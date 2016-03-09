@@ -1,0 +1,11 @@
+Package: mPowerProcessing
+Type: Package
+Title: Processes mPower data
+Version: 1.0
+Date: 2016-03-03
+Author: Brian Bot
+Maintainer: Brian Bot <brian.bot@sagebase.org>
+Description: This package processes mPower data.
+License: GPL
+Imports: synapseClient, RJSONIO, fractal, pracma, changepoint,lomb
+Suggests: testthat

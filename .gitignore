@@ -1,3 +1,10 @@
+
+# mac files
+**/.DS_Store
+
+#eclipse file
+.project
+
 # History files
 .Rhistory
 .Rapp.history
@@ -17,3 +24,31 @@ vignettes/*.pdf
 
 # OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
 .httr-oauth
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+# Sphinx documentation
+docs/_build/
+
+
+.pydevproject
