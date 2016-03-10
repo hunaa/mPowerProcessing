@@ -3,19 +3,49 @@
 # Author: bhoff
 ###############################################################################
 
-library(testthat)
-library(synapseClient)
+require(testthat)
+require(mPowerProcessing)
+require(synapseClient)
 
 context("test_process_survey_v1")
 
-testDataFolder<-system.file("testdata", package="mPowerProcessing")
+testDataFolder<-system.file("tests/testdata", package="mPowerProcessing")
 v1SurveyInputFile<-file.path(testDataFolder, "v1SurveyInput.RData")
+
+## HELPER FUNCTIONS FOR PERMUTATIONS - MAY WANT TO STORE SOMEWHERE CENTRAL SO NOT REPLICATED IN EVERY TEST FILE
+## generateUuids, permuteMe
+generateUuids <- function(n){
+  require(uuid)
+  res <- rep(NA, n)
+  for(i in 1:n){
+    res[i] <- UUIDgenerate(FALSE)
+  }
+  return(res)
+}
+permuteMe <- function(dat){
+  uuidFields <- c("recordId", "healthCode")
+  for(ii in uuidFields){
+    dat[[ii]] <- generateUuids(nrow(dat))
+  }
+  for(ii in names(dat)){
+    dat[[ii]] <- dat[[ii]][sample(1:nrow(dat), size=nrow(dat))]
+  }
+  return(dat)
+}
 
 # This is run once, to create the data used in the test
 createV1Expected<-function() {
 	id<-"syn4961453"
 	schema<-synGet(id)
-	query<-synTableQuery(paste0("SELECT * FROM ", id, " WHERE appVersion NOT LIKE '%YML%' LIMIT 100 OFFSET 500"))
+	query<-synTableQuery(paste0("SELECT * FROM ", id, " WHERE appVersion NOT LIKE '%YML%'"))
+	vals <- query@values
+	## CLEAN AS PER GOVERNANCE REQUIREMENTS
+	vals$Enter_State <- "blah"
+	vals$age[ which(vals$age>90 & vals$age<101) ] <- 90
+	vals <- vals[-which(vals$age < 18  | vals$age > 100), ]
+	## PERMUTE
+	vals <- permuteMe(vals)
+	query@values <- vals[1:100, ]
 	eComFiles<-synDownloadTableColumns(query, "health-history") # maps filehandleId to file path
 	eComContent <- sapply(eComFiles, readLines, warn=F)
 	names(eComContent)<-eComFiles # maps file path to file content
