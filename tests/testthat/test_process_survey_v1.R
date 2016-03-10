@@ -3,8 +3,8 @@
 # Author: bhoff
 ###############################################################################
 
-library(testthat)
-library(synapseClient)
+require(testthat)
+require(synapseClient)
 
 context("test_process_survey_v1")
 
@@ -15,8 +15,17 @@ v1SurveyInputFile<-file.path(testDataFolder, "v1SurveyInput.RData")
 createV1Expected<-function() {
 	id<-"syn4961453"
 	schema<-synGet(id)
-	query<-synTableQuery(paste0("SELECT * FROM ", id, " WHERE appVersion NOT LIKE '%YML%' LIMIT 100 OFFSET 500"))
-	eComFiles<-synDownloadTableColumns(query, "health-history") # maps filehandleId to file path
+	query<-synTableQuery(paste0("SELECT * FROM ", id, " WHERE appVersion NOT LIKE '%YML%'"))
+	vals <- query@values
+	## CLEAN AS PER GOVERNANCE REQUIREMENTS
+	vals$Enter_State <- "blah"
+	vals$age[ which(vals$age>90 & vals$age<101) ] <- 90
+	vals <- vals[-which(vals$age < 18  | vals$age > 100), ]
+	## PERMUTE
+	vals <- mPowerProcessing:::permuteMe(vals)
+	query@values <- vals[1:100, ]
+	eComFiles <- list.files(system.file("testdata/health-history", package="mPowerProcessing"), full.names = TRUE)
+	eComFiles <- sample(eComFiles, size = sum(!is.na(query@values$`health-history`)), replace = TRUE)
 	eComContent <- sapply(eComFiles, readLines, warn=F)
 	names(eComContent)<-eComFiles # maps file path to file content
 	save(schema, query, eComFiles, eComContent, file=v1SurveyInputFile, ascii=TRUE)

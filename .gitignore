@@ -52,5 +52,7 @@ docs/_build/
 
 
 .pydevproject
-
 ..Rcheck
+.Rbuildignore
+mPowerProcessing.Rproj
+.Rproj.user
