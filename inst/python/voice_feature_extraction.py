@@ -9,7 +9,7 @@ Example:
         --completed voice_gemaps.features.csv voice_countdown_gemaps.features.csv \
         --append > voice_feature_extraction.log 2>&1 &
 
-Author: Christopher Bare
+Author: J. Christopher Bare
 Adapted from mhealthx written by Arno Klein: https://github.com/Sage-Bionetworks/mhealthx
 """
 import synapseclient
@@ -114,6 +114,8 @@ def process_rows(args, syn):
     query = "SELECT {cols} FROM {table_id}".format(
                 cols=','.join(double_quote(KEEP_COLUMNS+args.data_columns)),
                 table_id=args.voice_table_id)
+    if args.last_row_version:
+        query += " WHERE ROW_VERSION > {0}".format(args.last_row_version)
     if args.limit:
         query += " LIMIT {0}".format(args.limit)
     if args.offset:
@@ -281,6 +283,8 @@ def main():
             help='Limit the number of records to process. Defaults to None (no limit).')
     subparser.add_argument('--offset', metavar='OFFSET', type=int, default=None,
             help='Offset into source table on which to start processing.')
+    subparser.add_argument('--last-row-version', metavar='VERSION', type=int, default=None,
+            help='Process only rows whose version is greater than the one given.')
     subparser.add_argument('--opensmile-home', metavar='PATH', type=str, default=OPENSMILE_DIR,
             help='Path to openSMILE installation. Defaults to {0}'.format(OPENSMILE_DIR))
     subparser.add_argument('-C', '--opensmile-conf', metavar='PATH', type=str, default=OPENSMILE_CONF,
