@@ -26,12 +26,11 @@ createV1Expected<-function() {
 	query@values <- vals[1:100, ]
 	eComFiles <- list.files(system.file("testdata/health-history", package="mPowerProcessing"), full.names = TRUE)
 	eComFiles <- sample(eComFiles, size = sum(!is.na(query@values$`health-history`)), replace = TRUE)
+	names(eComFiles)<-query@values$`health-history`[which(!is.na(query@values$`health-history`))]
 	eComContent <- sapply(eComFiles, readLines, warn=F)
 	names(eComContent)<-eComFiles # maps file path to file content
 	save(schema, query, eComFiles, eComContent, file=v1SurveyInputFile, ascii=TRUE)
 }
-
-createV1Expected()
 
 # Mock the schema and table content
 load(v1SurveyInputFile)
@@ -49,8 +48,8 @@ with_mock(
 			eDat<-process_survey_v1("syn101")
 			eDatFilePath<-file.path(testDataFolder, "eDatExpected.RData")
 			# Here's how we created the 'expected' data frame:
-			expected<-eDat
-			save(expected, file=eDatFilePath, ascii=TRUE)
+			# expected<-eDat
+			# save(expected, file=eDatFilePath, ascii=TRUE)
 			load(eDatFilePath) # creates 'expected'
 			expect_equal(eDat, expected)
 		}
