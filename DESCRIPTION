@@ -8,4 +8,5 @@ Maintainer: Brian Bot <brian.bot@sagebase.org>
 Description: This package processes mPower data.
 License: GPL
 Imports: synapseClient, RJSONIO, fractal, pracma, changepoint,lomb
+Remotes: github::Sage-Bionetworks/rSynapseClient
 Suggests: testthat

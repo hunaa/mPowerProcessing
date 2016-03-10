@@ -22,7 +22,7 @@ createVoiceExpected<-function() {
 	
 	vMap<-synDownloadTableColumns(query1, "momentInDayFormat.json") # maps filehandleId to file path
 	fileContent <- sapply(vMap[query1@values[, "momentInDayFormat.json"]], read_json_from_file)
-	names(fileContent)<-vMap # maps file path to file content
+	names(fileContent)<-vMap # fileContent maps file path to file content.  Note, file content is *parsed* json, not simple string
 	save(schema1, query1, schema2, query2, vMap, fileContent, file=voiceDataExpectedFile, ascii=TRUE)
 }
 

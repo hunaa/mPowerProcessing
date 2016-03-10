@@ -13,6 +13,7 @@ getMaxRowVersion<-function(df) {
 }
 
 process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, newParent, lastProcessedVersionTableId) {
+	# TODO check if Bridge is done.  If not, exit
 	
 	lastProcessedQueryResult<-synTableQuery(paste0("SELECT * FROM ", lastProcessedVersionTableId))
 	lastProcessedVersion<-getLastProcessedVersion(lastProcessedQueryResult@values)
