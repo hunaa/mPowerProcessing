@@ -55,3 +55,4 @@ docs/_build/
 ..Rcheck
 .Rbuildignore
 mPowerProcessing.Rproj
+.Rproj.user
