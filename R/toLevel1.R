@@ -239,9 +239,6 @@ read_json_from_file<-function(file) {
 ## VOICE
 #####
 process_voice_activity<-function(vId1, vId2, lastProcessedVersion1, lastProcessedVersion2) {
-	vSc <- synGet(vId2)
-	vFilehandleCols <- whichFilehandle(vSc@columns)
-	
 	maxRowProcessed<-NULL
 	
 	## FIRST SET OF IDS HAVE TO PARSE INTO momentInDayFormat.json FILES TO EXTRACT MED INFO
@@ -282,6 +279,9 @@ process_voice_activity<-function(vId1, vId2, lastProcessedVersion1, lastProcesse
 	rownames(vFirst) <- vFirst$recordId
 	
 	## SECOND SET (1) IS AS WE WOULD EXPECT
+	vSc <- synGet(vId2)
+	vFilehandleCols <- whichFilehandle(vSc@columns)
+	
 	vSecond <- synTableQuery(createQueryString(vId2, lastProcessedVersion2))@values
 	maxRowProcessed[[vId2]]<-getMaxRowVersion(vSecond)
 	rownames(vSecond) <- vSecond$recordId

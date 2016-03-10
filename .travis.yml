@@ -1,0 +1,17 @@
+language: r
+
+cache: packages
+
+warnings_are_errors: false
+
+addons:
+    apt:
+        packages:
+            - sshpass
+            
+after_success:
+    - mkdir build
+    - mv * build
+    - tar -czf package.tgz build
+    - export SSHPASS=$DEPLOY_PASS
+    - sshpass -e scp package.tgz $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH
