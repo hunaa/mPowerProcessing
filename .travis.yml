@@ -13,5 +13,6 @@ after_success:
     - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && mkdir build
     - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && mv * build
     - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && tar -czf package.tgz build
+     - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && export SSHPASS=$DEPLOY_PASS 
     - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && sshpass -e scp -o StrictHostKeyChecking=no package.tgz $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH
     
