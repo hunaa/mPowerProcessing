@@ -31,6 +31,8 @@ createV1Expected<-function() {
 	save(schema, query, eComFiles, eComContent, file=v1SurveyInputFile, ascii=TRUE)
 }
 
+createV1Expected()
+
 # Mock the schema and table content
 load(v1SurveyInputFile)
 
@@ -47,8 +49,8 @@ with_mock(
 			eDat<-process_survey_v1("syn101")
 			eDatFilePath<-file.path(testDataFolder, "eDatExpected.RData")
 			# Here's how we created the 'expected' data frame:
-			# expected<-eDat
-			# save(expected, file=eDatFilePath, ascii=TRUE)
+			expected<-eDat
+			save(expected, file=eDatFilePath, ascii=TRUE)
 			load(eDatFilePath) # creates 'expected'
 			expect_equal(eDat, expected)
 		}
