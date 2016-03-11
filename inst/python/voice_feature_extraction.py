@@ -6,7 +6,6 @@ Example:
 
    nohup python voice_feature_extraction.py process-rows \
         --limit 10000 --offset 50000 \
-        --completed voice_gemaps.features.csv voice_countdown_gemaps.features.csv \
         --append > voice_feature_extraction.log 2>&1 &
 
 Author: J. Christopher Bare
@@ -44,11 +43,13 @@ MPOWER_VOICE_PROJECT = 'syn4931517'
 ## public - syn5511444
 VOICE_TABLE = 'syn4590865'
 DATA_COLUMNS = ['audio_audio.m4a', 'audio_countdown.m4a']
+DEFAULT_OUT_FILES = [column + ".features.csv" for column in DATA_COLUMNS]
 
 OUT_FILE = 'voice_features.csv'
 
 OPENSMILE_DIR = os.path.expanduser("~/install/openSMILE-2.2rc1")
 OPENSMILE_CONF = os.path.join('config', 'gemaps', 'GeMAPSv01a.conf')
+OPENSMILE_CONF_PATH = os.path.join(OPENSMILE_DIR, OPENSMILE_CONF)
 
 ## which columns from the source table to we want to carry forward into
 ## the derived tables (feature table(s) and possibly a table of wav files)
@@ -100,26 +101,75 @@ def double_quote(strings):
         yield '"' + s + '"'
 
 
-def process_rows(args, syn):
+def process_rows_command(args, syn):
+    """
+    Pass command line arguments to process_rows().
+    """
+    process_rows(syn=syn,
+                 voice_table_id=args.voice_table_id,
+                 last_row_version=args.last_row_version,
+                 limit=args.limit,
+                 offset=args.offset,
+                 data_columns=args.data_columns,
+                 completed=args.completed,
+                 out_files=args.out_files,
+                 opensmile_conf=args.opensmile_conf,
+                 cleanup=args.cleanup,
+                 append=args.append)
+
+
+def process_rows(syn, voice_table_id=VOICE_TABLE,
+                      last_row_version=None,
+                      limit=None,
+                      offset=None,
+                      data_columns=DATA_COLUMNS,
+                      completed=None,
+                      out_files=None,
+                      opensmile_conf=OPENSMILE_CONF_PATH,
+                      cleanup=True,
+                      append=True):
     """
     Perform audio feature extraction for rows in a Synapse table
     containing file references. For each .m4a audio file:
-    1. convert to .wav with ffmpeg
-    2. extract features using openSMILE
-    3. accumulate metadata and features in an output .csv file
+        1. convert to .wav with ffmpeg
+        2. extract features using openSMILE
+        3. accumulate metadata and features in an output .csv file
+
+    Parameters:
+        syn: connection to Synapse
+        voice_table_id (str): Synapse ID of voice table.
+        last_row_version: Compute features only for rows whose version is
+            greater than the oven given. Enables processing rows added to
+            the source table since the script was last run.
+        limit: Maximum number of rows to process
+        offset: Process rows starting from an offset from the 1st row
+        data_columns (list of str): Column names holding file handles
+        completed (list of str): Optional paths to files holding completed
+            feature data (parallel to data_columns)
+        out_files (list of str): Paths to files into which to write feature
+            data (parallel to data_columns)
+        opensmile_conf (str): Path to opensmile configuration file
+        cleanup (bool): remove temporary files
+        append (bool): append rows to output files
+
+    Notes:
+        The voice table is expected to hold metadata columns and fileHandles to
+        raw voice data from the mPower app in m4a format. For each column in
+        data_columns, the program will produce one output file, which will have
+        one row of metadata and features for each row in the source table.
     """
     ##----------------------------------------------------------
     ## Query source table with limit and offset
     ##----------------------------------------------------------
     query = "SELECT {cols} FROM {table_id}".format(
-                cols=','.join(double_quote(KEEP_COLUMNS+args.data_columns)),
-                table_id=args.voice_table_id)
-    if args.last_row_version:
-        query += " WHERE ROW_VERSION > {0}".format(args.last_row_version)
-    if args.limit:
-        query += " LIMIT {0}".format(args.limit)
-    if args.offset:
-        query += " OFFSET {0}".format(args.offset)
+                cols=','.join(double_quote(KEEP_COLUMNS+data_columns)),
+                table_id=voice_table_id)
+    if last_row_version:
+        query += " WHERE ROW_VERSION > {0}".format(last_row_version)
+    if limit:
+        query += " LIMIT {0}".format(limit)
+    if offset:
+        query += " OFFSET {0}".format(offset)
     results = syn.tableQuery(query)
 
     ##----------------------------------------------------------
@@ -127,7 +177,7 @@ def process_rows(args, syn):
     ## columns so Pandas doesn't infer their type as int64 or float (with nans
     ## for missing values).
     ##----------------------------------------------------------
-    df = pd.read_csv(results.filepath, dtype={col:'string' for col in args.data_columns})
+    df = pd.read_csv(results.filepath, dtype={col:'string' for col in data_columns})
     df.index = ["%s_%s"%(id, version) for id, version in zip(df["ROW_ID"], df["ROW_VERSION"])]
     del df["ROW_ID"]
     del df["ROW_VERSION"]
@@ -137,11 +187,11 @@ def process_rows(args, syn):
     ## already been processed
     ##----------------------------------------------------------
     completed_dfs = {}
-    if args.completed:
+    if completed:
         completed_rows = pd.Series(True, index=df.index)
-        for i,column in enumerate(args.data_columns):
+        for i,column in enumerate(data_columns):
             ## read .csv
-            completed_dfs[column] = pd.read_csv(args.completed[i], dtype={col:'string' for col in args.data_columns})
+            completed_dfs[column] = pd.read_csv(completed[i], dtype={col:'string' for col in data_columns})
             ## fix calculatedMeds column name
             completed_dfs[column] = completed_dfs[column].rename(columns={'medTimepoint':'calculatedMeds'})
             ## reorder metadata columns to match query results,
@@ -161,7 +211,7 @@ def process_rows(args, syn):
     ##----------------------------------------------------------
     ## Bulk download audio data in .m4a format
     ##----------------------------------------------------------
-    file_map = syn.downloadTableColumns(Table(results.tableId, df_to_download), args.data_columns)
+    file_map = syn.downloadTableColumns(Table(results.tableId, df_to_download), data_columns)
 
     ##----------------------------------------------------------
     ## unix time stamps -> nicely formated dates
@@ -175,7 +225,7 @@ def process_rows(args, syn):
         row = df.iloc[[i],:]
         print "processing:", i, row['recordId'].values[0]
 
-        for column, out_file in zip(args.data_columns, args.out_files):
+        for column, out_file in zip(data_columns, out_files):
 
             ## check if we've already processed this record
             if completed_rows[i]:
@@ -216,7 +266,7 @@ def process_rows(args, syn):
                         os.remove(features_file)
                     command = "SMILExtract -I {input_file} -C {conf_file} --csvoutput {output_file}".format(
                                     input_file=wave_file,
-                                    conf_file=args.opensmile_conf,
+                                    conf_file=opensmile_conf,
                                     output_file=features_file)
                     output = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
 
@@ -238,7 +288,7 @@ def process_rows(args, syn):
                         sys.stderr.write("~~~>Exception while processing record.\n")
 
                 finally:
-                    if args.cleanup:
+                    if cleanup:
                         ## opensmile want to output an .arff file whether you ask it to or not. Worse
                         ## yet, it appends, so it keeps growing. Let's clean it up.
                         opensmile_arff_file = "output.arff"
@@ -252,7 +302,7 @@ def process_rows(args, syn):
                                 sys.stderr.write('\n')
 
             ## append row to output .csv file
-            append = (args.append or i>0)
+            append = (append or i>0)
             with open(out_file, 'a' if append else 'w') as f:
                     out_row.to_csv(f, header=(not append), index=False, quoting=csv.QUOTE_NONNUMERIC)
 
@@ -273,9 +323,9 @@ def main():
     subparser = subparsers.add_parser('process-rows')
     subparser.add_argument('--voice-table-id', metavar='SYNAPSE_ID', type=str, default=VOICE_TABLE,
             help='The Synapse ID of the voice data source table. Defaults to {0}'.format(VOICE_TABLE))
-    subparser.add_argument('-d', '--data-columns', metavar='COLUMNS', type=str, nargs='+', default=DATA_COLUMNS,
+    subparser.add_argument('-d', '--data-columns', metavar='COLUMN', type=str, nargs='+', default=DATA_COLUMNS,
             help='Synapse table column names holding file handles to audio data.')
-    subparser.add_argument('--out-files', '--outfiles', metavar='PATH', type=str, nargs='+', default=[],
+    subparser.add_argument('-o', '--out-files', '--outfiles', metavar='PATH', type=str, nargs='+', default=[],
             help='File paths to which to write output - one per column. Defaults to column name + ".features.csv".')
     subparser.add_argument('--completed', metavar='PATH', type=str, nargs='+', default=[],
             help='Paths to .csv files of completed results - one per column.')
@@ -292,7 +342,7 @@ def main():
     subparser.add_argument('--append', action='store_true', default=False)
     subparser.add_argument('--cleanup', dest='cleanup', action='store_true', default=True)
     subparser.add_argument('--no-cleanup', dest='cleanup', action='store_false')
-    subparser.set_defaults(func=process_rows)
+    subparser.set_defaults(func=process_rows_command)
 
     args = parser.parse_args()
 
