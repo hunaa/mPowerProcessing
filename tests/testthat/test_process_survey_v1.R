@@ -23,7 +23,7 @@ createV1Expected<-function() {
 	vals <- vals[-which(vals$age < 18  | vals$age > 100), ]
 	## PERMUTE
 	vals <- mPowerProcessing:::permuteMe(vals)
-	query@values <- vals[1:100, ]
+	query@values <- vals[1:min(nrow(vals), 100), ]
 	eComFiles <- list.files(system.file("testdata/health-history", package="mPowerProcessing"), full.names = TRUE)
 	eComFiles <- sample(eComFiles, size = sum(!is.na(query@values$`health-history`)), replace = TRUE)
 	names(eComFiles)<-query@values$`health-history`[which(!is.na(query@values$`health-history`))]
