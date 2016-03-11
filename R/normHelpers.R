@@ -11,7 +11,7 @@ GetAgeMatchedControlIds <- function(patientAge, ageInterval = 5, demo){
 GetControlFeatureSummaryStats <- function(dat, controlIds, featName){
   idx <- dat$healthCode %in% controlIds
   pdat <- dat[idx, featName]
-  res <- list(median = median(pdat, na.rm = TRUE), 
+  res <- list(median = median(pdat, na.rm = TRUE),
               mean = mean(pdat, na.rm = TRUE),
               sd = sd(pdat, na.rm = TRUE),
               nControls = length(controlIds),
@@ -19,10 +19,10 @@ GetControlFeatureSummaryStats <- function(dat, controlIds, featName){
   return(res)
 }
 
-NormalizeFeature <- function(dat, 
-                             patientId, 
-                             featName, 
-                             demo, 
+NormalizeFeature <- function(dat,
+                             patientId,
+                             featName,
+                             demo,
                              ageInterval,
                              floorCeilingRange = 1,
                              standardDeviations = 1,
