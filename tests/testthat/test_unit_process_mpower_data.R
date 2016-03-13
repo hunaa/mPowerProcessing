@@ -5,7 +5,7 @@
 
 library(testthat)
 
-context("test_process_mpower_data")
+context("test_unit_process_mpower_data")
 
 df<-data.frame("LAST_VERSION"=as.integer(c(1,2,3)), "TABLE_ID"=c("syn101", "syn202", "syn303"))
 lastProcessedVersion <- getLastProcessedVersion(df)

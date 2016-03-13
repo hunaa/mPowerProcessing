@@ -6,7 +6,7 @@
 library(testthat)
 library(synapseClient)
 
-context("test_process_tapping_activity")
+context("test_unit_process_tapping_activity")
 
 testDataFolder<-system.file("testdata", package="mPowerProcessing")
 tDataExpectedFile<-file.path(testDataFolder, "tappingTaskInput.RData")

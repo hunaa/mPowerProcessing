@@ -6,7 +6,7 @@
 library(testthat)
 library(synapseClient)
 
-context("test_cleanup_missing_med_data")
+context("test_unit_cleanup_missing_med_data")
 
 testDataFolder<-system.file("testdata", package="mPowerProcessing")
 
