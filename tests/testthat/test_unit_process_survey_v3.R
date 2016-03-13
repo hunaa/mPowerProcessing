@@ -15,7 +15,10 @@ v3DataExpectedFile<-file.path(testDataFolder, "v3SurveyInput.RData")
 createV3Expected<-function() {
 	id<-"syn4961472"
 	schema<-synGet(id)
-	query<-synTableQuery(paste0("SELECT * FROM ", id, " WHERE appVersion NOT LIKE '%YML%' LIMIT 100 OFFSET 500"))
+	query<-synTableQuery(paste0("SELECT * FROM ", id, " WHERE appVersion NOT LIKE '%YML%'"))
+	vals <- query@values
+	vals <- mPowerProcessing:::permuteMe(vals)
+	query@values <- vals[1:min(nrow(vals), 100), ]
 	save(schema, query, file=v3DataExpectedFile, ascii=TRUE)
 }
 

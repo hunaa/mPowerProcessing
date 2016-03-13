@@ -79,16 +79,16 @@ markProcesingComplete<-function(batchStatusQueryResult, status) {
 }
 
 getLastProcessedVersion<-function(df) {
-	lastProcessedVersion<-df[["LAST_VERSION"]]
-	names(lastProcessedVersion)<-df[["TABLE_ID"]]
-	lastProcessedVersion
+  lastProcessedVersion<-df[["LAST_VERSION"]]
+  names(lastProcessedVersion)<-df[["TABLE_ID"]]
+  lastProcessedVersion
 }
 
 # given a data frame having row values named according to the Synapse table convention
 # find the maximum value
 getMaxRowVersion<-function(df) {
-	# TODO make this private method public
-	max(synapseClient:::parseRowAndVersion(row.names(df))[2,])
+  # TODO make this private method public
+  max(synapseClient:::parseRowAndVersion(row.names(df))[2,])
 }
 
 process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputProjectId, 
@@ -163,5 +163,4 @@ process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputPr
 			markProcesingComplete(bridgeExportQueryResult, "complete")
 	}, 
 	error=function(e) markProcesingComplete(bridgeExportQueryResult, "failed"))
-
 }
