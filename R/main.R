@@ -18,10 +18,11 @@ main<-function() {
 	vId1 <- c("syn4961455", "syn4961457", "syn4961464")
 	vId2 <- c("syn4961456")
 	wId <- c("syn4961452", "syn4961466", "syn4961469")
-	newParent <- "syn4993293"
+	outputProjectId <- "syn4993293"
 	lastProcessedVersionTableId <- "syn5706434"
 	
 	synapseClient::synapseLogin()
 	
-	process_mpower_data(eId, uId, pId, mId, tId, vId1, vId2, wId, newParent, lastProcessedVersionTableId)
+	process_mpower_data(eId, uId, pId, mId, tId, vId1, vId2, wId, outputProjectId, 
+			bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId)
 }

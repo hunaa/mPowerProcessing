@@ -6,7 +6,7 @@
 library(testthat)
 library(synapseClient)
 
-context("test_process_walking_activity")
+context("test_unit_process_walking_activity")
 
 testDataFolder<-system.file("testdata", package="mPowerProcessing")
 wDataExpectedFile<-file.path(testDataFolder, "walkingTaskInput.RData")

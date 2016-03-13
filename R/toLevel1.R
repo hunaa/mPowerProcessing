@@ -377,7 +377,7 @@ cleanup_missing_med_data<-function(mDat, tDat, vDat, wDat) {
 ## STORE BACK TO SYNAPSE
 ## LOG IN AS BRIDGE EXPORTER TO STORE BACK
 # synapseLogout()
-store_cleaned_data<-function(newParent, eDat, uDat, pDat, mDat, tDat, vDat, wDat, mFilehandleCols, tFilehandleCols, vFilehandleCols) {
+store_cleaned_data<-function(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat, wDat, mFilehandleCols, tFilehandleCols, vFilehandleCols) {
 	storeThese <- list('Demographics Survey' = list(vals=eDat, fhCols=NULL),
 	                   'UPDRS Survey' = list(vals=uDat, fhCols=NULL),
 	                   'PDQ8 Survey' = list(vals=pDat, fhCols=NULL),
@@ -387,7 +387,7 @@ store_cleaned_data<-function(newParent, eDat, uDat, pDat, mDat, tDat, vDat, wDat
 	                   'Walking Activity' = list(vals=wDat, fhCols=grep("json.items", names(wDat), value = TRUE)))
 	
 	## SCHEMAS ALREADY STORED - FIND THEM
-	qq <- synQuery(paste0('SELECT id, name FROM table WHERE parentId=="', newParent, '"'))
+	qq <- synQuery(paste0('SELECT id, name FROM table WHERE parentId=="', outputProjectId, '"'))
 	
 	## NOW LETS DO SOMETHING WITH ALL OF THIS DATA
 	## FINALLY, STORE THE OUTPUT

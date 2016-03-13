@@ -6,7 +6,7 @@
 library(testthat)
 library(synapseClient)
 
-context("test_process_voice_activity")
+context("test_unit_process_voice_activity")
 
 testDataFolder<-system.file("testdata", package="mPowerProcessing")
 voiceDataExpectedFile<-file.path(testDataFolder, "voiceTaskInput.RData")

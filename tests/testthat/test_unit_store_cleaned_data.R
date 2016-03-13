@@ -6,7 +6,7 @@
 library(testthat)
 library(synapseClient)
 
-context("test_store_cleaned_data")
+context("test_unit_store_cleaned_data")
 
 testDataFolder<-system.file("testdata", package="mPowerProcessing")
 
@@ -52,10 +52,10 @@ load(pDatFilePath) # creates 'expected'
 pDat<-expected
 
 # this is the parent project of all the tables
-newParent<-"syn4993293"
+outputProjectId<-"syn4993293"
 
 # To generate qqFilePath:
-# qq <- synQuery(paste0('SELECT id, name FROM table WHERE parentId=="', newParent, '"'))
+# qq <- synQuery(paste0('SELECT id, name FROM table WHERE parentId=="', outputProjectId, '"'))
 
 qqFilePath<-file.path(testDataFolder, "qq.RData")
 # save(qq, file=qqFilePath, ascii=TRUE)
@@ -67,7 +67,7 @@ with_mock(
 		synGet=function(id) id,
 		synStore=function(table) table,
 		{
-			store_cleaned_data(newParent, eDat, uDat, pDat, mDat, tDat, vDat, wDat, 
+			store_cleaned_data(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat, wDat, 
 					mFilehandleCols, tFilehandleCols, vFilehandleCols)
 		}
 )

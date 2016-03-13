@@ -6,7 +6,7 @@
 require(testthat)
 require(synapseClient)
 
-context("test_process_survey_v1")
+context("test_unit_process_survey_v1")
 
 testDataFolder<-system.file("testdata", package="mPowerProcessing")
 v1SurveyInputFile<-file.path(testDataFolder, "v1SurveyInput.RData")

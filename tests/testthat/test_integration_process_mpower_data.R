@@ -24,8 +24,8 @@ synapseLogin(username=username, apiKey=apiKey, rememberMe=F)
 message("Creating project ...")
 project<-Project()
 project<-synStore(project)
-newParent<-propertyValue(project, "id")
-message("...done.  Project ID is ", newParent)
+outputProjectId<-propertyValue(project, "id")
+message("...done.  Project ID is ", outputProjectId)
 
 ## create and populate the source tables
 testDataFolder<-system.file("testdata", package="mPowerProcessing")
@@ -164,7 +164,10 @@ createLastProcessedVersionTable<-function() {
 }
 lastProcessedVersionTableId <- createLastProcessedVersionTable()
 
-#TODO reenable when data is available process_mpower_data(eId, uId, pId, mId, tId, vId1, vId2, wId, newParent, lastProcessedVersionTableId)
+# TODO set up bridgeStatusId, mPowerBatchStatusId
+
+# TODO reenable when data is available process_mpower_data(eId, uId, pId, mId, tId, vId1, vId2, wId, 
+# outputProjectId, bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId)
 
 # TODO verify content
 

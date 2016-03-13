@@ -6,7 +6,7 @@
 library(testthat)
 library(synapseClient)
 
-context("test_process_survey_v3")
+context("test_unit_process_survey_v3")
 
 testDataFolder<-system.file("testdata", package="mPowerProcessing")
 v3DataExpectedFile<-file.path(testDataFolder, "v3SurveyInput.RData")
