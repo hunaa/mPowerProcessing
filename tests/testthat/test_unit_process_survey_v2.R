@@ -33,8 +33,8 @@ with_mock(
 			uDat<-process_survey_v2("syn101")
 			uDatFilePath<-file.path(testDataFolder, "uDatExpected.RData")
 			# Here's how we created the 'expected' data frame:
-			# expected<-uDat
-			# save(expected, file=uDatFilePath, ascii=TRUE)
+			#expected<-uDat
+			#save(expected, file=uDatFilePath, ascii=TRUE)
 			load(uDatFilePath) # creates 'expected'
 			expect_equal(uDat, expected)
 		}

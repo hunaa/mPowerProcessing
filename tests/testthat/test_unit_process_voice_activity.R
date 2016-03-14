@@ -5,25 +5,42 @@
 
 library(testthat)
 library(synapseClient)
+library(RJSONIO)
 
 context("test_unit_process_voice_activity")
 
 testDataFolder<-system.file("testdata", package="mPowerProcessing")
 voiceDataExpectedFile<-file.path(testDataFolder, "voiceTaskInput.RData")
 
+vId1 <- c("syn4961455", "syn4961457", "syn4961464")
+vId2 <- c("syn4961456")
+
 # This is run once, to create the data used in the test
 createVoiceExpected<-function() {
-	id1<-"syn4961455"
-	schema1<-synGet(id1)
-	query1<-synTableQuery(paste0("SELECT * FROM ", id1, " WHERE appVersion NOT LIKE '%YML%' LIMIT 100 OFFSET 100"))
-	id2<-"syn4961456"
-	schema2<-synGet(id2)
-	query2<-synTableQuery(paste0("SELECT * FROM ", id2, " WHERE appVersion NOT LIKE '%YML%' LIMIT 100 OFFSET 500"))
+	cumFileContent<-NULL
 	
-	vMap<-synDownloadTableColumns(query1, "momentInDayFormat.json") # maps filehandleId to file path
-	fileContent <- sapply(vMap[query1@values[, "momentInDayFormat.json"]], read_json_from_file)
-	names(fileContent)<-vMap # fileContent maps file path to file content.  Note, file content is *parsed* json, not simple string
-	save(schema1, query1, schema2, query2, vMap, fileContent, file=voiceDataExpectedFile, ascii=TRUE)
+	schemaAndQuery<-sapply(vId1, function(id) {
+				schema<-synGet(id)
+				query<-synTableQuery(paste0("SELECT * FROM ", id, " WHERE appVersion NOT LIKE '%YML%'"))
+				vals <- query@values
+				vals <- mPowerProcessing:::permuteMe(vals)
+				query@values <- vals[1:min(nrow(vals), 100), ]
+				
+				vFiles <- list.files(system.file("testdata/moment-in-day-json", package="mPowerProcessing"), full.names = TRUE)
+				vFiles <- sample(vFiles, size = sum(!is.na(query@values$`momentInDayFormat.json`)), replace = TRUE)
+				names(vFiles)<-query@values$`momentInDayFormat.json`[which(!is.na(query@values$`momentInDayFormat.json`))]
+				fileContent <- sapply(vFiles, read_json_from_file)
+				cumFileContent<<-append(cumFileContent, fileContent)
+				list(schema=schema, query=query, vFiles=vFiles)
+			})
+	
+	schema2<-synGet(vId2)
+	query2<-synTableQuery(paste0("SELECT * FROM ", vId2, " WHERE appVersion NOT LIKE '%YML%'"))
+	vals <- query2@values
+	vals <- mPowerProcessing:::permuteMe(vals)
+	query2@values <- vals[1:min(nrow(vals), 100), ]
+	
+	save(schemaAndQuery, schema2, query2, cumFileContent, file=voiceDataExpectedFile, ascii=TRUE)
 }
 
 # Mock the schema and table content
@@ -31,30 +48,36 @@ expect_true(file.exists(voiceDataExpectedFile))
 load(voiceDataExpectedFile)
 with_mock(
 		synGet=function(id) {
-			if (id=="syn101") {
-				schema1
-			} else {
+			if (id==vId2) {
 				schema2
+			} else {
+				schemaAndQuery["schema", id][[1]]
 			}
 		},
 		synTableQuery=function(sql) {
-			if (length(grep("syn101", sql))>0) {
-				query1
-			} else {
+			id<-mPowerProcessing:::getIdFromSql(sql)
+			if (id==vId2) {
 				query2
+			} else {
+				schemaAndQuery["query", id][[1]]
 			}
 		},
 		read_json_from_file=function(file) {# file is a file path with fileHandleId as name
-			result<-fileContent[file] # this gets the file content.  The name is the file path
+			result<-cumFileContent[file] # this gets the file content.  The name is the file path
 			names(result)<-names(file) # result must map fileHandleId to file content
 			result
 		},
+		synDownloadTableColumns=function(synTable, tableColumns) {
+			id<-synTable@schema
+			schemaAndQuery["vFiles", id][[1]]
+		},
+		
 		{
-			vResults<-process_voice_activity("syn101", "syn102", "1", "2")
+			vResults<-process_voice_activity(vId1, vId2, "1", "2")
 			vDatFilePath<-file.path(testDataFolder, "vDatExpected.RData")
 			# Here's how we created the 'expected' data frame:
-			# expected<-vResults
-			# save(expected, file=vDatFilePath, ascii=TRUE)
+			#expected<-vResults
+			#save(expected, file=vDatFilePath, ascii=TRUE)
 			load(vDatFilePath) # creates 'expected'
 			expect_equal(vResults, expected)
 		}

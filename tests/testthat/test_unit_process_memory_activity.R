@@ -34,8 +34,8 @@ with_mock(
 			mResults<-process_memory_activity("syn101")
 			mDatFilePath<-file.path(testDataFolder, "mDatExpected.RData")
 			# Here's how we created the 'expected' data frame:
-			# expected<-mResults
-			# save(expected, file=mDatFilePath, ascii=TRUE)
+			#expected<-mResults
+			#save(expected, file=mDatFilePath, ascii=TRUE)
 			load(mDatFilePath) # creates 'expected'
 			expect_equal(mResults, expected)
 		}
