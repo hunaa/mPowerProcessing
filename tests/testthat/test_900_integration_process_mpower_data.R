@@ -23,13 +23,25 @@ if (nchar(apiKey)==0) {
 	message("WARNING: Cannot run integration test.  Environment variable SYNAPSE_APIKEY is missing.")
 	q("no")
 }
+bridgeUsername<-Sys.getenv("BRIDGE_USERNAME")
+if (nchar(bridgeUsername)==0) {
+	message("WARNING: Cannot run integration test.  Environment variable BRIDGE_USERNAME is missing.")
+	q("no")
+}
+bridgePassword<-Sys.getenv("BRIDGE_PASSWORD")
+if (nchar(bridgePassword)==0) {
+	message("WARNING: Cannot run integration test.  Environment variable BRIDGE_PASSWORD is missing.")
+	q("no")
+}
 
+
+# log in to Synapse
 synapseLogin(username=username, apiKey=apiKey, rememberMe=F)
 
-# TODO log in to Bridge
-bridgeLogin(email='myEmail@awesome.com', password='password', study='parkinsons')
+# log in to Bridge
+bridgeLogin(email=bridgeUsername, password=bridgePassword, study='parkinson')
 
-message("Creating project ...")
+message("\nCreating project ...")
 project<-Project()
 project<-synStore(project)
 outputProjectId<-propertyValue(project, "id")
