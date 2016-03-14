@@ -20,6 +20,8 @@ main<-function() {
 	wId <- c("syn4961452", "syn4961466", "syn4961469")
 	outputProjectId <- "syn4993293"
 	lastProcessedVersionTableId <- "syn5706434"
+	bridgeStatusId <- "syn5720756"
+	mPowerBatchStatusId <- "TBD"
 	
 	synapseClient::synapseLogin()
 	

@@ -1,8 +1,6 @@
 # End-to-end integration test
-# To run:
-# library(synapseClient)
-# synapseLogin()
-# source(system.file("integration_tests/process_mpower_data_integration_test.R", package="mPowerProcessing"))
+# 
+# To run the environment variables SYNAPSE_USERNAME, SYNAPSE_APIKEY must be set.
 # 
 # Author: bhoff
 ###############################################################################
@@ -13,6 +11,7 @@ context("test_integration_process_mpower_data")
 
 
 library(synapseClient)
+library(bridger)
 
 username<-Sys.getenv("SYNAPSE_USERNAME")
 if (nchar(username)==0) {
@@ -26,6 +25,9 @@ if (nchar(apiKey)==0) {
 }
 
 synapseLogin(username=username, apiKey=apiKey, rememberMe=F)
+
+# TODO log in to Bridge
+bridgeLogin(email='myEmail@awesome.com', password='password', study='parkinsons')
 
 message("Creating project ...")
 project<-Project()
@@ -71,7 +73,7 @@ createSurveyV1Table<-function(project) {
 	message("...done.")
 	eId
 }
-#TODO reenable when TEST IS FIXED eId<-createSurveyV1Table(project)
+eId<-createSurveyV1Table(project)
 
 createTable<-function(project, rDataFileName, tableName, message) {
 	message(message)
@@ -92,26 +94,49 @@ createTable<-function(project, rDataFileName, tableName, message) {
 	propertyValue(newSchema, "id")
 }
 
-#TODO reenable when data is available uId<-createTable(project, "v2SurveyInput.RData", "Survey V2 Raw Input", "Creating Survey V2 table ...")
+uId<-createTable(project, "v2SurveyInput.RData", "Survey V2 Raw Input", "Creating Survey V2 table ...")
 
-#TODO reenable when data is available pId<-createTable(project, "v3SurveyInput.RData", "Survey V3 Raw Input", "Creating Survey V3 table ...")
+pId<-createTable(project, "v3SurveyInput.RData", "Survey V3 Raw Input", "Creating Survey V3 table ...")
 
-#TODO reenable when data is available mId<-createTable(project, "memTaskInput.RData", "Memory Task Raw Input", "Creating Memory Task table ...")
+mId<-createTable(project, "memTaskInput.RData", "Memory Task Raw Input", "Creating Memory Task table ...")
 
-# TODO create copies of  "syn4961465", "syn4961484", in addition to "syn4961463"
-#TODO reenable when data is available tId<-createTable(project, "tappingTaskInput.RData", "Tapping Task Raw Input", "Creating Tapping Task table ...")
+createMultipleTables<-function(project, rDataFileName, tableName, message) {
+	message(message)
+	inputFile<-file.path(testDataFolder, rDataFileName)
+	load(inputFile) # brings into namespace: schemaAndQuery
+	tableIds<-NULL
+	for (i in 1:(dim(schemaAndQuery)[2])) {
+		schema<-schemaAndQuery["schema", id][[1]]
+		query<-schemaAndQuery["query", mPowerProcessing:::getIdFromSql(sql)][[1]]
+		tableData<-query@values
+		columns<-list()
+		for (column in schema@columns@content) {
+			column@id<-character(0)
+			columns<-append(columns, column)
+		}
+		newSchema<-TableSchema(tableName, project, columns)
+		newSchema<-synStore(newSchema)
+		# create the table content
+		table<-Table(newSchema, tableData)
+		table<-synStore(table)
+		tableIds<-append(tableIds, propertyValue(newSchema, "id"))
+	}
+	message("...done.")
+	tableIds
+}
+tIds<-createMultipleTables(project, "tappingTaskInput.RData", "Tapping Task Raw Input", "Creating Tapping Task table ...")
 
 
 createVoiceTaskTable1<-function(project) {
 	message("Creating Voice Task table ...")
 	voiceTaskInputFile<-file.path(testDataFolder, "voiceTaskInput.RData")
-	load(voiceTaskInputFile) # brings into namespace: schema1, query1, schema2, query2, vMap, fileContent
+	load(voiceTaskInputFile) # brings into namespace: schemaAndQuery, schema2, query2, cumFileContent, cumVFiles
+	tableData<-sapply(schemaAndQuery["query",], function(q) {q[[1]]@values})
 	# create the file handles
-	tableData<-query1@values
-	#	for each in eComContent:  write to disk, upload to file handle, replace fh-id in tableData
-	for (n in names(fileContent)) { # is the file path
-		fileContentAsRObject<-fileContent[n]
-		origFileHandleId<-names(vMap[which(vMap==n)])
+	#	for each in cumFileContent:  write to disk, upload to file handle, replace fh-id in tableData
+	for (n in names(cumFileContent)) { # is the file path
+		fileContentAsRObject<-cumFileContent[n]
+		origFileHandleId<-names(cumVFiles[which(cumVFiles==n)])
 		# upload a file and receive the file handle
 		filePath<-tempfile()
 		connection<-file(filePath)
@@ -119,21 +144,26 @@ createVoiceTaskTable1<-function(project) {
 		close(connection)  
 		fileHandle<-synapseClient:::chunkedUploadFile(filePath)
 		newFileHandleId<-fileHandle$id
-		tableData[["momentInDayFormat.json"]][which(tableData[["momentInDayFormat.json"]]==origFileHandleId)]<-newFileHandleId
+		for (i in 1:length(tableData)) {
+			tableData[i][["momentInDayFormat.json"]][which(tableData[i][["momentInDayFormat.json"]]==origFileHandleId)]<-newFileHandleId
+		}
 	}
-	# create the schema
-	columns<-list()
-	for (column in schema1@columns@content) {
-		column@id<-character(0)
-		columns<-append(columns, column)
+	vId1<-NULL
+	for (i in 1:length(tableData)) {
+		schema1<-schemaAndQuery["schema",i][[1]]
+		# create the schema
+		columns<-list()
+		for (column in schema1@columns@content) {
+			column@id<-character(0)
+			columns<-append(columns, column)
+		}
+		voiceSchema1<-TableSchema(paste0("Voice Raw Input 1 ", i), project, columns)
+		voiceSchema1<-synStore(voiceSchema1)
+		# create the v1 survey content
+		voiceTable1<-Table(voiceSchema1, tableData[i])
+		synStore(voiceTable1)
+		vId1<-append(vId1, propertyValue(voiceSchema1, "id"))
 	}
-	voiceSchema1<-TableSchema("Voice Raw Input 1", project, columns)
-	voiceSchema1<-synStore(voiceSchema1)
-	# create the v1 survey content
-	voiceTable1<-Table(voiceSchema1, tableData)
-	synStore(voiceTable1)
-	vId1<-propertyValue(voiceSchema1, "id")
-	
 	# now create that other voice table
 	columns<-list()
 	for (column in schema2@columns@content) {
@@ -150,13 +180,11 @@ createVoiceTaskTable1<-function(project) {
 	message("...done.")
 	list(vId1=vId1, vId2=vId2)
 }
-#TODO reenable when data is available vResult<-createVoiceTaskTable1(project)
-# TODO create copies of "syn4961457", "syn4961464" in addition to "syn4961455"
-#TODO reenable when data is available vId1<-vResult$vId1
-#TODO reenable when data is available vId2<-vResult$vId2
+vResult<-createVoiceTaskTable1(project)
+vId1<-vResult$vId1
+vId2<-vResult$vId2
 
-# TODO create copies of  "syn4961466", "syn4961469", in addition to "syn4961452"
-#TODO reenable when data is available wId<-createTable(project, "walkingTaskInput.RData", "Walking Task Raw Input", "Creating Walking Task table ...")
+wIds<-createMultipleTables(project, "walkingTaskInput.RData", "Walking Task Raw Input", "Creating Walking Task table ...")
 
 # create 'lastProcessedVersion' table
 createLastProcessedVersionTable<-function() {
@@ -170,12 +198,29 @@ createLastProcessedVersionTable<-function() {
 }
 lastProcessedVersionTableId <- createLastProcessedVersionTable()
 
-# TODO set up bridgeStatusId, mPowerBatchStatusId
+# set up bridgeStatusId
+column<-TableColumn(name="uploadDate", columnType="DATE")
+bridgeStatusSchema<-TableSchema("Bridge Status Schema", project, list(column))
+bridgeStatusSchema<-synStore(bridgeStatusSchema)
+bridgeStatusId<-propertyValue(bridgeStatusSchema, "id")
 
-# TODO reenable when data is available process_mpower_data(eId, uId, pId, mId, tId, vId1, vId2, wId, 
-# outputProjectId, bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId)
+# set up  mPowerBatchStatusId
+c1<-TableColumn(name="bridgeUploadDate", columnType="DATE")
+c2<-TableColumn(name="mPowerBatchStart", columnType="DATE")
+c3<-TableColumn(name="hostName", columnType="STRING")
+c4<-TableColumn(name="batchStatus", columnType="STRING")
+mPowerBatchStatusSchema<-TableSchema("mPower Batch Status Schema", project, list(c1,c2,c3,c4))
+mPowerBatchStatusSchema<-synStore(mPowerBatchStatusSchema)
+mPowerBatchStatusId<-propertyValue(mPowerBatchStatusSchema, "id")
+
+# TODO write a row into the bridgeStatusId table to kick off the job
+
+process_mpower_data(eId, uId, pId, mId, tIds, vId1, vId2, wIds, 
+	outputProjectId, bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId)
 
 # TODO verify content
+
+# TODO check that the batch has been marked 'complete'
 
 synDelete(project)
 message("Deleted project ", outputProjectId)

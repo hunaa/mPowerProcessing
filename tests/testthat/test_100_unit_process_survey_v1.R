@@ -17,6 +17,7 @@ createV1Expected<-function() {
 	schema<-synGet(id)
 	query<-synTableQuery(paste0("SELECT * FROM ", id, " WHERE appVersion NOT LIKE '%YML%'"))
 	vals <- query@values
+	vals <- prependHealthCodes(vals, "test-")
 	## CLEAN AS PER GOVERNANCE REQUIREMENTS
 	vals$Enter_State <- "blah"
 	vals$age[ which(vals$age>90 & vals$age<101) ] <- 90
@@ -31,6 +32,8 @@ createV1Expected<-function() {
 	names(eComContent)<-eComFiles # maps file path to file content
 	save(schema, query, eComFiles, eComContent, file=v1SurveyInputFile, ascii=TRUE)
 }
+
+if (createTestData()) createV1Expected()
 
 # Mock the schema and table content
 load(v1SurveyInputFile)
@@ -48,8 +51,10 @@ with_mock(
 			eDat<-process_survey_v1("syn101")
 			eDatFilePath<-file.path(testDataFolder, "eDatExpected.RData")
 			# Here's how we created the 'expected' data frame:
-			# expected<-eDat
-			# save(expected, file=eDatFilePath, ascii=TRUE)
+			if (createTestData()) {
+				expected<-eDat
+				save(expected, file=eDatFilePath, ascii=TRUE)
+			}
 			load(eDatFilePath) # creates 'expected'
 			expect_equal(eDat, expected)
 		}

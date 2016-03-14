@@ -18,11 +18,13 @@ vId2 <- c("syn4961456")
 # This is run once, to create the data used in the test
 createVoiceExpected<-function() {
 	cumFileContent<-NULL
+	cumVFiles<-NULL
 	
 	schemaAndQuery<-sapply(vId1, function(id) {
 				schema<-synGet(id)
 				query<-synTableQuery(paste0("SELECT * FROM ", id, " WHERE appVersion NOT LIKE '%YML%'"))
 				vals <- query@values
+				vals <- prependHealthCodes(vals, "test-")
 				vals <- mPowerProcessing:::permuteMe(vals)
 				query@values <- vals[1:min(nrow(vals), 100), ]
 				
@@ -31,6 +33,7 @@ createVoiceExpected<-function() {
 				names(vFiles)<-query@values$`momentInDayFormat.json`[which(!is.na(query@values$`momentInDayFormat.json`))]
 				fileContent <- sapply(vFiles, read_json_from_file)
 				cumFileContent<<-append(cumFileContent, fileContent)
+				cumVFiles<-append(cumVFiles, vFiles)
 				list(schema=schema, query=query, vFiles=vFiles)
 			})
 	
@@ -40,8 +43,10 @@ createVoiceExpected<-function() {
 	vals <- mPowerProcessing:::permuteMe(vals)
 	query2@values <- vals[1:min(nrow(vals), 100), ]
 	
-	save(schemaAndQuery, schema2, query2, cumFileContent, file=voiceDataExpectedFile, ascii=TRUE)
+	save(schemaAndQuery, schema2, query2, cumFileContent, cumVFiles, file=voiceDataExpectedFile, ascii=TRUE)
 }
+
+if (createTestData()) createVoiceExpected()
 
 # Mock the schema and table content
 expect_true(file.exists(voiceDataExpectedFile))
@@ -76,8 +81,10 @@ with_mock(
 			vResults<-process_voice_activity(vId1, vId2, "1", "2")
 			vDatFilePath<-file.path(testDataFolder, "vDatExpected.RData")
 			# Here's how we created the 'expected' data frame:
-			#expected<-vResults
-			#save(expected, file=vDatFilePath, ascii=TRUE)
+			if (createTestData()) {
+				expected<-vResults
+				save(expected, file=vDatFilePath, ascii=TRUE)
+			}
 			load(vDatFilePath) # creates 'expected'
 			expect_equal(vResults, expected)
 		}
