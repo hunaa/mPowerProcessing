@@ -15,9 +15,15 @@ context("test_integration_process_mpower_data")
 library(synapseClient)
 
 username<-Sys.getenv("SYNAPSE_USERNAME")
-if (nchar(username)==0) stop("Cannot run integration test.  Environment variable USERNAME is missing.")
+if (nchar(username)==0) {
+	message("WARNING: Cannot run integration test.  Environment variable SYNAPSE_USERNAME is missing.")
+	q("no")
+}
 apiKey<-Sys.getenv("SYNAPSE_APIKEY")
-if (nchar(apiKey)==0) stop("Cannot run integration test.  Environment variable USERNAME is missing.")
+if (nchar(apiKey)==0) {
+	message("WARNING: Cannot run integration test.  Environment variable SYNAPSE_APIKEY is missing.")
+	q("no")
+}
 
 synapseLogin(username=username, apiKey=apiKey, rememberMe=F)
 
@@ -172,5 +178,6 @@ lastProcessedVersionTableId <- createLastProcessedVersionTable()
 # TODO verify content
 
 synDelete(project)
+message("Deleted project ", outputProjectId)
 
 
