@@ -1,4 +1,4 @@
-# Test for process_tapping_activity
+# Test for process_walking_activity
 # 
 # Author: bhoff
 ###############################################################################
@@ -6,43 +6,46 @@
 library(testthat)
 library(synapseClient)
 
-context("test_unit_process_tapping_activity")
+context("test_unit_process_walking_activity")
 
 testDataFolder<-system.file("testdata", package="mPowerProcessing")
-tDataExpectedFile<-file.path(testDataFolder, "tappingTaskInput.RData")
-
-ids<-c("syn4961463", "syn4961465", "syn4961484")
+wDataExpectedFile<-file.path(testDataFolder, "walkingTaskInput.RData")
+wIds <- c("syn4961452", "syn4961466", "syn4961469")
 
 # This is run once, to create the data used in the test
-createtExpected<-function() {
-	schemaAndQuery<-sapply(ids, function(id) {
+createWExpected<-function() {
+	schemaAndQuery<-sapply(wIds, function(id) {
 				schema<-synGet(id)
 				query<-synTableQuery(paste0("SELECT * FROM ", id, " WHERE appVersion NOT LIKE '%YML%'"))
 				vals <- query@values
+				vals <- prependHealthCodes(vals, "test-")
 				vals <- mPowerProcessing:::permuteMe(vals)
 				query@values <- vals[1:min(nrow(vals), 100), ]
 				c(schema=schema, query=query)
 			})
-	save(schemaAndQuery, file=tDataExpectedFile, ascii=TRUE)
+	save(schemaAndQuery, file=wDataExpectedFile, ascii=TRUE)
+	
 }
 
-#createtExpected()
+if (createTestData()) createWExpected()
 
 # Mock the schema and table content
-expect_true(file.exists(tDataExpectedFile))
-load(tDataExpectedFile)
+expect_true(file.exists(wDataExpectedFile))
+load(wDataExpectedFile)
 
 with_mock(
 		synGet=function(id) {schemaAndQuery["schema", id][[1]]},
 		synTableQuery=function(sql) {schemaAndQuery["query", mPowerProcessing:::getIdFromSql(sql)][[1]]},
 		{
-			tResults<-process_tapping_activity(ids, NA)
-			tDatFilePath<-file.path(testDataFolder, "tDatExpected.RData")
+			wResults<-process_walking_activity(wIds, NA)
+			wDatFilePath<-file.path(testDataFolder, "wDatExpected.RData")
 			# Here's how we created the 'expected' data frame:
-			#expected<-tResults
-			#save(expected, file=tDatFilePath, ascii=TRUE)
-			load(tDatFilePath) # creates 'expected'
-			expect_equal(tResults, expected)
+			if (createTestData()) {
+				expected<-wResults
+				save(expected, file=wDatFilePath, ascii=TRUE)
+			}
+			load(wDatFilePath) # creates 'expected'
+			expect_equal(wResults, expected)
 		}
 )
 

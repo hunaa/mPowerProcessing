@@ -148,18 +148,31 @@ process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputPr
 			
 			store_cleaned_data(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat, wDat, mFilehandleCols, tFilehandleCols, vFilehandleCols)
 			
+			# **** other steps go here ****
+			
+			# Now call the Visualization Data API 
+			#https://sagebionetworks.jira.com/wiki/display/BRIDGE/mPower+Visualization#mPowerVisualization-WritemPowerVisualizationData
+			# place holder
+			content<-list(
+				"healthCode"="test-d9c31718-481f-4d75-b7d8-49154653504a",
+				"date"="2016-03-04",
+				"visualization"=list(
+					"standingPreMedication"=0.8,
+					"standingPostMedication"=0.9,
+					"tappingPreMedication"=0.4,
+					"tappingPostMedication"=0.6,
+					"voicePreMedication"=0.7,
+					"voicePostMedication"=0.8,
+					"walkingPreMedication"=0.5,
+					"walkingPostMedication"=0.8
+				)
+			)
+			bridgeRestPOST("/parkinson/visualization", content)
+
 			# update the last processed version
 			lastProcessedQueryResult@values<-lastProcessedVersion
 			synStore(lastProcessedQueryResult)
 			
-			# Note, we skip feature_selection for now
-			
-			
-			# this returns the json request body to be passed to the API
-			"feature_normalization/normExecute.R"
-			
-			# Now call the Visualization Data API 
-			#https://sagebionetworks.jira.com/wiki/display/BRIDGE/mPower+Visualization#mPowerVisualization-WritemPowerVisualizationData
 			markProcesingComplete(bridgeExportQueryResult, "complete")
 	}, 
 	error=function(e) markProcesingComplete(bridgeExportQueryResult, "failed"))

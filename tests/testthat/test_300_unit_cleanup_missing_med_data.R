@@ -42,8 +42,10 @@ cmm<-cleanup_missing_med_data(mDat, tDat, vDat, wDat)
 
 cmmFilePath<-file.path(testDataFolder, "cmmExpected.RData")
 # Here's how we created the 'expected' data frame:
-#expected<-cmm
-#save(expected, file=cmmFilePath, ascii=TRUE)
+if (createTestData()) {
+	expected<-cmm
+	save(expected, file=cmmFilePath, ascii=TRUE)
+}
 load(cmmFilePath) # creates 'expected'
 expect_equal(cmm, expected)
 
