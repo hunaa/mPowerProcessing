@@ -1,0 +1,10 @@
+{ "answer" : [ "I don't take Parkinson medications" ],
+  "choiceAnswers" : [ "I don't take Parkinson medications" ],
+  "endDate" : "2017-04-27T20:18:16-05:00",
+  "item" : "momentInDayFormat",
+  "questionType" : 2,
+  "questionTypeName" : "SingleChoice",
+  "saveable" : true,
+  "startDate" : "2017-04-27T20:18:16-05:00",
+  "userInfo" : null
+}

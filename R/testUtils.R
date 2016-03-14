@@ -22,3 +22,12 @@ permuteMe <- function(dat){
   }
   return(dat)
 }
+
+getIdFromSql<-function(sql) {
+	sql<-tolower(sql)
+	start<-pracma::strfind(sql, "syn")
+	end<-pracma::strfind(sql, " where")
+	substr(sql, start, end-1)
+}
+
+
