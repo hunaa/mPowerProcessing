@@ -10,13 +10,20 @@ context("test_unit_process_walking_activity")
 
 testDataFolder<-system.file("testdata", package="mPowerProcessing")
 wDataExpectedFile<-file.path(testDataFolder, "walkingTaskInput.RData")
+wIds <- c("syn4961452", "syn4961466", "syn4961469")
 
 # This is run once, to create the data used in the test
 createWExpected<-function() {
-	id<-"syn4961452"
-	schema<-synGet(id)
-	query<-synTableQuery(paste0("SELECT * FROM ", id, " WHERE appVersion NOT LIKE '%YML%' LIMIT 100 OFFSET 500"))
-	save(schema, query, file=wDataExpectedFile, ascii=TRUE)
+	schemaAndQuery<-sapply(wIds, function(id) {
+				schema<-synGet(id)
+				query<-synTableQuery(paste0("SELECT * FROM ", id, " WHERE appVersion NOT LIKE '%YML%'"))
+				vals <- query@values
+				vals <- mPowerProcessing:::permuteMe(vals)
+				query@values <- vals[1:min(nrow(vals), 100), ]
+				c(schema=schema, query=query)
+			})
+	save(schemaAndQuery, file=wDataExpectedFile, ascii=TRUE)
+	
 }
 
 # Mock the schema and table content
@@ -24,10 +31,10 @@ expect_true(file.exists(wDataExpectedFile))
 load(wDataExpectedFile)
 
 with_mock(
-		synGet=function(id) {schema},
-		synTableQuery=function(sql) {query},
+		synGet=function(id) {schemaAndQuery["schema", id][[1]]},
+		synTableQuery=function(sql) {schemaAndQuery["query", mPowerProcessing:::getIdFromSql(sql)][[1]]},
 		{
-			wResults<-process_walking_activity("syn101")
+			wResults<-process_walking_activity(wIds, NA)
 			wDatFilePath<-file.path(testDataFolder, "wDatExpected.RData")
 			# Here's how we created the 'expected' data frame:
 			# expected<-wResults

@@ -6,5 +6,4 @@
 library(testthat)
 library("mPowerProcessing")
 
-#TODO reenable tests by removing filter
-test_check("mPowerProcessing", filter="process_survey_v1")
+test_check("mPowerProcessing")
