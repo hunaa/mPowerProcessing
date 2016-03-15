@@ -27,7 +27,7 @@ checkForAndLockBridgeExportBatch<-function(bridgeStatusId, mPowerBatchStatusId, 
 	latestBridgeUploadDate<-bridgeStatusValues[1,1] # there's only one column in the result
 	
 	mPowerBatchSql<-paste0("select * from ", mPowerBatchStatusId, " where ",
-			bridgeUploadDateColumnName, "=='", latestBridgeUploadDate, "'")
+			bridgeUploadDateColumnName, "='", latestBridgeUploadDate, "'")
 	mPowerBatchStatusQueryResult<-synTableQuery(mPowerBatchSql)
 	mPowerBatchStatusValues<-mPowerBatchStatusQueryResult@values
 	if (nrow(mPowerBatchStatusValues)==0) {
@@ -45,7 +45,7 @@ checkForAndLockBridgeExportBatch<-function(bridgeStatusId, mPowerBatchStatusId, 
 					hostNameColumnName, 
 					batchStatusColumnName)
 		statusTable<-Table(mPowerBatchStatusQueryResult@schema, mPowerBatchStatusValues)
-		mPowerBatchStatusQueryResult<-synStore(statusTable)
+		mPowerBatchStatusQueryResult<-synStore(statusTable, retrieveData=TRUE)
 	} else if (nrow(mPowerBatchStatusValues)==1) {
 		# if there IS a row, we can only process it if leaseTimeOut is specified AND
 		# processing=InProgress AND the start time is too old
@@ -53,7 +53,7 @@ checkForAndLockBridgeExportBatch<-function(bridgeStatusId, mPowerBatchStatusId, 
 				now-mPowerBatchStatusValues[1,mPowerBatchStartColumnName]>leaseTimeOut) {
 			mPowerBatchStatusQueryResult@values[1,mPowerBatchStartColumnName]<-now
 			mPowerBatchStatusQueryResult@values[1,hostNameColumnName]<-hostname
-			mPowerBatchStatusQueryResult<-synStore(mPowerBatchStatusQueryResult)
+			mPowerBatchStatusQueryResult<-synStore(mPowerBatchStatusQueryResult, retrieveData=TRUE)
 		} else {
 			mPowerBatchStatusQueryResult<-NULL
 		}
@@ -75,7 +75,7 @@ getHostname<-function() {
 markProcesingComplete<-function(batchStatusQueryResult, status) {
 	if (nrow(batchStatusQueryResult@values)!=1) stop(paste0("Expected one row but found ", nrow(batchStatusQueryResult@values)))
 	batchStatusQueryResult@values[1, batchStatusColumnName]<-status
-	synStore(batchStatusQueryResult)
+	synStore(batchStatusQueryResult, retrieveData=TRUE)
 }
 
 getLastProcessedVersion<-function(df) {
@@ -96,7 +96,7 @@ process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputPr
 	# check if Bridge is done.  If not, exit
 	hostname<-getHostname()
 	leaseTimeout<-as.difftime("06:00:00") # not used at this time
-	bridgeExportQueryResult<-checkForAndLockBridgeExportBatch(bridgeStatusId, mPowerBatchStatusId, Sys.time(), hostname) # no lease timeout given
+	bridgeExportQueryResult<-checkForAndLockBridgeExportBatch(bridgeStatusId, mPowerBatchStatusId, hostname, Sys.time()) # no lease timeout given
 	if (is.null(bridgeExportQueryResult) || nrow(bridgeExportQueryResult@values)==0) return(NULL)
 	
 	tryCatch({
@@ -148,18 +148,31 @@ process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputPr
 			
 			store_cleaned_data(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat, wDat, mFilehandleCols, tFilehandleCols, vFilehandleCols)
 			
+			# **** other steps go here ****
+			
+			# Now call the Visualization Data API 
+			#https://sagebionetworks.jira.com/wiki/display/BRIDGE/mPower+Visualization#mPowerVisualization-WritemPowerVisualizationData
+			# place holder
+			content<-list(
+				"healthCode"="test-d9c31718-481f-4d75-b7d8-49154653504a",
+				"date"="2016-03-04",
+				"visualization"=list(
+					"standingPreMedication"=0.8,
+					"standingPostMedication"=0.9,
+					"tappingPreMedication"=0.4,
+					"tappingPostMedication"=0.6,
+					"voicePreMedication"=0.7,
+					"voicePostMedication"=0.8,
+					"walkingPreMedication"=0.5,
+					"walkingPostMedication"=0.8
+				)
+			)
+			bridgeRestPOST("/parkinson/visualization", content)
+
 			# update the last processed version
 			lastProcessedQueryResult@values<-lastProcessedVersion
 			synStore(lastProcessedQueryResult)
 			
-			# Note, we skip feature_selection for now
-			
-			
-			# this returns the json request body to be passed to the API
-			"feature_normalization/normExecute.R"
-			
-			# Now call the Visualization Data API 
-			#https://sagebionetworks.jira.com/wiki/display/BRIDGE/mPower+Visualization#mPowerVisualization-WritemPowerVisualizationData
 			markProcesingComplete(bridgeExportQueryResult, "complete")
 	}, 
 	error=function(e) markProcesingComplete(bridgeExportQueryResult, "failed"))

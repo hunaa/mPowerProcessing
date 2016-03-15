@@ -3,11 +3,7 @@
 # Author: bhoff
 ###############################################################################
 
-# TODO we should probably remove this file altogether and 
-# TODO instead put production IDs, log-in info, etc. on the 
-# TODO server which runs the script
-# 
-# TODO make sure to be 'logged in' to Synapse as Bridge exporter
+# make sure to be 'logged in' to Synapse as Bridge exporter
 #
 main<-function() {
 	eId <- c("syn3474927")
@@ -20,7 +16,9 @@ main<-function() {
 	wId <- c("syn3809915", "syn3809914", "syn3420243")
 	outputProjectId <- "syn5761747" ## TEST PROJECT
 	lastProcessedVersionTableId <- "syn5706434" ## MOVED INTO TEST PROJECT
-	
+	bridgeStatusId <- "syn5720756"
+	mPowerBatchStatusId <- "TBD"
+
 	synapseClient::synapseLogin()
 	
 	process_mpower_data(eId, uId, pId, mId, tId, vId1, vId2, wId, outputProjectId, 

@@ -17,10 +17,13 @@ createV2Expected<-function() {
 	schema<-synGet(id)
 	query<-synTableQuery(paste0("SELECT * FROM ", id, " WHERE appVersion NOT LIKE '%YML%'"))
 	vals <- query@values
-	vals <- mPowerProcessing:::permuteMe(vals)
+	vals <- prependHealthCodes(vals, "test-")
+	vals <- permuteMe(vals)
 	query@values <- vals[1:min(nrow(vals), 100), ]
 	save(schema, query, file=v2DataExpectedFile, ascii=TRUE)
 }
+
+if (createTestData()) createV2Expected()
 
 # Mock the schema and table content
 expect_true(file.exists(v2DataExpectedFile))
@@ -33,8 +36,10 @@ with_mock(
 			uDat<-process_survey_v2("syn101")
 			uDatFilePath<-file.path(testDataFolder, "uDatExpected.RData")
 			# Here's how we created the 'expected' data frame:
-			#expected<-uDat
-			#save(expected, file=uDatFilePath, ascii=TRUE)
+			if (createTestData()) {
+				expected<-uDat
+				save(expected, file=uDatFilePath, ascii=TRUE)
+			}
 			load(uDatFilePath) # creates 'expected'
 			expect_equal(uDat, expected)
 		}
