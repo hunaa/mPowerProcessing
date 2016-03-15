@@ -31,7 +31,7 @@ GetControlFeatureSummaryStats <- function(dat, controlIds, featName){
 #' @param reverse
 #'
 #' @return a list of fdat, controlMean, controlUpper and controlLower where
-#'         fdat is a data.frame with columns "medTimepoint", "createdOn",
+#'         fdat is a data.frame with columns "medTimepoint", "date",
 #'         and featName, with the feature column normalized to fall between
 #'         0 and 1.
 NormalizeFeature <- function(dat,
@@ -45,7 +45,7 @@ NormalizeFeature <- function(dat,
   patientAge <- demo$age[match(patientId, demo$healthCode)]
   controlIds <- GetAgeMatchedControlIds(patientAge, ageInterval, demo)  
   controlStats <- GetControlFeatureSummaryStats(dat, controlIds, featName)
-  fdat <- dat[dat$healthCode %in% patientId, c("medTimepoint", "createdOn", featName)]
+  fdat <- dat[dat$healthCode %in% patientId, c("medTimepoint", "date", featName)]
   z <- (fdat[, featName] - controlStats$mean)/controlStats$sd 
   alpha <- (1 - floorCeilingRange)/2
   q <- quantile(c(z, -standardDeviations, standardDeviations), c(alpha, 1 - alpha))  
