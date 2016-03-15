@@ -15,14 +15,14 @@ with_mock(
 			if (sql=="select uploadDate from syn101 ORDER BY uploadDate DESC LIMIT 1 OFFSET 0") {
 				df<-data.frame(uploadDate=latestBridgeUploadDate, stringsAsFactors=FALSE)
 				Table("syn101", df)
-			} else if (sql==paste0("select * from syn202 where bridgeUploadDate=='", latestBridgeUploadDate, "'")) {
+			} else if (sql==paste0("select * from syn202 where bridgeUploadDate='", latestBridgeUploadDate, "'")) {
 				df<-data.frame() # empty
 				Table("syn202", df)
 			} else {
-				stop(paste0("Unexpected query: ", sql))
+				stop(paste0("Unexpected query: <", sql, ">"))
 			}
 		},
-		synStore=function(table) {table},
+		synStore=function(table, retrieveData=F) {table},
 		{
 			bridgeStatusId<-"syn101"
 			mPowerBatchStatusId<-"syn202"
@@ -45,11 +45,14 @@ with_mock(
 			if (sql=="select uploadDate from syn101 ORDER BY uploadDate DESC LIMIT 1 OFFSET 0") {
 				df<-data.frame() # empty
 				Table("syn101", df)
+			} else if (sql=="select * from syn202 where bridgeUploadDate='2016-03-21'") {
+				df<-data.frame() # empty
+				Table("syn202", df)
 			} else {
-				stop(paste0("Unexpected query: ", sql))
+				stop(paste0("Unexpected query: <", sql, ">"))
 			}
 		},
-		synStore=function(table) {table},
+		synStore=function(table, retrieveData=F) {table},
 		{
 			bridgeStatusId<-"syn101"
 			mPowerBatchStatusId<-"syn202"
@@ -67,7 +70,7 @@ with_mock(
 			if (sql=="select uploadDate from syn101 ORDER BY uploadDate DESC LIMIT 1 OFFSET 0") {
 				df<-data.frame(uploadDate=latestBridgeUploadDate, stringsAsFactors=FALSE)
 				Table("syn101", df)
-			} else if (sql==paste0("select * from syn202 where bridgeUploadDate=='", latestBridgeUploadDate, "'")) {
+			} else if (sql==paste0("select * from syn202 where bridgeUploadDate='", latestBridgeUploadDate, "'")) {
 				df<-data.frame(
 						bridgeUploadDate="2016-03-21", 
 						mPowerBatchStart=now, 
@@ -78,7 +81,7 @@ with_mock(
 				stop(paste0("Unexpected query: ", sql))
 			}
 		},
-		synStore=function(table) {table},
+		synStore=function(table, retrieveData=F) {table},
 		{
 			bridgeStatusId<-"syn101"
 			mPowerBatchStatusId<-"syn202"
@@ -96,7 +99,7 @@ with_mock(
 			if (sql=="select uploadDate from syn101 ORDER BY uploadDate DESC LIMIT 1 OFFSET 0") {
 				df<-data.frame(uploadDate=latestBridgeUploadDate, stringsAsFactors=FALSE)
 				Table("syn101", df)
-			} else if (sql==paste0("select * from syn202 where bridgeUploadDate=='", latestBridgeUploadDate, "'")) {
+			} else if (sql==paste0("select * from syn202 where bridgeUploadDate='", latestBridgeUploadDate, "'")) {
 				df<-data.frame(
 						bridgeUploadDate="2016-03-21", 
 						mPowerBatchStart=now, 
@@ -107,7 +110,7 @@ with_mock(
 				stop(paste0("Unexpected query: ", sql))
 			}
 		},
-		synStore=function(table) {table},
+		synStore=function(table, retrieveData=F) {table},
 		{
 			bridgeStatusId<-"syn101"
 			mPowerBatchStatusId<-"syn202"
@@ -125,7 +128,7 @@ with_mock(
 			if (sql=="select uploadDate from syn101 ORDER BY uploadDate DESC LIMIT 1 OFFSET 0") {
 				df<-data.frame(uploadDate=latestBridgeUploadDate, stringsAsFactors=FALSE)
 				Table("syn101", df)
-			} else if (sql==paste0("select * from syn202 where bridgeUploadDate=='", latestBridgeUploadDate, "'")) {
+			} else if (sql==paste0("select * from syn202 where bridgeUploadDate='", latestBridgeUploadDate, "'")) {
 				df<-data.frame(
 						bridgeUploadDate="2016-03-21", 
 						mPowerBatchStart=now-10, # stated 10 seconds ago 
@@ -136,7 +139,7 @@ with_mock(
 				stop(paste0("Unexpected query: ", sql))
 			}
 		},
-		synStore=function(table) {table},
+		synStore=function(table, retrieveData=F) {table},
 		{
 			bridgeStatusId<-"syn101"
 			mPowerBatchStatusId<-"syn202"
@@ -155,7 +158,7 @@ with_mock(
 			if (sql=="select uploadDate from syn101 ORDER BY uploadDate DESC LIMIT 1 OFFSET 0") {
 				df<-data.frame(uploadDate=latestBridgeUploadDate, stringsAsFactors=FALSE)
 				Table("syn101", df)
-			} else if (sql==paste0("select * from syn202 where bridgeUploadDate=='", latestBridgeUploadDate, "'")) {
+			} else if (sql==paste0("select * from syn202 where bridgeUploadDate='", latestBridgeUploadDate, "'")) {
 				df<-data.frame(
 						bridgeUploadDate="2016-03-21", 
 						mPowerBatchStart=now-as.difftime("07:00:00"), # stated 10 seconds ago 
@@ -167,7 +170,7 @@ with_mock(
 				stop(paste0("Unexpected query: ", sql))
 			}
 		},
-		synStore=function(table) {table},
+		synStore=function(table, retrieveData=F) {table},
 		{
 			bridgeStatusId<-"syn101"
 			mPowerBatchStatusId<-"syn202"
@@ -187,7 +190,7 @@ with_mock(
 
 # test markProcesingComplete
 with_mock(
-		synStore=function(table) {table},
+		synStore=function(table, retrieveData=F) {table},
 		{
 			mPowerBatchStatusId<-"syn202"
 			now<-Sys.time()
