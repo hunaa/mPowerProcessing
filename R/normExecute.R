@@ -51,7 +51,9 @@ getVisData <- function(participantId, featureNames, featureTables, windowStart, 
   })
   names(norms) <- activityTypes
 
-  norms <- lapply(norms, function(x){
+  # Return a list of data.frames, one per activity, with columns "data",
+  # "pre" and "post"
+  norms <- lapply(norms, function(x) {
     tmp <- x$fdat
     tmp$createdOn <- as.Date(tmp$createdOn)
     tmp <- tmp[ tmp$createdOn >= windowStart & tmp$createdOn <= windowEnd, ]
@@ -63,14 +65,14 @@ getVisData <- function(participantId, featureNames, featureTables, windowStart, 
     post$medTimepoint <- NULL
     names(post) <- c("date", "post")
     df <- data.frame(date=seq(windowStart, windowEnd, by="day"), 
-                     stringsAsFactors = FALSE)
+                     stringsAsFactors=FALSE)
     df <- merge(df, post, all=TRUE)
     df <- merge(df, pre, all=TRUE)
     rownames(df) <- df$date
     x$fdat <- df
     return(x)
   })
-  
+
   towardJSON <- lapply(as.list(seq(windowStart, windowEnd, by="day")), function(thisDate){
     res <- list(list(
       tap=list(
@@ -100,7 +102,7 @@ getVisData <- function(participantId, featureNames, featureTables, windowStart, 
     names(res) <- thisDate
     return(res)
   })
-  
+
   ## INSERT CODE TO CALL BRIDGE APIS WHERE APPROPRIATE
   return(toJSON(towardJSON))
 }
@@ -129,11 +131,20 @@ testNormalization <- function() {
 
   featureTables <- fetchActivityFeatureTables(tables, features)
   featureNames <- list(balance='rangeAA', gait='medianZ', tap='numberTaps', voice='shimmerLocaldB_sma3nz_amean')
-  exampleParticipantId <- "6c130d05-41af-49e9-9212-aaae738d3ec1"
+  participantId <- "6c130d05-41af-49e9-9212-aaae738d3ec1"
   windowEnd <- as.Date("2015-05-01")
   windowStart <- windowEnd-29
 
-  visData <- getVisData(exampleParticipantId, featureNames, featureTables, windowStart, windowEnd)
+  visData <- getVisData(participantId, featureNames, featureTables, windowStart, windowEnd)
   return(visData)
 }
+
+
+cases <- na.omit(demo$healthCode[demo$`professional-diagnosis`])
+normalizedFeatures <- lapply(cases, function(participantId) {
+  cat(participantId, "\n")
+  try(getVisData(participantId, featureNames, featureTables, windowStart, windowEnd))
+})
+
+
 

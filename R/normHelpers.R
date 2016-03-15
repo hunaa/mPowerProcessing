@@ -19,6 +19,21 @@ GetControlFeatureSummaryStats <- function(dat, controlIds, featName){
   return(res)
 }
 
+#' Normalize feature data relative to an age matched control.
+#'
+#' @param dat data.frame of feature data for an activity
+#' @param patientId patient's healthCode
+#' @param featName name of feature column
+#' @param demo data.frame holding demographic data
+#' @param ageInterval age interval of controls
+#' @param floorCeilingRange
+#' @param standardDeviations
+#' @param reverse
+#'
+#' @return a list of fdat, controlMean, controlUpper and controlLower where
+#'         fdat is a data.frame with columns "medTimepoint", "createdOn",
+#'         and featName, with the feature column normalized to fall between
+#'         0 and 1.
 NormalizeFeature <- function(dat,
                              patientId,
                              featName,
