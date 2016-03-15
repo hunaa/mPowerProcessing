@@ -27,7 +27,7 @@ checkForAndLockBridgeExportBatch<-function(bridgeStatusId, mPowerBatchStatusId, 
 	latestBridgeUploadDate<-bridgeStatusValues[1,1] # there's only one column in the result
 	
 	mPowerBatchSql<-paste0("select * from ", mPowerBatchStatusId, " where ",
-			bridgeUploadDateColumnName, "=='", latestBridgeUploadDate, "'")
+			bridgeUploadDateColumnName, "='", latestBridgeUploadDate, "'")
 	mPowerBatchStatusQueryResult<-synTableQuery(mPowerBatchSql)
 	mPowerBatchStatusValues<-mPowerBatchStatusQueryResult@values
 	if (nrow(mPowerBatchStatusValues)==0) {
@@ -45,7 +45,7 @@ checkForAndLockBridgeExportBatch<-function(bridgeStatusId, mPowerBatchStatusId, 
 					hostNameColumnName, 
 					batchStatusColumnName)
 		statusTable<-Table(mPowerBatchStatusQueryResult@schema, mPowerBatchStatusValues)
-		mPowerBatchStatusQueryResult<-synStore(statusTable)
+		mPowerBatchStatusQueryResult<-synStore(statusTable, retrieveData=TRUE)
 	} else if (nrow(mPowerBatchStatusValues)==1) {
 		# if there IS a row, we can only process it if leaseTimeOut is specified AND
 		# processing=InProgress AND the start time is too old
@@ -53,7 +53,7 @@ checkForAndLockBridgeExportBatch<-function(bridgeStatusId, mPowerBatchStatusId, 
 				now-mPowerBatchStatusValues[1,mPowerBatchStartColumnName]>leaseTimeOut) {
 			mPowerBatchStatusQueryResult@values[1,mPowerBatchStartColumnName]<-now
 			mPowerBatchStatusQueryResult@values[1,hostNameColumnName]<-hostname
-			mPowerBatchStatusQueryResult<-synStore(mPowerBatchStatusQueryResult)
+			mPowerBatchStatusQueryResult<-synStore(mPowerBatchStatusQueryResult, retrieveData=TRUE)
 		} else {
 			mPowerBatchStatusQueryResult<-NULL
 		}
@@ -75,7 +75,7 @@ getHostname<-function() {
 markProcesingComplete<-function(batchStatusQueryResult, status) {
 	if (nrow(batchStatusQueryResult@values)!=1) stop(paste0("Expected one row but found ", nrow(batchStatusQueryResult@values)))
 	batchStatusQueryResult@values[1, batchStatusColumnName]<-status
-	synStore(batchStatusQueryResult)
+	synStore(batchStatusQueryResult, retrieveData=TRUE)
 }
 
 getLastProcessedVersion<-function(df) {
@@ -96,7 +96,7 @@ process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputPr
 	# check if Bridge is done.  If not, exit
 	hostname<-getHostname()
 	leaseTimeout<-as.difftime("06:00:00") # not used at this time
-	bridgeExportQueryResult<-checkForAndLockBridgeExportBatch(bridgeStatusId, mPowerBatchStatusId, Sys.time(), hostname) # no lease timeout given
+	bridgeExportQueryResult<-checkForAndLockBridgeExportBatch(bridgeStatusId, mPowerBatchStatusId, hostname, Sys.time()) # no lease timeout given
 	if (is.null(bridgeExportQueryResult) || nrow(bridgeExportQueryResult@values)==0) return(NULL)
 	
 	tryCatch({

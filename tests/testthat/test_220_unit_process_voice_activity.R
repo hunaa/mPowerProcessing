@@ -17,24 +17,21 @@ vId2 <- c("syn4961456")
 
 # This is run once, to create the data used in the test
 createVoiceExpected<-function() {
-	cumFileContent<-NULL
-	cumVFiles<-NULL
+	mockFiles<-mockFileAttachments(system.file("testdata/moment-in-day-json", package="mPowerProcessing"), readJson=T)
+	vFiles<-mockFiles$mockFiles
+	fileContent<-mockFiles$fileContent
 	
 	schemaAndQuery<-sapply(vId1, function(id) {
 				schema<-synGet(id)
 				query<-synTableQuery(paste0("SELECT * FROM ", id, " WHERE appVersion NOT LIKE '%YML%'"))
 				vals <- query@values
 				vals <- prependHealthCodes(vals, "test-")
-				vals <- mPowerProcessing:::permuteMe(vals)
+				vals <- permuteMe(vals)
 				query@values <- vals[1:min(nrow(vals), 100), ]
-				
-				vFiles <- list.files(system.file("testdata/moment-in-day-json", package="mPowerProcessing"), full.names = TRUE)
-				vFiles <- sample(vFiles, size = sum(!is.na(query@values$`momentInDayFormat.json`)), replace = TRUE)
-				names(vFiles)<-query@values$`momentInDayFormat.json`[which(!is.na(query@values$`momentInDayFormat.json`))]
-				fileContent <- sapply(vFiles, read_json_from_file)
-				cumFileContent<<-append(cumFileContent, fileContent)
-				cumVFiles<-append(cumVFiles, vFiles)
-				list(schema=schema, query=query, vFiles=vFiles)
+				# Now update the file Handle IDs in the data frame to match the fake ones
+				query@values$`momentInDayFormat.json`[which(!is.na(query@values$`momentInDayFormat.json`))]<-
+						sample(names(vFiles), size=length(which(!is.na(query@values$`momentInDayFormat.json`))), replace=T)
+				list(schema=schema, query=query)
 			})
 	
 	schema2<-synGet(vId2)
@@ -43,7 +40,7 @@ createVoiceExpected<-function() {
 	vals <- mPowerProcessing:::permuteMe(vals)
 	query2@values <- vals[1:min(nrow(vals), 100), ]
 	
-	save(schemaAndQuery, schema2, query2, cumFileContent, cumVFiles, file=voiceDataExpectedFile, ascii=TRUE)
+	save(schemaAndQuery, schema2, query2, fileContent, vFiles, file=voiceDataExpectedFile, ascii=TRUE)
 }
 
 if (createTestData()) createVoiceExpected()
@@ -68,13 +65,12 @@ with_mock(
 			}
 		},
 		read_json_from_file=function(file) {# file is a file path with fileHandleId as name
-			result<-cumFileContent[file] # this gets the file content.  The name is the file path
+			result<-fileContent[file] # this gets the file content.  The name is the file path
 			names(result)<-names(file) # result must map fileHandleId to file content
 			result
 		},
 		synDownloadTableColumns=function(synTable, tableColumns) {
-			id<-synTable@schema
-			schemaAndQuery["vFiles", id][[1]]
+			vFiles
 		},
 		
 		{

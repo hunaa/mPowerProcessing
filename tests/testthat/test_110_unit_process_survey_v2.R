@@ -18,7 +18,7 @@ createV2Expected<-function() {
 	query<-synTableQuery(paste0("SELECT * FROM ", id, " WHERE appVersion NOT LIKE '%YML%'"))
 	vals <- query@values
 	vals <- prependHealthCodes(vals, "test-")
-	vals <- mPowerProcessing:::permuteMe(vals)
+	vals <- permuteMe(vals)
 	query@values <- vals[1:min(nrow(vals), 100), ]
 	save(schema, query, file=v2DataExpectedFile, ascii=TRUE)
 }

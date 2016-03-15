@@ -3,11 +3,7 @@
 # Author: bhoff
 ###############################################################################
 
-# TODO we should probably remove this file altogether and 
-# TODO instead put production IDs, log-in info, etc. on the 
-# TODO server which runs the script
-# 
-# TODO make sure to be 'logged in' to Synapse as Bridge exporter
+# make sure to be 'logged in' to Synapse as Bridge exporter
 #
 main<-function() {
 	eId <- c("syn4961453")
