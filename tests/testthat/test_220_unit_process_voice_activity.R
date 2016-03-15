@@ -17,7 +17,7 @@ vId2 <- c("syn4961456")
 
 # This is run once, to create the data used in the test
 createVoiceExpected<-function() {
-	mockFiles<-mockFileAttachments(system.file("testdata/moment-in-day-json", package="mPowerProcessing"), readJson=T)
+	mockFiles<-mockFileAttachments(system.file("testdata/moment-in-day-json", package="mPowerProcessing"))
 	vFiles<-mockFiles$mockFiles
 	fileContent<-mockFiles$fileContent
 	
@@ -65,7 +65,7 @@ with_mock(
 			}
 		},
 		read_json_from_file=function(file) {# file is a file path with fileHandleId as name
-			result<-fileContent[file] # this gets the file content.  The name is the file path
+			result<-fromJSON(fileContent[file]) # this gets the file content.  The name is the file path
 			names(result)<-names(file) # result must map fileHandleId to file content
 			result
 		},

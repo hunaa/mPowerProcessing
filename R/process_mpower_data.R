@@ -99,26 +99,29 @@ process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputPr
 	bridgeExportQueryResult<-checkForAndLockBridgeExportBatch(bridgeStatusId, mPowerBatchStatusId, hostname, Sys.time()) # no lease timeout given
 	if (is.null(bridgeExportQueryResult) || nrow(bridgeExportQueryResult@values)==0) return(NULL)
 	
-	tryCatch({
+#	tryCatch({
 			lastProcessedQueryResult<-synTableQuery(paste0("SELECT * FROM ", lastProcessedVersionTableId))
 			lastProcessedVersion<-getLastProcessedVersion(lastProcessedQueryResult@values)
 			
 			######
 			# Data Cleaning
 			######
-			eDat<-process_survey_v1(eId, lastProcessedVersion[eId])
-			lastProcessedVersion[eId]<-getMaxRowVersion(eDat)
+			eDatResult<-process_survey_v1(eId, lastProcessedVersion[eId])
+			eDat<-eDatResult$eDat
+			lastProcessedVersion[eId]<-eDatResult$maxRowVersion
 			
-			uDat<-process_survey_v2(uId, lastProcessedVersion[uId])
-			lastProcessedVersion[uId]<-getMaxRowVersion(uDat)
+			uDatResult<-process_survey_v2(uId, lastProcessedVersion[uId])
+			uDat<-uDatResult$uDat
+			lastProcessedVersion[uId]<-uDatResult$maxRowVersion
 			
-			pDat<-process_survey_v3(pId, lastProcessedVersion[pId])
-			lastProcessedVersion[pId]<-getMaxRowVersion(pDat)
+			pDatResult<-process_survey_v3(pId, lastProcessedVersion[pId])
+			pDat<-pDatResult$pDat
+			lastProcessedVersion[pId]<-pDatResult$maxRowVersion
 			
 			mResults<-process_memory_activity(mId, lastProcessedVersion[mId])
 			mDat<-mResults$mDat
 			mFilehandleCols<-mResults$mFilehandleCols
-			lastProcessedVersion[mId]<-getMaxRowVersion(mDat)
+			lastProcessedVersion[mId]<-mResults$maxRowVersion
 			
 			tResults<-process_tapping_activity(tId, lastProcessedVersion[tId])
 			tDat<-tResults$tDat
@@ -174,6 +177,6 @@ process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputPr
 			synStore(lastProcessedQueryResult)
 			
 			markProcesingComplete(bridgeExportQueryResult, "complete")
-	}, 
-	error=function(e) markProcesingComplete(bridgeExportQueryResult, "failed"))
+#	}, 
+#	error=function(e) markProcesingComplete(bridgeExportQueryResult, "failed"))
 }

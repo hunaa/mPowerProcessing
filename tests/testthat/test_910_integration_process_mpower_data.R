@@ -46,6 +46,10 @@ project<-synStore(project)
 outputProjectId<-propertyValue(project, "id")
 message("...done.  Project ID is ", outputProjectId)
 
+message("Creating output tables...")
+createOutputTables(outputProjectId)
+message("...done.")
+
 ## create and populate the source tables
 testDataFolder<-system.file("testdata", package="mPowerProcessing")
 
