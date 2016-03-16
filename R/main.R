@@ -6,19 +6,19 @@
 # make sure to be 'logged in' to Synapse as Bridge exporter
 #
 main<-function() {
-	eId <- c("syn4961453")
-	uId <- c("syn4961480")
-	pId <- c("syn4961472")
-	mId <- c("syn4961459")
-	tId <- c("syn4961463", "syn4961465", "syn4961484")
-	vId1 <- c("syn4961455", "syn4961457", "syn4961464")
-	vId2 <- c("syn4961456")
-	wId <- c("syn4961452", "syn4961466", "syn4961469")
-	outputProjectId <- "syn4993293"
-	lastProcessedVersionTableId <- "syn5706434"
+	eId <- c("syn3474927")
+	uId <- c("syn3420500")
+	pId <- c("syn3420263")
+	mId <- c("syn4216473")
+	tId <- c("syn3420272", "syn3809916", "syn3809917")
+	vId1 <- c("syn3420254") ## ACTUALLY ONLY ONE HERE INSTEAD OF THREE
+	vId2 <- c("syn4601589")
+	wId <- c("syn3809915", "syn3809914", "syn3420243")
+	outputProjectId <- "syn5761747" ## TEST PROJECT
+	lastProcessedVersionTableId <- "syn5706434" ## MOVED INTO TEST PROJECT
 	bridgeStatusId <- "syn5720756"
 	mPowerBatchStatusId <- "TBD"
-	
+
 	synapseClient::synapseLogin()
 	
 	process_mpower_data(eId, uId, pId, mId, tId, vId1, vId2, wId, outputProjectId, 
