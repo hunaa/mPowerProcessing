@@ -17,7 +17,7 @@ vId2 <- c("syn4961456")
 
 # This is run once, to create the data used in the test
 createVoiceExpected<-function() {
-	mockFiles<-mockFileAttachments(system.file("testdata/moment-in-day-json", package="mPowerProcessing"), readJson=T)
+	mockFiles<-mockFileAttachments(system.file("testdata/moment-in-day-json", package="mPowerProcessing"))
 	vFiles<-mockFiles$mockFiles
 	fileContent<-mockFiles$fileContent
 	
@@ -25,8 +25,8 @@ createVoiceExpected<-function() {
 				schema<-synGet(id)
 				query<-synTableQuery(paste0("SELECT * FROM ", id, " WHERE appVersion NOT LIKE '%YML%'"))
 				vals <- query@values
-				vals <- prependHealthCodes(vals, "test-")
 				vals <- permuteMe(vals)
+				vals <- prependHealthCodes(vals, "test-")
 				query@values <- vals[1:min(nrow(vals), 100), ]
 				# Now update the file Handle IDs in the data frame to match the fake ones
 				query@values$`momentInDayFormat.json`[which(!is.na(query@values$`momentInDayFormat.json`))]<-
@@ -65,7 +65,7 @@ with_mock(
 			}
 		},
 		read_json_from_file=function(file) {# file is a file path with fileHandleId as name
-			result<-fileContent[file] # this gets the file content.  The name is the file path
+			result<-fromJSON(fileContent[file]) # this gets the file content.  The name is the file path
 			names(result)<-names(file) # result must map fileHandleId to file content
 			result
 		},

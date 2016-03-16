@@ -84,6 +84,12 @@ getLastProcessedVersion<-function(df) {
   lastProcessedVersion
 }
 
+lastProcessVersionToDF<-function(lastProcessedVersion) {
+	result<-data.frame(TABLE_ID=names(lastProcessedVersion), LAST_VERSION=lastProcessedVersion, stringsAsFactors=F)
+	row.names(result)<-NULL
+	result
+}
+
 # given a data frame having row values named according to the Synapse table convention
 # find the maximum value
 getMaxRowVersion<-function(df) {
@@ -106,19 +112,22 @@ process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputPr
 			######
 			# Data Cleaning
 			######
-			eDat<-process_survey_v1(eId, lastProcessedVersion[eId])
-			lastProcessedVersion[eId]<-getMaxRowVersion(eDat)
+			eDatResult<-process_survey_v1(eId, lastProcessedVersion[eId])
+			eDat<-eDatResult$eDat
+			lastProcessedVersion[eId]<-eDatResult$maxRowVersion
 			
-			uDat<-process_survey_v2(uId, lastProcessedVersion[uId])
-			lastProcessedVersion[uId]<-getMaxRowVersion(uDat)
+			uDatResult<-process_survey_v2(uId, lastProcessedVersion[uId])
+			uDat<-uDatResult$uDat
+			lastProcessedVersion[uId]<-uDatResult$maxRowVersion
 			
-			pDat<-process_survey_v3(pId, lastProcessedVersion[pId])
-			lastProcessedVersion[pId]<-getMaxRowVersion(pDat)
+			pDatResult<-process_survey_v3(pId, lastProcessedVersion[pId])
+			pDat<-pDatResult$pDat
+			lastProcessedVersion[pId]<-pDatResult$maxRowVersion
 			
 			mResults<-process_memory_activity(mId, lastProcessedVersion[mId])
 			mDat<-mResults$mDat
 			mFilehandleCols<-mResults$mFilehandleCols
-			lastProcessedVersion[mId]<-getMaxRowVersion(mDat)
+			lastProcessedVersion[mId]<-mResults$maxRowVersion
 			
 			tResults<-process_tapping_activity(tId, lastProcessedVersion[tId])
 			tDat<-tResults$tDat
@@ -166,11 +175,14 @@ process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputPr
 					"walkingPreMedication"=0.5,
 					"walkingPostMedication"=0.8
 				)
-			)
-			bridgeRestPOST("/parkinson/visualization", content)
+			)			
+			url <- bridger:::uriToUrl("/parkinson/visualization", bridger:::.getBridgeCache("bridgeEndpoint"))
+			response<-getURL(url, postfields=toJSON(content), customrequest="POST", 
+					.opts=bridger:::.getBridgeCache("opts"), httpheader=bridger:::.getBridgeCache("httpheader"))
+			# response is "Visualization created."
 
 			# update the last processed version
-			lastProcessedQueryResult@values<-lastProcessedVersion
+			lastProcessedQueryResult@values<-lastProcessVersionToDF(lastProcessedVersion)
 			synStore(lastProcessedQueryResult)
 			
 			markProcesingComplete(bridgeExportQueryResult, "complete")

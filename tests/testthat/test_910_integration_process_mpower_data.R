@@ -11,6 +11,7 @@ context("test_integration_process_mpower_data")
 
 library(synapseClient)
 library(bridger)
+library(RCurl)
 
 username<-Sys.getenv("SYNAPSE_USERNAME")
 if (nchar(username)==0) {
@@ -45,6 +46,10 @@ project<-Project()
 project<-synStore(project)
 outputProjectId<-propertyValue(project, "id")
 message("...done.  Project ID is ", outputProjectId)
+
+message("Creating output tables...")
+createOutputTables(outputProjectId)
+message("...done.")
 
 ## create and populate the source tables
 testDataFolder<-system.file("testdata", package="mPowerProcessing")
