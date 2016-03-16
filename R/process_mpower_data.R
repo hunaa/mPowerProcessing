@@ -112,55 +112,80 @@ process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputPr
 			######
 			# Data Cleaning
 			######
+			cat("Processing survey v1...\n")
 			eDatResult<-process_survey_v1(eId, lastProcessedVersion[eId])
 			eDat<-eDatResult$eDat
 			lastProcessedVersion[eId]<-eDatResult$maxRowVersion
+			cat("... done.  # rows: ", nrow(eDat), ", max row version: ", eDatResult$maxRowVersion, "\n")
 			
+			cat("Processing survey v2...\n")
 			uDatResult<-process_survey_v2(uId, lastProcessedVersion[uId])
 			uDat<-uDatResult$uDat
 			lastProcessedVersion[uId]<-uDatResult$maxRowVersion
+			cat("... done.  # rows: ", nrow(uDat), ", max row version: ", uDatResult$maxRowVersion, "\n")
 			
+			cat("Processing survey v3...\n")
 			pDatResult<-process_survey_v3(pId, lastProcessedVersion[pId])
 			pDat<-pDatResult$pDat
 			lastProcessedVersion[pId]<-pDatResult$maxRowVersion
+			cat("... done.  # rows: ", nrow(pDat), ", max row version: ", pDatResult$maxRowVersion, "\n")
 			
+			cat("Processing memory activity...\n")
 			mResults<-process_memory_activity(mId, lastProcessedVersion[mId])
 			mDat<-mResults$mDat
 			mFilehandleCols<-mResults$mFilehandleCols
 			lastProcessedVersion[mId]<-mResults$maxRowVersion
+			cat("... done.  # rows: ", nrow(mDat), ", max row version: ", mResults$maxRowVersion, "\n")
 			
+			cat("Processing tapping activity...\n")
 			tResults<-process_tapping_activity(tId, lastProcessedVersion[tId])
 			tDat<-tResults$tDat
 			tFilehandleCols<-tResults$tFilehandleCols
+			cat("... done.  # rows: ", nrow(tDat))
 			for (id in names(tResults$maxRowProcessed)) {
 				lastProcessedVersion[id]<-tResults$maxRowProcessed[[id]]
+				cat(", max row version for ", id, ": ", tResults$maxRowProcessed[[id]])
 			}
+			cat("\n")
 			
+			cat("Processing voice activity...\n")
 			vResults<-process_voice_activity(vId1, vId2, lastProcessedVersion[vId1], lastProcessedVersion[vId2])
 			vDat<-vResults$vDat
 			vFilehandleCols<-vResults$vFilehandleCols
+			cat("... done.  # rows: ", nrow(vDat))
 			for (id in names(vResults$maxRowProcessed)) {
 				lastProcessedVersion[id]<-vResults$maxRowProcessed[[id]]
+				cat(", max row version for ", id, ": ", vResults$maxRowProcessed[[id]])
 			}
+			cat("\n")
 			
+			cat("Processing walking activity...\n")
 			wResults<-process_walking_activity(wId, lastProcessedVersion[wId])
 			wDat<-wResults$wDat
+			cat("... done.  # rows: ", nrow(wDat))
 			for (id in names(wResults$maxRowProcessed)) {
 				lastProcessedVersion[id]<-wResults$maxRowProcessed[[id]]
+				cat(", max row version for ", id, ": ", wResults$maxRowProcessed[[id]])
 			}
+			cat("\n")
 			
+			cat("Cleaning up missing med data...\n")
 			clean_up_result<-cleanup_missing_med_data(mDat, tDat, vDat, wDat)
 			mDat<-clean_up_result$mDat
 			tDat<-clean_up_result$tDat
 			vDat<-clean_up_result$vDat
 			wDat<-clean_up_result$wDat
+			cat("... done.\n")
 			
+			cat("Storing cleaned data...\n")
 			store_cleaned_data(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat, wDat, mFilehandleCols, tFilehandleCols, vFilehandleCols)
+			cat("... done.\n")
 			
 			# **** other steps go here ****
 			
 			# Now call the Visualization Data API 
 			#https://sagebionetworks.jira.com/wiki/display/BRIDGE/mPower+Visualization#mPowerVisualization-WritemPowerVisualizationData
+			cat("Invoking visualization API...\n")
 			# place holder
 			content<-list(
 				"healthCode"="test-d9c31718-481f-4d75-b7d8-49154653504a",
@@ -180,12 +205,18 @@ process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputPr
 			response<-getURL(url, postfields=toJSON(content), customrequest="POST", 
 					.opts=bridger:::.getBridgeCache("opts"), httpheader=bridger:::.getBridgeCache("httpheader"))
 			# response is "Visualization created."
+			cat("... done.\n")
 
+			cat("Wrapping up...\n")
 			# update the last processed version
 			lastProcessedQueryResult@values<-lastProcessVersionToDF(lastProcessedVersion)
 			synStore(lastProcessedQueryResult)
 			
 			markProcesingComplete(bridgeExportQueryResult, "complete")
-	}, 
-	error=function(e) markProcesingComplete(bridgeExportQueryResult, "failed"))
+			cat("... ALL DONE!!!\n")
+			}, 
+	error=function(e) {
+		message(e)
+		markProcesingComplete(bridgeExportQueryResult, "failed")
+	})
 }
