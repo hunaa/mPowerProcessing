@@ -1,1 +1,6 @@
-^\.travis\.yml$
+\.travis\.yml
+\.project
+\.gitignore
+**/\.DS_Store
+\.\.Rcheck
+\.git
