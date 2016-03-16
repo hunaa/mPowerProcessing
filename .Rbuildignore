@@ -1,6 +1,6 @@
 \.travis\.yml
 \.project
 \.gitignore
-**/\.DS_Store
+\.DS_Store
 \.\.Rcheck
 \.git
