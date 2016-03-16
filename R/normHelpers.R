@@ -43,12 +43,12 @@ NormalizeFeature <- function(dat,
                              standardDeviations = 1,
                              reverse = FALSE){
   patientAge <- demo$age[match(patientId, demo$healthCode)]
-  controlIds <- GetAgeMatchedControlIds(patientAge, ageInterval, demo)  
+  controlIds <- GetAgeMatchedControlIds(patientAge, ageInterval, demo)
   controlStats <- GetControlFeatureSummaryStats(dat, controlIds, featName)
   fdat <- dat[dat$healthCode %in% patientId, c("medTimepoint", "date", featName)]
-  z <- (fdat[, featName] - controlStats$mean)/controlStats$sd 
+  z <- (fdat[, featName] - controlStats$mean)/controlStats$sd
   alpha <- (1 - floorCeilingRange)/2
-  q <- quantile(c(z, -standardDeviations, standardDeviations), c(alpha, 1 - alpha))  
+  q <- quantile(c(z, -standardDeviations, standardDeviations), c(alpha, 1 - alpha), na.rm=TRUE)
   ql <- as.numeric(q[1])
   qu <- as.numeric(q[2])
   zstar <- pmax(pmin(z, qu), ql)
@@ -69,7 +69,6 @@ NormalizeFeature <- function(dat,
               controlLower = controlLower)
   return(res)
 }
-
 
 
 # recategorize medTimepoint as 'pre', 'post' or 'other'
@@ -120,6 +119,7 @@ countActivity <- function(demo, featureTables, window) {
   # for each PD patient, return a data.frame with counts of activities
   # performed within the date window
   lapply(cases, function(healthCode) {
+    message(healthCode)
     do.call(rbind,
             mapply(countParticipantActivity, names(featureTables), featureTables,
                    MoreArgs=list(healthCode=healthCode, window=window),
@@ -138,10 +138,34 @@ countPrepostActivity <- function(demo, featureTables, window) {
 
 ## return a list of health codes of cases with activities performed
 ## at pre or post medication time points.
-findCasesWithPrepostActivity <- function(demo, featureTables, window) {
-  actvityCounts <- countPrepostActivity(demo, featureTables, window)
+reallySlowFindCasesWithPrepostActivity <- function(demo, featureTables, window) {
+  activityCounts <- countPrepostActivity(demo, featureTables, window)
   healthCodes <- names(activityCounts)
   names(healthCodes) <- healthCodes
   return(healthCodes)
 }
 
+#' Find cases who have performed activities withing the date
+#' window and at pre or post medication time points
+#'
+#' @param lists a list of lists
+#' @return a list of health codes
+findCasesWithPrepostActivity <- function(demo, featureTables, window) {
+  # find participants with a PD diagnosis
+  cases <- na.omit(demo$healthCode[demo$`professional-diagnosis` & !is.na(demo$age)])
+  names(cases) <- cases
+
+  prepost <- c('Immediately before Parkinson medication',
+               'Just after Parkinson medication (at your best)')
+
+  unique(unlist(
+    lapply(featureTables, function(dat) {
+      ## subset the data frame keeping activities performed by PD
+      ## patients, within the date window, pre or post medication
+      dat$healthCode[ dat$date >= window$start &
+                      dat$date <= window$end &
+                      dat$healthCode %in% cases &
+                      dat$medTimepoint %in% prepost ]
+    })
+  ))
+}

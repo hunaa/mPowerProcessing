@@ -166,7 +166,7 @@ runNormalization <- function(tables, features, window) {
   casesWithPrepostActivity <- findCasesWithPrepostActivity(demo, featureTables, window)
 
   normalizedFeatures <- lapply(casesWithPrepostActivity, function(healthCode) {
-    message(healthCode)
+    message(healthCode, " - ", demo$age[demo$healthCode==healthCode])
     try(getVisData(healthCode, featureNames, featureTables, window))
   })
 
