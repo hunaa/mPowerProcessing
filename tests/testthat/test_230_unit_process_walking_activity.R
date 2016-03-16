@@ -18,13 +18,16 @@ createWExpected<-function() {
 				schema<-synGet(id)
 				query<-synTableQuery(paste0("SELECT * FROM ", id, " WHERE appVersion NOT LIKE '%YML%'"))
 				vals <- query@values
-				vals <- mPowerProcessing:::permuteMe(vals)
+				vals <- permuteMe(vals)
+				vals <- prependHealthCodes(vals, "test-")
 				query@values <- vals[1:min(nrow(vals), 100), ]
 				c(schema=schema, query=query)
 			})
 	save(schemaAndQuery, file=wDataExpectedFile, ascii=TRUE)
 	
 }
+
+if (createTestData()) createWExpected()
 
 # Mock the schema and table content
 expect_true(file.exists(wDataExpectedFile))
@@ -37,8 +40,10 @@ with_mock(
 			wResults<-process_walking_activity(wIds, NA)
 			wDatFilePath<-file.path(testDataFolder, "wDatExpected.RData")
 			# Here's how we created the 'expected' data frame:
-			# expected<-wResults
-			# save(expected, file=wDatFilePath, ascii=TRUE)
+			if (createTestData()) {
+				expected<-wResults
+				save(expected, file=wDatFilePath, ascii=TRUE)
+			}
 			load(wDatFilePath) # creates 'expected'
 			expect_equal(wResults, expected)
 		}

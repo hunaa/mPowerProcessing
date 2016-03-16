@@ -17,10 +17,13 @@ createV3Expected<-function() {
 	schema<-synGet(id)
 	query<-synTableQuery(paste0("SELECT * FROM ", id, " WHERE appVersion NOT LIKE '%YML%'"))
 	vals <- query@values
-	vals <- mPowerProcessing:::permuteMe(vals)
+	vals <- permuteMe(vals)
+	vals <- prependHealthCodes(vals, "test-")
 	query@values <- vals[1:min(nrow(vals), 100), ]
 	save(schema, query, file=v3DataExpectedFile, ascii=TRUE)
 }
+
+if (createTestData()) createV3Expected()
 
 # Mock the schema and table content
 expect_true(file.exists(v3DataExpectedFile))
@@ -33,8 +36,10 @@ with_mock(
 			pDat<-process_survey_v3("syn101")
 			pDatFilePath<-file.path(testDataFolder, "pDatExpected.RData")
 			# Here's how we created the 'expected' data frame:
-			#expected<-pDat
-			#save(expected, file=pDatFilePath, ascii=TRUE)
+			if (createTestData()) {
+				expected<-pDat
+				save(expected, file=pDatFilePath, ascii=TRUE)
+			}
 			load(pDatFilePath) # creates 'expected'
 			expect_equal(pDat, expected)
 		}

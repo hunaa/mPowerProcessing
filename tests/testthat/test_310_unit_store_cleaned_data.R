@@ -54,11 +54,14 @@ pDat<-expected
 # this is the parent project of all the tables
 outputProjectId<-"syn4993293"
 
-# To generate qqFilePath:
-# qq <- synQuery(paste0('SELECT id, name FROM table WHERE parentId=="', outputProjectId, '"'))
-
 qqFilePath<-file.path(testDataFolder, "qq.RData")
-# save(qq, file=qqFilePath, ascii=TRUE)
+
+# To generate qqFilePath:
+if (createTestData()) {
+	qq <- synQuery(paste0('SELECT id, name FROM table WHERE parentId=="', outputProjectId, '"'))
+	save(qq, file=qqFilePath, ascii=TRUE)
+}
+
 load(qqFilePath)
 
 with_mock(
