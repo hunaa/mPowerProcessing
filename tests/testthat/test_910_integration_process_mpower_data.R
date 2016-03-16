@@ -11,6 +11,7 @@ context("test_integration_process_mpower_data")
 
 library(synapseClient)
 library(bridger)
+library(RCurl)
 
 username<-Sys.getenv("SYNAPSE_USERNAME")
 if (nchar(username)==0) {

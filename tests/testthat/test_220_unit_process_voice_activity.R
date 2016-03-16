@@ -25,8 +25,8 @@ createVoiceExpected<-function() {
 				schema<-synGet(id)
 				query<-synTableQuery(paste0("SELECT * FROM ", id, " WHERE appVersion NOT LIKE '%YML%'"))
 				vals <- query@values
-				vals <- prependHealthCodes(vals, "test-")
 				vals <- permuteMe(vals)
+				vals <- prependHealthCodes(vals, "test-")
 				query@values <- vals[1:min(nrow(vals), 100), ]
 				# Now update the file Handle IDs in the data frame to match the fake ones
 				query@values$`momentInDayFormat.json`[which(!is.na(query@values$`momentInDayFormat.json`))]<-

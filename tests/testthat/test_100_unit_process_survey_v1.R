@@ -17,13 +17,13 @@ createV1Expected<-function() {
 	schema<-synGet(id)
 	query<-synTableQuery(paste0("SELECT * FROM ", id, " WHERE appVersion NOT LIKE '%YML%'"))
 	vals <- query@values
-	vals <- prependHealthCodes(vals, "test-")
 	## CLEAN AS PER GOVERNANCE REQUIREMENTS
 	vals$Enter_State <- "blah"
 	vals$age[ which(vals$age>90 & vals$age<101) ] <- 90
 	vals <- vals[-which(vals$age < 18  | vals$age > 100), ]
 	## PERMUTE
 	vals <- permuteMe(vals)
+	vals <- prependHealthCodes(vals, "test-")
 	query@values <- vals[1:min(nrow(vals), 100), ]
 	
 	mockFiles<-mockFileAttachments(system.file("testdata/health-history", package="mPowerProcessing"))

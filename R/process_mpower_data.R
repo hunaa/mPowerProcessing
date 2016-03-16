@@ -84,6 +84,12 @@ getLastProcessedVersion<-function(df) {
   lastProcessedVersion
 }
 
+lastProcessVersionToDF<-function(lastProcessedVersion) {
+	result<-data.frame(TABLE_ID=names(lastProcessedVersion), LAST_VERSION=lastProcessedVersion, stringsAsFactors=F)
+	row.names(result)<-NULL
+	result
+}
+
 # given a data frame having row values named according to the Synapse table convention
 # find the maximum value
 getMaxRowVersion<-function(df) {
@@ -99,7 +105,7 @@ process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputPr
 	bridgeExportQueryResult<-checkForAndLockBridgeExportBatch(bridgeStatusId, mPowerBatchStatusId, hostname, Sys.time()) # no lease timeout given
 	if (is.null(bridgeExportQueryResult) || nrow(bridgeExportQueryResult@values)==0) return(NULL)
 	
-#	tryCatch({
+	tryCatch({
 			lastProcessedQueryResult<-synTableQuery(paste0("SELECT * FROM ", lastProcessedVersionTableId))
 			lastProcessedVersion<-getLastProcessedVersion(lastProcessedQueryResult@values)
 			
@@ -169,14 +175,17 @@ process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputPr
 					"walkingPreMedication"=0.5,
 					"walkingPostMedication"=0.8
 				)
-			)
-			bridgeRestPOST("/parkinson/visualization", content)
+			)			
+			url <- bridger:::uriToUrl("/parkinson/visualization", bridger:::.getBridgeCache("bridgeEndpoint"))
+			response<-getURL(url, postfields=toJSON(content), customrequest="POST", 
+					.opts=bridger:::.getBridgeCache("opts"), httpheader=bridger:::.getBridgeCache("httpheader"))
+			# response is "Visualization created."
 
 			# update the last processed version
-			lastProcessedQueryResult@values<-lastProcessedVersion
+			lastProcessedQueryResult@values<-lastProcessVersionToDF(lastProcessedVersion)
 			synStore(lastProcessedQueryResult)
 			
 			markProcesingComplete(bridgeExportQueryResult, "complete")
-#	}, 
-#	error=function(e) markProcesingComplete(bridgeExportQueryResult, "failed"))
+	}, 
+	error=function(e) markProcesingComplete(bridgeExportQueryResult, "failed"))
 }
