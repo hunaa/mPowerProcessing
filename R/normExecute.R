@@ -42,8 +42,20 @@ fetchActivityFeatureTables<-function(tables, features) {
   return(list(balance=balance, gait=gait, tap=tap, voice=voice))
 }
 
-
-getVisData <- function(healthCode, featureNames, featureTables, windowStart, windowEnd) {
+# return a list, indexed by activity type, of normalized pre and
+# post medication values for a selected feature
+#
+# $gait
+# $gait$fdat
+#                  date     post       pre
+# 2015-04-02 2015-04-02 0.502782 0.4981415
+# $gait$controlMean
+# [1] 0.5883402
+# $gait$controlUpper
+# [1] 0.7726447
+# $gait$controlLower
+# [1] 0.4040358
+getVisData <- function(healthCode, featureNames, featureTables, window) {
   activityTypes <- names(featureTables)
   norms <- lapply(activityTypes, function(activity) {
     NormalizeFeature(featureTables[[activity]], healthCode, featureNames[[activity]], demo, ageInterval=5)
@@ -54,7 +66,7 @@ getVisData <- function(healthCode, featureNames, featureTables, windowStart, win
   # "pre" and "post"
   norms <- lapply(norms, function(x) {
     tmp <- x$fdat
-    tmp <- tmp[ tmp$date >= windowStart & tmp$date <= windowEnd, ]
+    tmp <- tmp[ tmp$date >= window$start & tmp$date <= window$end, ]
     tmp <- tmp[!duplicated(tmp[, c("date", "medTimepoint")]), ]
     pre <- tmp[tmp$medTimepoint == "Immediately before Parkinson medication", ]
     pre$medTimepoint <- NULL
@@ -62,7 +74,7 @@ getVisData <- function(healthCode, featureNames, featureTables, windowStart, win
     post <- tmp[tmp$medTimepoint == "Just after Parkinson medication (at your best)", ]
     post$medTimepoint <- NULL
     names(post) <- c("date", "post")
-    df <- data.frame(date=seq(windowStart, windowEnd, by="day"), 
+    df <- data.frame(date=seq(window$start, window$end, by="day"), 
                      stringsAsFactors=FALSE)
     df <- merge(df, post)
     df <- merge(df, pre)
@@ -75,8 +87,9 @@ getVisData <- function(healthCode, featureNames, featureTables, windowStart, win
   Filter(function(x) { nrow(x$fdat) > 0}, norms)
 }
 
+
 visDataToJSON <- function(norms, window) {
-  towardJSON <- lapply(as.list(seq(windowStart, windowEnd, by="day")), function(thisDate){
+  towardJSON <- lapply(as.list(seq(window$start, window$end, by="day")), function(thisDate) {
     res <- list(list(
       tap=list(
         pre=norms$tap$fdat[as.character(thisDate), "pre"],
@@ -135,67 +148,29 @@ testNormalization <- function() {
   featureTables <- fetchActivityFeatureTables(tables, features)
   featureNames <- list(balance='rangeAA', gait='medianZ', tap='numberTaps', voice='shimmerLocaldB_sma3nz_amean')
   participantId <- "6c130d05-41af-49e9-9212-aaae738d3ec1"
-  windowEnd <- as.Date("2015-05-01")
-  windowStart <- windowEnd-29
+  window <- list(start=as.Date("2015-05-01")-29, end=as.Date("2015-05-01"))
 
-  visData <- getVisData(participantId, featureNames, featureTables, windowStart, windowEnd)
+  visData <- getVisData(participantId, featureNames, featureTables, window)
   return(visData)
 }
 
-prepost <- c("Immediately before Parkinson medication", "Just after Parkinson medication (at your best)")
 
-# demographics table
-demoTb <- synTableQuery(sprintf("SELECT * FROM %s", tables$demographics))
-demo <- demoTb@values
+runNormalization <- function(tables, features, window) {
+  # demographics table
+  demoTb <- synTableQuery(sprintf("SELECT * FROM %s", tables$demographics))
+  demo <- demoTb@values
 
-# find participants with a PD diagnosis
-cases <- na.omit(demo$healthCode[demo$`professional-diagnosis`])
-names(cases) <- cases
+  featureTables <- fetchActivityFeatureTables(tables, features)
+  featureNames <- list(balance='rangeAA', gait='medianZ', tap='numberTaps', voice='shimmerLocaldB_sma3nz_amean')
 
-# date window
-window <- list(start=as.Date("2015-05-01")-29, end=as.Date("2015-05-01"))
+  casesWithPrepostActivity <- findCasesWithPrepostActivity(demo, featureTables, window)
 
+  normalizedFeatures <- lapply(casesWithPrepostActivity, function(healthCode) {
+    message(healthCode)
+    try(getVisData(healthCode, featureNames, featureTables, window))
+  })
 
-categorizeTimepoints <- function(timepoints) {
-  result <- vector(mode="character", length=length(timepoints))
-  result[timepoints=='Immediately before Parkinson medication'] <- 'pre'
-  result[timepoints=='Just after Parkinson medication (at your best)'] <- 'post'
-  result[result==""] <- 'other'
-  return(result)
+  # convert to JSON
+
+  # call Bridge Visualization API
 }
-
-# count the activities performed by the given participant within the
-# date window at the given pre/post medication timepoint
-countActivities <- function(activity, dat, healthCode, window) {
-  dat1 <- dat[ dat$healthCode==healthCode & dat$date >= window$start & dat$date <= window$end, ]
-  pre <- sum(na.omit(dat1$medTimepoint=='Immediately before Parkinson medication'))
-  post <- sum(na.omit(dat1$medTimepoint=='Just after Parkinson medication (at your best)'))
-  other <- nrow(dat1) - pre - post
-  data.frame(activity=activity,
-             medTimepoint=c('pre','post','other'),
-             count=c(pre, post, other))
-}
-
-# for all PD patients, return a data.frame with counts of each activity
-# performed within the date window
-activityCounts <- lapply(cases, function(healthCode) {
-  do.call(rbind,
-          mapply(countActivities, names(featureTables), featureTables,
-                 MoreArgs=list(healthCode=healthCode, window=window),
-                 SIMPLIFY=FALSE))
-})
-
-nonzeroActivityCounts <- Filter(function(df) {
-  sum(df$count[df$medTimepoint %in% c('pre','post')]) > 0
-  }, activityCounts)
-
-cases_with_activity <- names(nonzero_activity_counts)
-names(cases_with_activity) <- names(cases_with_activity)
-
-normalizedFeatures <- lapply(cases_with_activity[1:10], function(healthCode) {
-  cat(healthCode, "\n")
-  try(getVisData(healthCode, featureNames, featureTables, windowStart, windowEnd))
-})
-
-
-
