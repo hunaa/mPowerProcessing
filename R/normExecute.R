@@ -153,13 +153,8 @@ cases <- na.omit(demo$healthCode[demo$`professional-diagnosis`])
 names(cases) <- cases
 
 # date window
-window <- list(start=windowStart, end=windowEnd)
+window <- list(start=as.Date("2015-05-01")-29, end=as.Date("2015-05-01"))
 
-# count the activities performed by the given participant within the
-# date window at the given pre/post medication timepoint
-count_activities <- function(dat, healthCode, window, timepoint) {
-  sum( dat$healthCode==healthCode & dat$date >= window$start & dat$date <= window$end & dat$medTimepoint == timepoint )
-}
 
 categorizeTimepoints <- function(timepoints) {
   result <- vector(mode="character", length=length(timepoints))
@@ -169,18 +164,31 @@ categorizeTimepoints <- function(timepoints) {
   return(result)
 }
 
+# count the activities performed by the given participant within the
+# date window at the given pre/post medication timepoint
+countActivities <- function(activity, dat, healthCode, window) {
+  dat1 <- dat[ dat$healthCode==healthCode & dat$date >= window$start & dat$date <= window$end, ]
+  pre <- sum(na.omit(dat1$medTimepoint=='Immediately before Parkinson medication'))
+  post <- sum(na.omit(dat1$medTimepoint=='Just after Parkinson medication (at your best)'))
+  other <- nrow(dat1) - pre - post
+  data.frame(activity=activity,
+             medTimepoint=c('pre','post','other'),
+             count=c(pre, post, other))
+}
+
 # for all PD patients, return a data.frame with counts of each activity
 # performed within the date window
-activity_counts <- lapply(cases, function(healthCode) {
-
-  data.frame(activity=names(featureTables),
-             count=sapply(featureTables, count_activities, 
-                                         healthCode=healthCode,
-                                         window=window,
-                                         timepoint=timepoint))
+activityCounts <- lapply(cases, function(healthCode) {
+  do.call(rbind,
+          mapply(countActivities, names(featureTables), featureTables,
+                 MoreArgs=list(healthCode=healthCode, window=window),
+                 SIMPLIFY=FALSE))
 })
 
-nonzero_activity_counts <- Filter(function(df) { sum(df$count) > 0 }, activity_counts)
+nonzeroActivityCounts <- Filter(function(df) {
+  sum(df$count[df$medTimepoint %in% c('pre','post')]) > 0
+  }, activityCounts)
+
 cases_with_activity <- names(nonzero_activity_counts)
 names(cases_with_activity) <- names(cases_with_activity)
 
