@@ -3,7 +3,7 @@ library(crayon)
 # when set to 'true' the test suite will generate unit test data that becomes part of the code base
 # Note that since data generators have to be run in a certain order, we have named the tests 
 # (under test/testthat) to ensure execution in that order.
-createTestData<-function() {TRUE}
+createTestData<-function() {FALSE}
 
 ## HELPER FUNCTIONS FOR PERMUTATIONS
 ## generateUuids, permuteMe
