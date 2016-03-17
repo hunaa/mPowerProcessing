@@ -74,52 +74,46 @@ getVisData <- function(healthCode, featureNames, featureTables, window) {
     post <- tmp[tmp$medTimepoint == "Just after Parkinson medication (at your best)", ]
     post$medTimepoint <- NULL
     names(post) <- c("date", "post")
-    df <- data.frame(date=seq(window$start, window$end, by="day"), 
-                     stringsAsFactors=FALSE)
-    df <- merge(df, post)
-    df <- merge(df, pre)
+    df <- merge(pre, post, all=TRUE)
     rownames(df) <- df$date
     x$fdat <- df
     return(x)
   })
-
-  ## remove activities with no data
-  Filter(function(x) { nrow(x$fdat) > 0}, norms)
 }
 
 
-visDataToJSON <- function(norms, window) {
-  towardJSON <- lapply(as.list(seq(window$start, window$end, by="day")), function(thisDate) {
-    res <- list(list(
-      tap=list(
-        pre=norms$tap$fdat[as.character(thisDate), "pre"],
-        post=norms$tap$fdat[as.character(thisDate), "post"],
-        controlMin=norms$tap$controlLower,
-        controlMax=norms$tap$controlUpper
-      ),
-      voice=list(
-        pre=norms$voice$fdat[as.character(thisDate), "pre"],
-        post=norms$voice$fdat[as.character(thisDate), "post"],
-        controlMin=norms$voice$controlLower,
-        controlMax=norms$voice$controlUpper
-      ),
-      gait=list(
-        pre=norms$gait$fdat[as.character(thisDate), "pre"],
-        post=norms$gait$fdat[as.character(thisDate), "post"],
-        controlMin=norms$gait$controlLower,
-        controlMax=norms$gait$controlUpper
-      ),
-      balance=list(
-        pre=norms$balance$fdat[as.character(thisDate), "pre"],
-        post=norms$balance$fdat[as.character(thisDate), "post"],
-        controlMin=norms$balance$controlLower,
-        controlMax=norms$balance$controlUpper
-      )))
-    names(res) <- thisDate
-    return(res)
+#' converts getVisData output into JSON
+visDataToJSON <- function(healthCode, normdata) {
+  towardJSON <- lapply(collectDates(normdata), function(thisDate) {
+    list(
+      healthCode=healthCode,
+      date=as.character(thisDate),
+      visualization=list(
+        tap=list(
+          pre=normdata$tap$fdat[as.character(thisDate), "pre"],
+          post=normdata$tap$fdat[as.character(thisDate), "post"],
+          controlMin=normdata$tap$controlLower,
+          controlMax=normdata$tap$controlUpper
+        ),
+        voice=list(
+          pre=normdata$voice$fdat[as.character(thisDate), "pre"],
+          post=normdata$voice$fdat[as.character(thisDate), "post"],
+          controlMin=normdata$voice$controlLower,
+          controlMax=normdata$voice$controlUpper
+        ),
+        gait=list(
+          pre=normdata$gait$fdat[as.character(thisDate), "pre"],
+          post=normdata$gait$fdat[as.character(thisDate), "post"],
+          controlMin=normdata$gait$controlLower,
+          controlMax=normdata$gait$controlUpper
+        ),
+        balance=list(
+          pre=normdata$balance$fdat[as.character(thisDate), "pre"],
+          post=normdata$balance$fdat[as.character(thisDate), "post"],
+          controlMin=normdata$balance$controlLower,
+          controlMax=normdata$balance$controlUpper
+        )))
   })
-
-  ## INSERT CODE TO CALL BRIDGE APIS WHERE APPROPRIATE
   return(toJSON(towardJSON))
 }
 
@@ -170,7 +164,9 @@ runNormalization <- function(tables, features, window) {
     try(getVisData(healthCode, featureNames, featureTables, window))
   })
 
-  # convert to JSON
+  for (healthCode in names(normalizedFeatures)) {
+    jsonString <- visDataToJSON(healthCode, normalizedFeatures[[healthCode]])
+  }
 
   # call Bridge Visualization API
 }
