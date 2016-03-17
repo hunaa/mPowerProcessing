@@ -1,4 +1,4 @@
-# Test for store_cleaned_data
+# Test for cleanup_missing_med_data
 # 
 # Author: bhoff
 ###############################################################################
@@ -6,7 +6,7 @@
 library(testthat)
 library(synapseClient)
 
-context("test_store_cleaned_data")
+context("test_unit_cleanup_missing_med_data")
 
 testDataFolder<-system.file("testdata", package="mPowerProcessing")
 
@@ -37,38 +37,15 @@ load(wDatFilePath) # creates 'expected'
 wResults<-expected
 wDat<-wResults$wDat
 
+# method under test:
 cmm<-cleanup_missing_med_data(mDat, tDat, vDat, wDat)
 
-eDatFilePath<-file.path(testDataFolder, "eDatExpected.RData")
-load(eDatFilePath) # creates 'expected'
-eDat<-expected
-
-uDatFilePath<-file.path(testDataFolder, "uDatExpected.RData")
-load(uDatFilePath) # creates 'expected'
-uDat<-expected
-
-pDatFilePath<-file.path(testDataFolder, "pDatExpected.RData")
-load(pDatFilePath) # creates 'expected'
-pDat<-expected
-
-# this is the parent project of all the tables
-newParent<-"syn4993293"
-
-# To generate qqFilePath:
-# qq <- synQuery(paste0('SELECT id, name FROM table WHERE parentId=="', newParent, '"'))
-
-qqFilePath<-file.path(testDataFolder, "qq.RData")
-# save(qq, file=qqFilePath, ascii=TRUE)
-load(qqFilePath)
-
-with_mock(
-		synQuery=function(q) qq,
-		as.tableColumns=function(x) list(fileHandleId="123"),
-		synGet=function(id) id,
-		synStore=function(table) table,
-		{
-			store_cleaned_data(newParent, eDat, uDat, pDat, mDat, tDat, vDat, wDat, 
-					mFilehandleCols, tFilehandleCols, vFilehandleCols)
-		}
-)
+cmmFilePath<-file.path(testDataFolder, "cmmExpected.RData")
+# Here's how we created the 'expected' data frame:
+if (createTestData()) {
+	expected<-cmm
+	save(expected, file=cmmFilePath, ascii=TRUE)
+}
+load(cmmFilePath) # creates 'expected'
+expect_equal(cmm, expected)
 

@@ -6,7 +6,7 @@
 require(testthat)
 require(synapseClient)
 
-context("test_process_survey_v1")
+context("test_unit_process_survey_v1")
 
 testDataFolder<-system.file("testdata", package="mPowerProcessing")
 v1SurveyInputFile<-file.path(testDataFolder, "v1SurveyInput.RData")
@@ -22,15 +22,20 @@ createV1Expected<-function() {
 	vals$age[ which(vals$age>90 & vals$age<101) ] <- 90
 	vals <- vals[-which(vals$age < 18  | vals$age > 100), ]
 	## PERMUTE
-	vals <- mPowerProcessing:::permuteMe(vals)
-	query@values <- vals[1:100, ]
-	eComFiles <- list.files(system.file("testdata/health-history", package="mPowerProcessing"), full.names = TRUE)
-	eComFiles <- sample(eComFiles, size = sum(!is.na(query@values$`health-history`)), replace = TRUE)
-	names(eComFiles)<-query@values$`health-history`[which(!is.na(query@values$`health-history`))]
-	eComContent <- sapply(eComFiles, readLines, warn=F)
-	names(eComContent)<-eComFiles # maps file path to file content
+	vals <- permuteMe(vals)
+	vals <- prependHealthCodes(vals, "test-")
+	query@values <- vals[1:min(nrow(vals), 100), ]
+	
+	mockFiles<-mockFileAttachments(system.file("testdata/health-history", package="mPowerProcessing"))
+	eComFiles<-mockFiles$mockFiles
+	eComContent<-mockFiles$fileContent
+	# Now update the file Handle IDs in the data frame to match these fake ones
+	query@values$`health-history`[which(!is.na(query@values$`health-history`))]<-
+			sample(names(eComFiles), size=length(which(!is.na(query@values$`health-history`))), replace=T)
 	save(schema, query, eComFiles, eComContent, file=v1SurveyInputFile, ascii=TRUE)
 }
+
+if (createTestData()) createV1Expected()
 
 # Mock the schema and table content
 load(v1SurveyInputFile)
@@ -48,8 +53,10 @@ with_mock(
 			eDat<-process_survey_v1("syn101")
 			eDatFilePath<-file.path(testDataFolder, "eDatExpected.RData")
 			# Here's how we created the 'expected' data frame:
-			# expected<-eDat
-			# save(expected, file=eDatFilePath, ascii=TRUE)
+			if (createTestData()) {
+				expected<-eDat
+				save(expected, file=eDatFilePath, ascii=TRUE)
+			}
 			load(eDatFilePath) # creates 'expected'
 			expect_equal(eDat, expected)
 		}

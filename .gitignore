@@ -9,9 +9,6 @@
 .Rhistory
 .Rapp.history
 
-# Session Data files
-.RData
-
 # Example code in package build process
 *-Ex.R
 
@@ -53,6 +50,5 @@ docs/_build/
 
 .pydevproject
 ..Rcheck
-.Rbuildignore
 mPowerProcessing.Rproj
 .Rproj.user

@@ -67,6 +67,7 @@ process_survey_v1<-function(eId, lastProcessedVersion) {
   eTab <- synTableQuery(createQueryString(eId, lastProcessedVersion))
   
   eDat <- eTab@values
+	maxRowVersion<-getMaxRowVersion(eDat)
   for(i in eStringCols){
     eDat[[i]] <- cleanString(eDat[[i]])
   }
@@ -100,7 +101,7 @@ process_survey_v1<-function(eId, lastProcessedVersion) {
   
   eDat <- subsetThis(eDat, theseOnes)
   
-  eDat
+  list(maxRowVersion=maxRowVersion, eDat=eDat)
 }
   
 #####
@@ -120,7 +121,8 @@ process_survey_v2<-function(uId, lastProcessedVersion) {
   uTab <- synTableQuery(createQueryString(uId, lastProcessedVersion))
   
   uDat <- uTab@values
-  for(i in uStringCols){
+	maxRowVersion<-getMaxRowVersion(uDat)
+	for(i in uStringCols){
     uDat[[i]] <- cleanString(uDat[[i]])
   }
   uDat$externalId <- NULL
@@ -129,7 +131,7 @@ process_survey_v2<-function(uId, lastProcessedVersion) {
   uDat$`MDS-UPRDRS1.1` <- NULL
   uDat <- subsetThis(uDat)
   rownames(uDat) <- uDat$recordId
-  uDat
+	list(maxRowVersion=maxRowVersion, uDat=uDat)
 }
 
 #####
@@ -149,6 +151,8 @@ process_survey_v3<-function(pId, lastProcessedVersion) {
   pTab <- synTableQuery(createQueryString(pId, lastProcessedVersion))
   
   pDat <- pTab@values
+	maxRowVersion<-getMaxRowVersion(pDat)
+	
   for(i in pStringCols){
     pDat[[i]] <- cleanString(pDat[[i]])
   }
@@ -160,7 +164,7 @@ process_survey_v3<-function(pId, lastProcessedVersion) {
   
   pDat <- subsetThis(pDat)
   rownames(pDat) <- pDat$recordId
-  pDat
+	list(maxRowVersion=maxRowVersion, pDat=pDat)
 }
 
 #####
@@ -172,13 +176,15 @@ process_memory_activity<-function(mId, lastProcessedVersion) {
   
   mTab <- synTableQuery(createQueryString(mId, lastProcessedVersion))
   mDat <- mTab@values
+	maxRowVersion<-getMaxRowVersion(mDat)
+	
   mDat$externalId <- NULL
   mDat$uploadDate <- NULL
   mDat$momentInDayFormat.json.choiceAnswers <- cleanString(mDat$momentInDayFormat.json.choiceAnswers)
   
   mDat <- subsetThis(mDat)
   rownames(mDat) <- mDat$recordId
-  list(mDat=mDat, mFilehandleCols=mFilehandleCols)
+  list(mDat=mDat, mFilehandleCols=mFilehandleCols, maxRowVersion=maxRowVersion)
 }
 
 #####
@@ -377,7 +383,8 @@ cleanup_missing_med_data<-function(mDat, tDat, vDat, wDat) {
 ## STORE BACK TO SYNAPSE
 ## LOG IN AS BRIDGE EXPORTER TO STORE BACK
 # synapseLogout()
-store_cleaned_data<-function(newParent, eDat, uDat, pDat, mDat, tDat, vDat, wDat, mFilehandleCols, tFilehandleCols, vFilehandleCols) {
+store_cleaned_data<-function(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat, wDat, 
+		mFilehandleCols, tFilehandleCols, vFilehandleCols) {
   storeThese <- list('Demographics Survey' = list(vals=eDat, fhCols=NULL),
                      'UPDRS Survey' = list(vals=uDat, fhCols=NULL),
                      'PDQ8 Survey' = list(vals=pDat, fhCols=NULL),
@@ -387,7 +394,7 @@ store_cleaned_data<-function(newParent, eDat, uDat, pDat, mDat, tDat, vDat, wDat
                      'Walking Activity' = list(vals=wDat, fhCols=grep("json.items", names(wDat), value = TRUE)))
   
   ## SCHEMAS ALREADY STORED - FIND THEM
-  qq <- synQuery(paste0('SELECT id, name FROM table WHERE parentId=="', newParent, '"'))
+  qq <- synQuery(paste0('SELECT id, name FROM table WHERE parentId=="', outputProjectId, '"'))
   
   ## NOW LETS DO SOMETHING WITH ALL OF THIS DATA
   ## FINALLY, STORE THE OUTPUT
