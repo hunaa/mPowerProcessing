@@ -1,3 +1,12 @@
+#' Retreive feature data from Synapse and load
+#'
+#' @param tables a named list of Synapse IDs of feature metadata tables
+#' @param features a named list of Synapse IDs of feature files
+#'
+#' @return A named list of feature tables
+#'
+#' All lists are indexed by activity name ('balance', 'gait', 'tap', 'voice').
+#'
 fetchActivityFeatureTables<-function(tables, features) {
   ## GET TAPPING FEATURES
   tapTable <- synTableQuery(sprintf('SELECT * FROM %s WHERE "tapping_results.json.TappingSamples" is not null', tables$tapping))
@@ -42,19 +51,23 @@ fetchActivityFeatureTables<-function(tables, features) {
   return(list(balance=balance, gait=gait, tap=tap, voice=voice))
 }
 
-# return a list, indexed by activity type, of normalized pre and
-# post medication values for a selected feature
-#
-# $gait
-# $gait$fdat
-#                  date     post       pre
-# 2015-04-02 2015-04-02 0.502782 0.4981415
-# $gait$controlMean
-# [1] 0.5883402
-# $gait$controlUpper
-# [1] 0.7726447
-# $gait$controlLower
-# [1] 0.4040358
+#' Return a list, indexed by activity type, of normalized pre and
+#' post medication values for a selected feature to push to the
+#' Bridge mPower Visualization API
+#' \url{https://sagebionetworks.jira.com/wiki/display/BRIDGE/mPower+Visualization}
+#'
+#' \code{
+#'    $gait
+#'    $gait$fdat
+#'                     date     post       pre
+#'    2015-04-02 2015-04-02 0.502782 0.4981415
+#'    $gait$controlMean
+#'    [1] 0.5883402
+#'    $gait$controlUpper
+#'    [1] 0.7726447
+#'    $gait$controlLower
+#'    [1] 0.4040358
+#' }
 getVisData <- function(healthCode, featureNames, featureTables, window) {
   activityTypes <- names(featureTables)
   norms <- lapply(activityTypes, function(activity) {
@@ -82,7 +95,45 @@ getVisData <- function(healthCode, featureNames, featureTables, window) {
 }
 
 
-#' converts getVisData output into JSON
+#' Convert getVisData output into JSON.
+#'
+#' @return a JSON string
+#'
+#' \code{
+#'  [
+#'    {
+#'      "healthCode": "8beab5c6-6067-4c47-b655-999999999999",
+#'      "date": "2015-04-03",
+#'      "visualization": {
+#'        "tap": {
+#'          "pre": 0.4885,
+#'          "post": "NA",
+#'          "controlMin": 0.3636,
+#'          "controlMax": 0.8649
+#'        },
+#'        "voice": {
+#'          "pre": 0.5223,
+#'          "post": "NA",
+#'          "controlMin": 0,
+#'          "controlMax": 0.5738
+#'        },
+#'        "gait": {
+#'          "pre": "NA",
+#'          "post": "NA",
+#'          "controlMin": 0.1285,
+#'          "controlMax": 0.3539
+#'        },
+#'        "balance": {
+#'          "pre": "NA",
+#'          "post": "NA",
+#'          "controlMin": 0,
+#'          "controlMax": 0.1049
+#'        }
+#'      }
+#'    },
+#'    ...
+#'  ]
+#' }
 visDataToJSON <- function(healthCode, normdata) {
   towardJSON <- lapply(collectDates(normdata), function(thisDate) {
     list(
@@ -118,14 +169,7 @@ visDataToJSON <- function(healthCode, normdata) {
 }
 
 
-## LET US TRY FOR THIS INDIVIDUAL
-# participantId <- "6c130d05-41af-49e9-9212-aaae738d3ec1"
-# tapName <- "numberTaps"
-# voiceName <- "shimmerLocaldB_sma3nz_amean"
-# gaitName <- "medianZ"
-# balanceName <- "rangeAA"
-# windowEnd <- as.Date("2015-05-01")
-# windowStart <- windowEnd-29
+#' Compute normalized features for one participant as a test
 testNormalization <- function() {
   ## public table IDs
   tables   <- list(demographics='syn5511429',
@@ -155,9 +199,29 @@ testNormalization <- function() {
 #' @param features named list of Synapse IDs of features
 #' @param window date window
 #'
-#' @return ???
+#' @return a list of normalized features indexed by health code for
+#'         PD patients with activity within the date window
 #'
-#' window = list(start=as.Date("2015-05-01")-29, end=as.Date("2015-05-01"))
+#' The date window is a list of Date objects with two elements labeled
+#' start and end.
+#'
+#' @examples
+#'  tables   <- list(demographics='syn5511429',
+#'                   tapping='syn5511439',
+#'                   voice='syn5511444',
+#'                   walking='syn5511449')
+#'  features <- list(balance='syn5678820',
+#'                   gait='syn5679280',
+#'                   tapping='syn5612449',
+#'                   voice='syn5653006')
+#'  window = list(start=as.Date("2015-05-01")-29, end=as.Date("2015-05-01")
+#'
+#'  normalizedFeatures <- runNormalization(tables, features, window)
+#'
+#'  for (healthCode in names(normalizedFeatures)) {
+#'    jsonString <- visDataToJSON(healthCode, normalizedFeatures[[healthCode]])
+#'    # call Bridge Visualization API here
+#'  }
 #'
 runNormalization <- function(tables, features, window) {
   # demographics table
@@ -169,13 +233,8 @@ runNormalization <- function(tables, features, window) {
 
   casesWithPrepostActivity <- findCasesWithPrepostActivity(demo, featureTables, window)
 
-  normalizedFeatures <- lapply(casesWithPrepostActivity, function(healthCode) {
+  lapply(casesWithPrepostActivity, function(healthCode) {
     message(healthCode, " - ", demo$age[demo$healthCode==healthCode])
     try(getVisData(healthCode, featureNames, featureTables, window))
   })
-
-  for (healthCode in names(normalizedFeatures)) {
-    jsonString <- visDataToJSON(healthCode, normalizedFeatures[[healthCode]])
-    # call Bridge Visualization API
-  }
 }
