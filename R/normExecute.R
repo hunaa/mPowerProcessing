@@ -149,6 +149,16 @@ testNormalization <- function() {
 }
 
 
+#' Normalize feature data and export to Bridge Visualization API
+#'
+#' @param tables named list of Synapse tables
+#' @param features named list of Synapse IDs of features
+#' @param window date window
+#'
+#' @return ???
+#'
+#' window = list(start=as.Date("2015-05-01")-29, end=as.Date("2015-05-01"))
+#'
 runNormalization <- function(tables, features, window) {
   # demographics table
   demoTb <- synTableQuery(sprintf("SELECT * FROM %s", tables$demographics))
@@ -166,7 +176,6 @@ runNormalization <- function(tables, features, window) {
 
   for (healthCode in names(normalizedFeatures)) {
     jsonString <- visDataToJSON(healthCode, normalizedFeatures[[healthCode]])
+    # call Bridge Visualization API
   }
-
-  # call Bridge Visualization API
 }
