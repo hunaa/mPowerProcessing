@@ -51,10 +51,19 @@ fetchActivityFeatureTables<-function(tables, features) {
   return(list(balance=balance, gait=gait, tap=tap, voice=voice))
 }
 
+
 #' Return a list, indexed by activity type, of normalized pre and
 #' post medication values for a selected feature to push to the
 #' Bridge mPower Visualization API
 #' \url{https://sagebionetworks.jira.com/wiki/display/BRIDGE/mPower+Visualization}
+#'
+#' @param healthCode
+#' @param featureNames
+#' @param featureTables
+#' @param window Date window in which to find activities
+#' @param demo data.frame demographics table
+#' @param ageInterval integer defaults to 5 meaning the age matched controls
+#'        are to be plus or minus 5 years from the age of the patient
 #'
 #' \code{
 #'    $gait
@@ -68,7 +77,7 @@ fetchActivityFeatureTables<-function(tables, features) {
 #'    $gait$controlLower
 #'    [1] 0.4040358
 #' }
-getVisData <- function(healthCode, featureNames, featureTables, window) {
+getVisData <- function(healthCode, featureNames, featureTables, window, demo, ageInterval=5) {
   activityTypes <- names(featureTables)
   norms <- lapply(activityTypes, function(activity) {
     NormalizeFeature(featureTables[[activity]], healthCode, featureNames[[activity]], demo, ageInterval=5)
@@ -79,12 +88,12 @@ getVisData <- function(healthCode, featureNames, featureTables, window) {
   # "pre" and "post"
   norms <- lapply(norms, function(x) {
     tmp <- x$fdat
-    tmp <- tmp[ tmp$date >= window$start & tmp$date <= window$end, ]
+    tmp <- tmp[!is.na(tmp$date) & tmp$date >= window$start & tmp$date <= window$end, ]
     tmp <- tmp[!duplicated(tmp[, c("date", "medTimepoint")]), ]
-    pre <- tmp[tmp$medTimepoint == "Immediately before Parkinson medication", ]
+    pre <- tmp[!is.na(tmp$medTimepoint) & tmp$medTimepoint == "Immediately before Parkinson medication", ]
     pre$medTimepoint <- NULL
     names(pre) <- c("date", "pre")
-    post <- tmp[tmp$medTimepoint == "Just after Parkinson medication (at your best)", ]
+    post <- tmp[!is.na(tmp$medTimepoint) & tmp$medTimepoint == "Just after Parkinson medication (at your best)", ]
     post$medTimepoint <- NULL
     names(post) <- c("date", "post")
     df <- merge(pre, post, all=TRUE)
@@ -170,7 +179,7 @@ visDataToJSON <- function(healthCode, normdata) {
 
 
 #' Compute normalized features for one participant as a test
-testNormalization <- function() {
+testNormalization <- function(participantId, featureNames, featureTables, window, demo) {
   ## public table IDs
   tables   <- list(demographics='syn5511429',
                    tapping='syn5511439',
@@ -183,27 +192,42 @@ testNormalization <- function() {
                    tapping='syn5612449',
                    voice='syn5653006')
 
-  featureTables <- fetchActivityFeatureTables(tables, features)
-  featureNames <- list(balance='rangeAA', gait='medianZ', tap='numberTaps', voice='shimmerLocaldB_sma3nz_amean')
-  participantId <- "6c130d05-41af-49e9-9212-aaae738d3ec1"
-  window <- list(start=as.Date("2015-05-01")-29, end=as.Date("2015-05-01"))
+  if (missing(demo)) {
+    demoTb <- synTableQuery(sprintf("SELECT * FROM %s", tables$demographics))
+    demo <- demoTb@values
+  }
 
-  visData <- getVisData(participantId, featureNames, featureTables, window)
-  return(visData)
+  if (missing(featureTables)) {
+    featureTables <- fetchActivityFeatureTables(tables, features)
+  }
+
+  if (missing(featureNames)) {
+    featureNames <- list(balance='rangeAA', gait='medianZ', tap='numberTaps', voice='shimmerLocaldB_sma3nz_amean')
+  }
+
+  if (missing(participantId)) {
+    participantId <- "6c130d05-41af-49e9-9212-aaae738d3ec1"
+  }
+
+  if (missing(window)) {
+    window <- list(start=as.Date("2015-05-01")-29, end=as.Date("2015-05-01"))
+  }
+
+  getVisData(participantId, featureNames, featureTables, window, demo)
 }
 
 
-#' Normalize feature data and export to Bridge Visualization API
+#' Normalize feature data for export to Bridge mPower Visualization API
 #'
 #' @param tables named list of Synapse tables
 #' @param features named list of Synapse IDs of features
 #' @param window date window
 #'
-#' @return a list of normalized features indexed by health code for
-#'         PD patients with activity within the date window
+#' @return a list of normalized feature data.
 #'
-#' The date window is a list of Date objects with two elements labeled
-#' start and end.
+#' This function calls getVisData for each PD patient who has any
+#' activity during the date window and returns the results in a list
+#' indexed by health code.
 #'
 #' @examples
 #'  tables   <- list(demographics='syn5511429',
@@ -214,12 +238,18 @@ testNormalization <- function() {
 #'                   gait='syn5679280',
 #'                   tapping='syn5612449',
 #'                   voice='syn5653006')
-#'  window = list(start=as.Date("2015-05-01")-29, end=as.Date("2015-05-01")
+#'  window <- list(start=as.Date("2015-05-01"), end=as.Date("2015-05-31"))
 #'
 #'  normalizedFeatures <- runNormalization(tables, features, window)
 #'
+#'  # export to Bridge mPower Visualization API
 #'  for (healthCode in names(normalizedFeatures)) {
-#'    jsonString <- visDataToJSON(healthCode, normalizedFeatures[[healthCode]])
+#'    normdata <- normalizedFeatures[[healthCode]]
+#'    if (inherits(normdata, "try-error")) {
+#'      message(sprintf('skipping %s due to error in processing', healthCode))
+#'    } else {
+#'      jsonString <- visDataToJSON(healthCode, normalizedFeatures[[healthCode]])
+#'    }
 #'    # call Bridge Visualization API here
 #'  }
 #'
@@ -234,7 +264,7 @@ runNormalization <- function(tables, features, window) {
   casesWithPrepostActivity <- findCasesWithPrepostActivity(demo, featureTables, window)
 
   lapply(casesWithPrepostActivity, function(healthCode) {
-    message(healthCode, " - ", demo$age[demo$healthCode==healthCode])
-    try(getVisData(healthCode, featureNames, featureTables, window))
+    message(healthCode)
+    try(getVisData(healthCode, featureNames, featureTables, window, demo))
   })
 }
