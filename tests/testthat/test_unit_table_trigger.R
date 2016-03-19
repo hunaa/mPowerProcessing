@@ -32,7 +32,7 @@ with_mock(
 			expect_true(is(result, "TableDataFrame"))
 			expect_equal(result@schema, "syn202")
 			expect_equal(result@values, data.frame(
-							bridgeUploadDate="2016-03-21", 
+							bridgeUploadDate=as.Date("2016-03-21"), 
 							mPowerBatchStart=now, 
 							hostName="hostname",
 							batchStatus="inProgress", stringsAsFactors=FALSE))
