@@ -25,6 +25,7 @@ checkForAndLockBridgeExportBatch<-function(bridgeStatusId, mPowerBatchStatusId, 
 	if (nrow(bridgeStatusValues)==0) return(NULL) # an unusual case
 	if (nrow(bridgeStatusValues)!=1) stop(paste0("Expected 0-1 rows but got ", nrow(bridgeStatusValues)))
 	latestBridgeUploadDate<-bridgeStatusValues[1,1] # there's only one column in the result
+	if (is(latestBridgeUploadDate, "character")) latestBridgeUploadDate<-as.Date(latestBridgeUploadDate)
 	
 	mPowerBatchSql<-paste0("select * from ", mPowerBatchStatusId, " where ",
 			bridgeUploadDateColumnName, "='", latestBridgeUploadDate, "'")
