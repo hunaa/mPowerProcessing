@@ -218,6 +218,7 @@ process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputPr
 			}, 
 	error=function(e) {
 		message(e)
+		traceback()
 		markProcesingComplete(bridgeExportQueryResult, "failed")
 	})
 }
