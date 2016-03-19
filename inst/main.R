@@ -4,6 +4,8 @@
 ###############################################################################
 
 library(mPowerProcessing)
+library(synapseClient)
+library(bridger)
 
 # make sure to be 'logged in' to Synapse as Bridge exporter
 #
@@ -20,31 +22,29 @@ main<-function() {
 	lastProcessedVersionTableId <- "syn5706434" ## NOTE: THIS WAS MOVED INTO TEST PROJECT
 	bridgeStatusId <- "syn5720756"
 	mPowerBatchStatusId <- "syn5762675" # NOTE: THIS IS IN THE TEST PROJECT
-
-	synapseClient::synapseLogin()
 	
-	process_mpower_data(eId, uId, pId, mId, tId, vId1, vId2, wId, outputProjectId, 
+	mPowerProcessing::process_mpower_data(eId, uId, pId, mId, tId, vId1, vId2, wId, outputProjectId, 
 			bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId)
 }
 
 username<-Sys.getenv("SYNAPSE_USERNAME")
 if (nchar(username)==0) {
-	message("WARNING: Cannot run integration test.  Environment variable SYNAPSE_USERNAME is missing.")
+	cat("ERROR: Environment variable SYNAPSE_USERNAME is missing.\n")
 	q("no")
 }
 apiKey<-Sys.getenv("SYNAPSE_APIKEY")
 if (nchar(apiKey)==0) {
-	message("WARNING: Cannot run integration test.  Environment variable SYNAPSE_APIKEY is missing.")
+	cat("ERROR: Environment variable SYNAPSE_APIKEY is missing.\n")
 	q("no")
 }
 bridgeUsername<-Sys.getenv("BRIDGE_USERNAME")
 if (nchar(bridgeUsername)==0) {
-	message("WARNING: Cannot run integration test.  Environment variable BRIDGE_USERNAME is missing.")
+	cat("ERROR: Environment variable BRIDGE_USERNAME is missing.\n")
 	q("no")
 }
 bridgePassword<-Sys.getenv("BRIDGE_PASSWORD")
 if (nchar(bridgePassword)==0) {
-	message("WARNING: Cannot run integration test.  Environment variable BRIDGE_PASSWORD is missing.")
+	cat("ERROR: Environment variable BRIDGE_PASSWORD is missing.\n")
 	q("no")
 }
 
