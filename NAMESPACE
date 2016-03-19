@@ -1,2 +1,3 @@
 exportPattern("^[[[:alnum:]]_]+")
 export("read_json_from_file")
+export("process_mpower_data")
