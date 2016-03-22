@@ -52,6 +52,31 @@ fetchActivityFeatureTables<-function(tables, features) {
 }
 
 
+#' Transforms the output of NormalizeFeature.
+#' 
+#' Given the output of NormalizeFeature - a list one entry per activity of
+#' a list of fdat, controlMean, controlUpper and controlLower - transform the
+#' data.frame fdat into one containing columns "date", "pre" and "post".
+#' Columns pre and post hold normalized data for a selected feature.
+transformNormalizedData <- function(norms, window) {
+  lapply(norms, function(x) {
+    tmp <- x$fdat
+    tmp <- tmp[!is.na(tmp$date) & tmp$date >= window$start & tmp$date <= window$end, ]
+    tmp <- tmp[!duplicated(tmp[, c("date", "medTimepoint")]), ]
+    pre <- tmp[!is.na(tmp$medTimepoint) & tmp$medTimepoint == "Immediately before Parkinson medication", ]
+    pre$medTimepoint <- NULL
+    names(pre) <- c("date", "pre")
+    post <- tmp[!is.na(tmp$medTimepoint) & tmp$medTimepoint == "Just after Parkinson medication (at your best)", ]
+    post$medTimepoint <- NULL
+    names(post) <- c("date", "post")
+    df <- merge(pre, post, all=TRUE)
+    rownames(df) <- df$date
+    x$fdat <- df
+    return(x)
+  })
+}
+
+
 #' Return a list, indexed by activity type, of normalized pre and
 #' post medication values for a selected feature to push to the
 #' Bridge mPower Visualization API
@@ -80,27 +105,11 @@ fetchActivityFeatureTables<-function(tables, features) {
 getVisData <- function(healthCode, featureNames, featureTables, window, demo, ageInterval=5) {
   activityTypes <- names(featureTables)
   norms <- lapply(activityTypes, function(activity) {
-    NormalizeFeature(featureTables[[activity]], healthCode, featureNames[[activity]], demo, ageInterval=5)
+    NormalizeFeature(featureTables[[activity]], healthCode, featureNames[[activity]], demo, ageInterval=ageInterval)
   })
   names(norms) <- activityTypes
 
-  # Return a list of data.frames, one per activity, with columns "date",
-  # "pre" and "post"
-  norms <- lapply(norms, function(x) {
-    tmp <- x$fdat
-    tmp <- tmp[!is.na(tmp$date) & tmp$date >= window$start & tmp$date <= window$end, ]
-    tmp <- tmp[!duplicated(tmp[, c("date", "medTimepoint")]), ]
-    pre <- tmp[!is.na(tmp$medTimepoint) & tmp$medTimepoint == "Immediately before Parkinson medication", ]
-    pre$medTimepoint <- NULL
-    names(pre) <- c("date", "pre")
-    post <- tmp[!is.na(tmp$medTimepoint) & tmp$medTimepoint == "Just after Parkinson medication (at your best)", ]
-    post$medTimepoint <- NULL
-    names(post) <- c("date", "post")
-    df <- merge(pre, post, all=TRUE)
-    rownames(df) <- df$date
-    x$fdat <- df
-    return(x)
-  })
+  transformNormalizedData(norms, window)
 }
 
 
