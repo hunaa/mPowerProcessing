@@ -9,6 +9,71 @@ require(synapseClient)
 context("test_unit_normalization")
 
 
+#-----------------------------------------------------------
+# Helper functions
+#-----------------------------------------------------------
+
+# count the activities performed by the given participant within the
+# date window at the given pre/post medication timepoint
+countParticipantActivityDays <- function(activity, dat, healthCode, window) {
+  dat1 <- dat[ dat$healthCode==healthCode & dat$date >= window$start & dat$date <= window$end, ]
+  pre_days  <- unique(dat1$date[!is.na(dat1$medTimepoint) & dat1$medTimepoint=='Immediately before Parkinson medication'])
+  post_days <- unique(dat1$date[!is.na(dat1$medTimepoint) & dat1$medTimepoint=='Just after Parkinson medication (at your best)'])
+  other <- length( setdiff(setdiff(unique(dat1$date), pre_days), post_days) )
+  data.frame(activity=activity,
+             medTimepoint=c('pre','post','other'),
+             days=c(length(pre_days), length(post_days), other))
+}
+
+## Return a list of data frames, one per PD patient, which counts activities
+## performed within the date window. For example:
+##
+##     $`43294479-32e0-4589-92ee-370b47a81e57`
+##               activity medTimepoint  days
+##     balance.1  balance          pre    17
+##     balance.2  balance         post     9
+##     balance.3  balance        other     1
+##     gait.1        gait          pre    17
+##     gait.2        gait         post     9
+##     gait.3        gait        other     1
+##     tap.1          tap          pre    19
+##     tap.2          tap         post    12
+##     tap.3          tap        other     1
+##     voice.1      voice          pre    19
+##     voice.2      voice         post    11
+##     voice.3      voice        other     1
+##
+countActivity <- function(demo, featureTables, window) {
+  # find participants with a PD diagnosis
+  cases <- na.omit(demo$healthCode[demo$`professional-diagnosis` & !is.na(demo$age)])
+  names(cases) <- cases
+
+  # for each PD patient, return a data.frame with counts of activities
+  # performed within the date window
+  lapply(cases, function(healthCode) {
+    message(healthCode)
+    do.call(rbind,
+            mapply(countParticipantActivityDays, names(featureTables), featureTables,
+                   MoreArgs=list(healthCode=healthCode, window=window),
+                   SIMPLIFY=FALSE))
+  })
+}
+
+## filter activity count to those with activities performed at
+## pre or post medication time points.
+countPrepostActivity <- function(demo, featureTables, window) {
+  activityCounts <- countActivity(demo, featureTables, window)
+  Filter(function(df) {
+           sum(df$days[df$medTimepoint %in% c('pre','post')]) > 0
+         }, activityCounts)
+}
+
+
+#-----------------------------------------------------------
+# Test set-up and tests
+#-----------------------------------------------------------
+
+
 timepoints <- c('Immediately before Parkinson medication',
                 'Just after Parkinson medication (at your best)',
                 'Another time',
@@ -17,6 +82,7 @@ dates <- as.Date(sapply(1:30, function(d) sprintf('2015-04-%02d',d)))
 cases <- sprintf('test-%d', c(90050, 90060, 90080))
 controls <- sprintf('test-%d', 10020:10080)
 
+## create bogus demographics table with cases and controls
 demo <- data.frame(
   healthCode=c(cases, controls),
   `professional-diagnosis`=c(rep(TRUE, length(cases)), rep(FALSE, length(controls))),
@@ -90,34 +156,32 @@ controlStats <- GetControlFeatureSummaryStats(dat, controlIds, 'featureX')
 expect_true(abs(controlStats$mean - 61.25) < 5)
 
 
+## Count days on which pre and post activity occurs
+featureTables <- list(foo=dat)
+window <- list(start=as.Date('2015-04-01'), end=as.Date('2015-04-30'))
+cppa <- countPrepostActivity(demo, featureTables, window)
+
+
 ## test normalization
-## TODO the tests here are a little weak, just that the pre values are less
-##      than post values as they are contrived to be in the bogus data created
-##      above. Ideally, we'd have tests resulting in specific expected values.
-norm <- NormalizeFeature(dat,
-                 patientId='test-90050',
-                 featName='featureX',
-                 demo=demo,
-                 ageInterval=5)
-mpre <- mean(norm$fdat$featureX[norm$fdat$medTimepoint==timepoints[1]], na.rm=TRUE)
-mpost <- mean(norm$fdat$featureX[norm$fdat$medTimepoint==timepoints[2]], na.rm=TRUE)
-expect_true(mpre < mpost)
+##   * test that the pre values are less than post values as they are
+##     contrived to be in the bogus data created above.
+##   * test that the counts of days with pre and post data are as expected
+for (healthCode in cases) {
+  message('testing ', healthCode)
+  norm <- NormalizeFeature(dat,
+                   patientId=healthCode,
+                   featName='featureX',
+                   demo=demo,
+                   ageInterval=5)
+  mpre <- mean(norm$fdat$featureX[norm$fdat$medTimepoint==timepoints[1]], na.rm=TRUE)
+  mpost <- mean(norm$fdat$featureX[norm$fdat$medTimepoint==timepoints[2]], na.rm=TRUE)
+  expect_true(mpre < mpost)
 
-norm <- NormalizeFeature(dat,
-                 patientId='test-90060',
-                 featName='featureX',
-                 demo=demo,
-                 ageInterval=5)
-mpre <- mean(norm$fdat$featureX[norm$fdat$medTimepoint==timepoints[1]], na.rm=TRUE)
-mpost <- mean(norm$fdat$featureX[norm$fdat$medTimepoint==timepoints[2]], na.rm=TRUE)
-expect_true(mpre < mpost)
-
-norm <- NormalizeFeature(dat,
-                 patientId='test-90080',
-                 featName='featureX',
-                 demo=demo,
-                 ageInterval=5)
-mpre <- mean(norm$fdat$featureX[norm$fdat$medTimepoint==timepoints[1]], na.rm=TRUE)
-mpost <- mean(norm$fdat$featureX[norm$fdat$medTimepoint==timepoints[2]], na.rm=TRUE)
-expect_true(mpre < mpost)
+  norms <- list(foo=norm)
+  tnorms <- transformNormalizedData(norms, window)
+  expect_equal(sum(!is.na(tnorms$foo$fdat$pre)),
+               cppa[[healthCode]]$days[ cppa[[healthCode]]$medTimepoint=='pre' ])
+  expect_equal(sum(!is.na(tnorms$foo$fdat$post)),
+               cppa[[healthCode]]$days[ cppa[[healthCode]]$medTimepoint=='post' ])
+}
 
