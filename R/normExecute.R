@@ -8,6 +8,7 @@
 #' All lists are indexed by activity name ('balance', 'gait', 'tap', 'voice').
 #'
 fetchActivityFeatureTables<-function(tables, features) {
+  ## TODO: consider time zone in the use of as.Date here ignores time zone
   ## GET TAPPING FEATURES
   tapTable <- synTableQuery(sprintf('SELECT * FROM %s WHERE "tapping_results.json.TappingSamples" is not null', tables$tapping))
   tap <- tapTable@values

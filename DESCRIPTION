@@ -7,6 +7,6 @@ Author: Brian Bot
 Maintainer: Brian Bot <brian.bot@sagebase.org>
 Description: This package processes mPower data.
 License: GPL
-Imports: synapseClient, bridger, RJSONIO, fractal, pracma, changepoint, lomb, uuid, crayon, RCurl
+Imports: synapseClient, bridger, rjson, fractal, pracma, changepoint, lomb, uuid, crayon, RCurl
 Remotes: github::Sage-Bionetworks/rSynapseClient, github::brian-bot/bridger
 Suggests: testthat
