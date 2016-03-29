@@ -38,6 +38,10 @@ wResults<-expected
 wDat<-wResults$wDat
 
 cmm<-cleanup_missing_med_data(mDat, tDat, vDat, wDat)
+mDat<-cmm$mDat
+tDat<-cmm$tDat
+vDat<-cmm$vDat
+wDat<-cmm$wDat
 
 eDatFilePath<-file.path(testDataFolder, "eDatExpected.RData")
 load(eDatFilePath) # creates 'expected'

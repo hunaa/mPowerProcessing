@@ -473,7 +473,8 @@ formatDF<-function(dataframe, schema) {
 	for (column in schemaColumns@content) schemaColumnMap[[column@name]]<-column
 	for (dfColumnName in names(dataframe)) {
 		schemaColumn<-schemaColumnMap[[dfColumnName]]
-		if (is.null(schemaColumn)) stop(sprintf("Data frame has column %s but schema has no such column.", dfColumnName))
+		if (is.null(schemaColumn)) stop(sprintf("Data frame has column %s but %s has no such column.", 
+							dfColumnName, propertyValue(schema, "name")))
 		dfColumnType<-class(dataframe[[dfColumnName]])[1]
 		expectedTableColumnTypes<-synapseClient:::getTableColumnTypeForDataFrameColumnType(dfColumnType)
 		tableColumnType<-schemaColumn@columnType
