@@ -49,4 +49,23 @@ with_mock(
 		}
 )
 
+load(tDataExpectedFile)
+# now add a duplicate row (repeat the last row)
+dfRef<-schemaAndQuery["query", "syn4961463"][[1]]@values
+schemaAndQuery["query", "syn4961463"][[1]]@values<-dfRef[c(1:nrow(dfRef),nrow(dfRef)),]
+row.names(schemaAndQuery["query", "syn4961463"][[1]]@values)<-c(row.names(dfRef), sprintf("%s_0", nrow(dfRef)))
+
+with_mock(
+		synGet=function(id) {schemaAndQuery["schema", id][[1]]},
+		synTableQuery=function(sql) {schemaAndQuery["query", mPowerProcessing:::getIdFromSql(sql)][[1]]},
+		{
+			tResults<-process_tapping_activity(ids, NA)
+			tDatFilePath<-file.path(testDataFolder, "tDatExpected.RData")
+			load(tDatFilePath) # creates 'expected'
+			expect_equal(tResults, expected)
+		}
+)
+
+
+
 

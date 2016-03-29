@@ -41,15 +41,15 @@ cmm<-cleanup_missing_med_data(mDat, tDat, vDat, wDat)
 
 eDatFilePath<-file.path(testDataFolder, "eDatExpected.RData")
 load(eDatFilePath) # creates 'expected'
-eDat<-expected
+eDat<-expected$eDat
 
 uDatFilePath<-file.path(testDataFolder, "uDatExpected.RData")
 load(uDatFilePath) # creates 'expected'
-uDat<-expected
+uDat<-expected$uDat
 
 pDatFilePath<-file.path(testDataFolder, "pDatExpected.RData")
 load(pDatFilePath) # creates 'expected'
-pDat<-expected
+pDat<-expected$pDat
 
 # this is the parent project of all the tables
 outputProjectId<-"syn4993293"
@@ -64,14 +64,31 @@ if (createTestData()) {
 
 load(qqFilePath)
 
+# we use this to capture the table values that 'store_cleaned_data' stores
+storedResults<-NULL
+
+tDatId<- qq[which(qq$table.name=="Tapping Activity"), "table.id"]
+
 with_mock(
 		synQuery=function(q) qq,
-		as.tableColumns=function(x) list(fileHandleId="123"),
+		synTableQuery=function(sql) {
+			id<-getIdFromSql(sprintf("%s where", sql))
+			if (id==tDatId) {
+				values=tDat # mock the case in which the data is already in the table
+			} else {
+				values=data.frame()
+			}
+			Table(tableSchema=id, values=values)
+		},
 		synGet=function(id) id,
-		synStore=function(table) table,
+		synStore=function(table) {storedResults[[table@schema]]<<-table@values; table},
 		{
 			store_cleaned_data(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat, wDat, 
 					mFilehandleCols, tFilehandleCols, vFilehandleCols)
 		}
 )
 
+
+# 'expect_equal' fails if I don't do this:
+rownames(storedResults[[tDatId]])<-NULL; rownames(tDat)<-NULL
+expect_equal(storedResults[[tDatId]], tDat)

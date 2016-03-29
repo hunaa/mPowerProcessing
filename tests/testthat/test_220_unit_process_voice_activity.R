@@ -86,4 +86,42 @@ with_mock(
 		}
 )
 
+load(voiceDataExpectedFile)
+# now add a duplicate row (repeat the last row)
+dfRef<-schemaAndQuery["query", "syn4961455"][[1]]@values
+schemaAndQuery["query", "syn4961455"][[1]]@values<-dfRef[c(1:nrow(dfRef),nrow(dfRef)),]
+row.names(schemaAndQuery["query", "syn4961455"][[1]]@values)<-c(row.names(dfRef), sprintf("%s_0", nrow(dfRef)))
+
+with_mock(
+		synGet=function(id) {
+			if (id==vId2) {
+				schema2
+			} else {
+				schemaAndQuery["schema", id][[1]]
+			}
+		},
+		synTableQuery=function(sql) {
+			id<-mPowerProcessing:::getIdFromSql(sql)
+			if (id==vId2) {
+				query2
+			} else {
+				schemaAndQuery["query", id][[1]]
+			}
+		},
+		read_json_from_file=function(file) {# file is a file path with fileHandleId as name
+			result<-fromJSON(fileContent[file]) # this gets the file content.  The name is the file path
+			names(result)<-names(file) # result must map fileHandleId to file content
+			result
+		},
+		synDownloadTableColumns=function(synTable, tableColumns) {
+			vFiles
+		},
+		
+		{
+			vResults<-process_voice_activity(vId1, vId2, "1", "2")
+			vDatFilePath<-file.path(testDataFolder, "vDatExpected.RData")
+			load(vDatFilePath) # creates 'expected'
+			expect_equal(vResults, expected)
+		}
+)
 

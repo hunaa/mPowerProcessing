@@ -49,6 +49,56 @@ subsetThis <- function(x, theseOnes){
 }
 
 
+# given a data frame 'df', subselect the rows such that column 'col' is unique
+# by taking  only the *last* row in df having the repeated value
+takeLastValue<-function(df, col) {
+	# find the unique values in column 'col'
+	uniqueValuesInColumn<-unique(df[[col]])
+	# this function finds the index of the last row in df having value 'value' in column 'col'
+	lastIndexForValueInColumn<-function(value) {
+		max(which(df[[col]]==value))
+	}
+	# now find the last row index for *all* the unique values in column 'col'
+	lastIndexForEachValueInColumn<-sapply(uniqueValuesInColumn, lastIndexForValueInColumn)
+	# finally, return the rows of 'df' corresponding to this collection of 'last rows'
+	df[lastIndexForEachValueInColumn,]
+}
+
+# combine 'new' into 'current', replacing the rows of current with that 
+# of 'new' where the values in column 'col' are the same, otherwise appending
+# the row to the bottom of the data frame
+mergeDataFrames<-function(current, new, col) {
+	if (nrow(current)==0) return(new)
+	if (nrow(new)==0) return(current)
+	if (is.null(current[[col]])) stop("'current' has no column ", col)
+	if (is.null(new[[col]])) stop("'new' has no column ", col)
+	# these are the indices in 'current' that require merging
+	colIndicesInCurrentThatMatchNew<-which(sapply(current[[col]], function(x) any(new[[col]]==x)))
+	# these are the indices in 'new' to be merged into 'current'
+	colIndicesInNewThatMatchCurrent<-which(sapply(new[[col]], function(x) any(current[[col]]==x)))
+	# the two vectors should be the same length
+	if (length(colIndicesInCurrentThatMatchNew)>length(colIndicesInNewThatMatchCurrent))
+		stop("There are multiple rows in 'new' that match rows in 'current'")
+	if (length(colIndicesInNewThatMatchCurrent)>length(colIndicesInCurrentThatMatchNew))
+		stop("There are multiple rows in 'current' that match rows in 'new'")
+	
+	# the following is only necessary if there are matching rows in the two dataframes
+	if (length(colIndicesInCurrentThatMatchNew)>0) {
+		# Within the space of colIndicesInNewThatMatchCurrent, what is the index in current
+		# that holds the matching value?
+		subIndex<-sapply(new[colIndicesInNewThatMatchCurrent,col], function(x) which(current[colIndicesInCurrentThatMatchNew, col]==x))
+		if (is(subIndex, "list")) stop("There are multiple matches in the given key column between 'current' and 'new'")
+		current[colIndicesInCurrentThatMatchNew,]<-new[colIndicesInNewThatMatchCurrent[subIndex],]
+		# now append the values of new that were not merged in to current
+		# and return the result
+		rbind(current, new[-colIndicesInNewThatMatchCurrent,])
+	} else {
+		rbind(current, new)
+	}
+	
+}
+
+
 #####
 ## ENROLLMENT for first survey: parkinson-EnrollmentSurvey-v1
 #####
@@ -208,7 +258,10 @@ process_tapping_activity<-function(tId, lastProcessedVersion) {
     return(x[, tAllNames])
   })
   tDat <- do.call(rbind, tAll)
-  rownames(tDat) <- tDat$recordId
+	tDat<-takeLastValue(tDat, "recordId")
+	# This is done 19 lines below, _after_ calling 'subsetThis' which remove duplicates
+	# It's not clear why it was done here.  It causes error when duplicate recordIds are present
+	# rownames(tDat) <- tDat$recordId
   
   tDat$externalId <- NULL
   tDat$uploadDate <- NULL
@@ -282,6 +335,7 @@ process_voice_activity<-function(vId1, vId2, lastProcessedVersion1, lastProcesse
     return(vals)
   })
   vFirst <- do.call(rbind, vFirst)
+	vFirst <- takeLastValue(vFirst, "recordId")
   rownames(vFirst) <- vFirst$recordId
   
   ## SECOND SET (1) IS AS WE WOULD EXPECT
@@ -290,7 +344,8 @@ process_voice_activity<-function(vId1, vId2, lastProcessedVersion1, lastProcesse
   
   vSecond <- synTableQuery(createQueryString(vId2, lastProcessedVersion2))@values
   maxRowProcessed[[vId2]]<-getMaxRowVersion(vSecond)
-  rownames(vSecond) <- vSecond$recordId
+	vSecond <- takeLastValue(vSecond, "recordId")
+	rownames(vSecond) <- vSecond$recordId
   
   vDat <- rbind(vFirst, vSecond)
   vDat$externalId <- NULL
@@ -400,8 +455,13 @@ store_cleaned_data<-function(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat
   ## FINALLY, STORE THE OUTPUT
   for(i in 1:length(storeThese)){
     thisId <- qq$table.id[qq$table.name == names(storeThese)[i]]
-    thisFile <- as.tableColumns(storeThese[[i]]$vals)
-    synStore(Table(synGet(thisId), thisFile$fileHandleId))
+		# Appending the new data is not sufficient since there may be
+		# rows in the new data that _replace_ rows in the current data.
+		# Instead we have to _merge_, based on the 'recordId' column.
+		rownames(storeThese[[i]]$vals)<-NULL
+		tableContent<-synTableQuery(sprintf("select * from %s", thisId))
+		tableContent@values<-mergeDataFrames(tableContent@values, storeThese[[i]]$vals, "recordId")
+		synStore(tableContent)
   }
 }
 
