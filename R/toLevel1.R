@@ -258,7 +258,6 @@ process_tapping_activity<-function(tId, lastProcessedVersion) {
     return(x[, tAllNames])
   })
   tDat <- do.call(rbind, tAll)
-	tDat<-takeLastValue(tDat, "recordId")
 	# This is done 19 lines below, _after_ calling 'subsetThis' which remove duplicates
 	# It's not clear why it was done here.  It causes error when duplicate recordIds are present
 	# rownames(tDat) <- tDat$recordId
@@ -461,7 +460,33 @@ store_cleaned_data<-function(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat
 		rownames(storeThese[[i]]$vals)<-NULL
 		tableContent<-synTableQuery(sprintf("select * from %s", thisId))
 		tableContent@values<-mergeDataFrames(tableContent@values, storeThese[[i]]$vals, "recordId")
+		tableContent@values<-formatDF(tableContent@values, synGet(thisId))
 		synStore(tableContent)
   }
+}
+
+# given a dataframe and a schema, format the data frame
+# columns to be compatible with the schema
+formatDF<-function(dataframe, schema) {
+	schemaColumns<-schema@columns
+	schemaColumnMap<-list()
+	for (column in schemaColumns@content) schemaColumnMap[[column@name]]<-column
+	for (dfColumnName in names(dataframe)) {
+		schemaColumn<-schemaColumnMap[[dfColumnName]]
+		if (is.null(schemaColumn)) stop(sprintf("Data frame has column %s but schema has no such column.", dfColumnName))
+		dfColumnType<-class(dataframe[[dfColumnName]])[1]
+		expectedTableColumnTypes<-synapseClient:::getTableColumnTypeForDataFrameColumnType(dfColumnType)
+		tableColumnType<-schemaColumn@columnType
+		if (tableColumnType=="BOOLEAN") {
+			if (!is.logical(dataframe[[dfColumnName]])) {
+				dataframe[[dfColumnName]]<-as.logical(dataframe[[dfColumnName]])
+			}
+		} else if (tableColumnType=="INTEGER") {
+			if (!is.integer(dataframe[[dfColumnName]])) {
+				dataframe[[dfColumnName]]<-as.integer(dataframe[[dfColumnName]])
+			}
+		}
+	}
+	dataframe
 }
 

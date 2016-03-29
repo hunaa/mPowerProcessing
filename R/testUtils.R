@@ -69,141 +69,163 @@ mockFileAttachments<-function(folder, readJson=F) {
 # schema<-synGet(id)
 # for (c in schema@columns@content) message("TableColumn(name=\"", c@name, "\", columnType=\"", c@columnType, "\"),")
 #
+demographicSurveySchema<-function(projectId) {
+	TableSchema("Demographics Survey", projectId, list(
+					TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="healthCode", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="createdOn", columnType="DATE"),
+					TableColumn(name="appVersion", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="phoneInfo", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="age", columnType="INTEGER"),
+					TableColumn(name="are-caretaker", columnType="BOOLEAN"),
+					TableColumn(name="deep-brain-stimulation", columnType="BOOLEAN"),
+					TableColumn(name="diagnosis-year", columnType="INTEGER"),
+					TableColumn(name="education", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="employment", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="gender", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="health-history", columnType="STRING", maximumSize=as.integer(997)),
+					TableColumn(name="healthcare-provider", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="home-usage", columnType="BOOLEAN"),
+					TableColumn(name="last-smoked", columnType="INTEGER"),
+					TableColumn(name="maritalStatus", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="medical-usage", columnType="BOOLEAN"),
+					TableColumn(name="medical-usage-yesterday", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="medication-start-year", columnType="INTEGER"),
+					TableColumn(name="onset-year", columnType="INTEGER"),
+					TableColumn(name="packs-per-day", columnType="INTEGER"),
+					TableColumn(name="past-participation", columnType="BOOLEAN"),
+					TableColumn(name="phone-usage", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="professional-diagnosis", columnType="BOOLEAN"),
+					TableColumn(name="race", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="smartphone", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="smoked", columnType="BOOLEAN"),
+					TableColumn(name="surgery", columnType="BOOLEAN"),
+					TableColumn(name="video-usage", columnType="BOOLEAN"),
+					TableColumn(name="years-smoking", columnType="INTEGER")
+			))
+}
+
+updrsSurveySchema<-function(projectId) {
+	TableSchema("UPDRS Survey", projectId, list(
+					TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="healthCode", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="createdOn", columnType="DATE"),
+					TableColumn(name="appVersion", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="phoneInfo", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="EQ-5D1", columnType="INTEGER"),
+					TableColumn(name="GELTQ-1a", columnType="INTEGER"),
+					TableColumn(name="GELTQ-1b", columnType="INTEGER"),
+					TableColumn(name="GELTQ-1c", columnType="INTEGER"),
+					TableColumn(name="GELTQ-2", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="MDS-UPDRS1.3", columnType="INTEGER"),
+					TableColumn(name="MDS-UPDRS1.4", columnType="INTEGER"),
+					TableColumn(name="MDS-UPDRS1.5", columnType="INTEGER"),
+					TableColumn(name="MDS-UPDRS1.7", columnType="INTEGER"),
+					TableColumn(name="MDS-UPDRS1.8", columnType="INTEGER"),
+					TableColumn(name="MDS-UPDRS2.1", columnType="INTEGER"),
+					TableColumn(name="MDS-UPDRS2.4", columnType="INTEGER"),
+					TableColumn(name="MDS-UPDRS2.5", columnType="INTEGER"),
+					TableColumn(name="MDS-UPDRS2.6", columnType="INTEGER"),
+					TableColumn(name="MDS-UPDRS2.7", columnType="INTEGER"),
+					TableColumn(name="MDS-UPDRS2.8", columnType="INTEGER"),
+					TableColumn(name="MDS-UPDRS2.9", columnType="INTEGER"),
+					TableColumn(name="MDS-UPDRS2.10", columnType="INTEGER"),
+					TableColumn(name="MDS-UPDRS2.12", columnType="INTEGER"),
+					TableColumn(name="MDS-UPDRS2.13", columnType="INTEGER"),
+					TableColumn(name="MDS-UPDRS1.1", columnType="INTEGER")
+			))
+}
+
+pdq8SurveySchema<-function(projectId) {
+	TableSchema("PDQ8 Survey", projectId, list(
+					TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="healthCode", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="createdOn", columnType="DATE"),
+					TableColumn(name="appVersion", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="phoneInfo", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="PDQ8-1", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="PDQ8-2", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="PDQ8-3", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="PDQ8-4", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="PDQ8-5", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="PDQ8-6", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="PDQ8-7", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="PDQ8-8", columnType="STRING", maximumSize=as.integer(200))
+			))
+}
+
+memoryActivitySchema<-function(projectId) {
+	TableSchema("Memory Activity", projectId, list(
+					TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="healthCode", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="createdOn", columnType="DATE"),
+					TableColumn(name="appVersion", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="phoneInfo", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="MemoryGameResults.json.MemoryGameOverallScore", columnType="INTEGER"),
+					TableColumn(name="MemoryGameResults.json.MemoryGameNumberOfGames", columnType="INTEGER"),
+					TableColumn(name="MemoryGameResults.json.MemoryGameNumberOfFailures", columnType="INTEGER"),
+					TableColumn(name="MemoryGameResults.json.startDate", columnType="DATE"),
+					TableColumn(name="MemoryGameResults.json.endDate", columnType="DATE"),
+					TableColumn(name="MemoryGameResults.json.MemoryGameGameRecords", columnType="FILEHANDLEID"),
+					TableColumn(name="medTimepoint", columnType="STRING", maximumSize=as.integer(200))
+			))
+}
+
+tappingActivitySchema<-function(projectId) {
+	TableSchema("Tapping Activity", projectId, list(
+					TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="healthCode", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="createdOn", columnType="DATE"),
+					TableColumn(name="appVersion", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="phoneInfo", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="accel_tapping.json.items", columnType="FILEHANDLEID"),
+					TableColumn(name="tapping_results.json.ButtonRectLeft", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="tapping_results.json.ButtonRectRight", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="tapping_results.json.endDate", columnType="DATE"),
+					TableColumn(name="tapping_results.json.startDate", columnType="DATE"),
+					TableColumn(name="tapping_results.json.TappingSamples", columnType="FILEHANDLEID"),
+					TableColumn(name="tapping_results.json.TappingViewSize", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="medTimepoint", columnType="STRING", maximumSize=as.integer(200))
+			))
+}
+
+voiceActivitySchema<-function(projectId) {
+	TableSchema("Voice Activity", projectId, list(
+					TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="healthCode", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="createdOn", columnType="DATE"),
+					TableColumn(name="appVersion", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="phoneInfo", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="audio_audio.m4a", columnType="FILEHANDLEID"),
+					TableColumn(name="audio_countdown.m4a", columnType="FILEHANDLEID"),
+					TableColumn(name="medTimepoint", columnType="STRING", maximumSize=as.integer(200))))
+}
+
+walkingActivitySchema<-function(projectId) {
+	TableSchema("Walking Activity", projectId, list(
+					TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="healthCode", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="createdOn", columnType="DATE"),
+					TableColumn(name="appVersion", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="phoneInfo", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="accel_walking_outbound.json.items", columnType="FILEHANDLEID"),
+					TableColumn(name="deviceMotion_walking_outbound.json.items", columnType="FILEHANDLEID"),
+					TableColumn(name="pedometer_walking_outbound.json.items", columnType="FILEHANDLEID"),
+					TableColumn(name="accel_walking_return.json.items", columnType="FILEHANDLEID"),
+					TableColumn(name="deviceMotion_walking_return.json.items", columnType="FILEHANDLEID"),
+					TableColumn(name="pedometer_walking_return.json.items", columnType="FILEHANDLEID"),
+					TableColumn(name="accel_walking_rest.json.items", columnType="FILEHANDLEID"),
+					TableColumn(name="deviceMotion_walking_rest.json.items", columnType="FILEHANDLEID"),
+					TableColumn(name="medTimepoint", columnType="STRING", maximumSize=as.integer(200))
+			))
+}
+
 createOutputTables<-function(projectId) {
-			synStore(TableSchema("Demographics Survey", projectId, list(
-							TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
-							TableColumn(name="healthCode", columnType="STRING", maximumSize=as.integer(200)),
-							TableColumn(name="createdOn", columnType="DATE"),
-							TableColumn(name="appVersion", columnType="STRING", maximumSize=as.integer(200)),
-							TableColumn(name="phoneInfo", columnType="STRING", maximumSize=as.integer(200)),
-							TableColumn(name="age", columnType="INTEGER"),
-							TableColumn(name="are-caretaker", columnType="BOOLEAN"),
-							TableColumn(name="deep-brain-stimulation", columnType="BOOLEAN"),
-							TableColumn(name="diagnosis-year", columnType="INTEGER"),
-							TableColumn(name="education", columnType="STRING", maximumSize=as.integer(200)),
-							TableColumn(name="employment", columnType="STRING", maximumSize=as.integer(200)),
-							TableColumn(name="gender", columnType="STRING", maximumSize=as.integer(200)),
-							TableColumn(name="health-history", columnType="STRING", maximumSize=as.integer(997)),
-							TableColumn(name="healthcare-provider", columnType="STRING", maximumSize=as.integer(200)),
-							TableColumn(name="home-usage", columnType="BOOLEAN"),
-							TableColumn(name="last-smoked", columnType="INTEGER"),
-							TableColumn(name="maritalStatus", columnType="STRING", maximumSize=as.integer(200)),
-							TableColumn(name="medical-usage", columnType="BOOLEAN"),
-							TableColumn(name="medical-usage-yesterday", columnType="STRING", maximumSize=as.integer(200)),
-							TableColumn(name="medication-start-year", columnType="INTEGER"),
-							TableColumn(name="onset-year", columnType="INTEGER"),
-							TableColumn(name="packs-per-day", columnType="INTEGER"),
-							TableColumn(name="past-participation", columnType="BOOLEAN"),
-							TableColumn(name="phone-usage", columnType="STRING", maximumSize=as.integer(200)),
-							TableColumn(name="professional-diagnosis", columnType="BOOLEAN"),
-							TableColumn(name="race", columnType="STRING", maximumSize=as.integer(200)),
-							TableColumn(name="smartphone", columnType="STRING", maximumSize=as.integer(200)),
-							TableColumn(name="smoked", columnType="BOOLEAN"),
-							TableColumn(name="surgery", columnType="BOOLEAN"),
-							TableColumn(name="video-usage", columnType="BOOLEAN"),
-							TableColumn(name="years-smoking", columnType="INTEGER")
-					)))
-	
-			synStore(TableSchema("UPDRS Survey", projectId, list(
-									TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="healthCode", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="createdOn", columnType="DATE"),
-									TableColumn(name="appVersion", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="phoneInfo", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="EQ-5D1", columnType="INTEGER"),
-									TableColumn(name="GELTQ-1a", columnType="INTEGER"),
-									TableColumn(name="GELTQ-1b", columnType="INTEGER"),
-									TableColumn(name="GELTQ-1c", columnType="INTEGER"),
-									TableColumn(name="GELTQ-2", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="MDS-UPDRS1.3", columnType="INTEGER"),
-									TableColumn(name="MDS-UPDRS1.4", columnType="INTEGER"),
-									TableColumn(name="MDS-UPDRS1.5", columnType="INTEGER"),
-									TableColumn(name="MDS-UPDRS1.7", columnType="INTEGER"),
-									TableColumn(name="MDS-UPDRS1.8", columnType="INTEGER"),
-									TableColumn(name="MDS-UPDRS2.1", columnType="INTEGER"),
-									TableColumn(name="MDS-UPDRS2.4", columnType="INTEGER"),
-									TableColumn(name="MDS-UPDRS2.5", columnType="INTEGER"),
-									TableColumn(name="MDS-UPDRS2.6", columnType="INTEGER"),
-									TableColumn(name="MDS-UPDRS2.7", columnType="INTEGER"),
-									TableColumn(name="MDS-UPDRS2.8", columnType="INTEGER"),
-									TableColumn(name="MDS-UPDRS2.9", columnType="INTEGER"),
-									TableColumn(name="MDS-UPDRS2.10", columnType="INTEGER"),
-									TableColumn(name="MDS-UPDRS2.12", columnType="INTEGER"),
-									TableColumn(name="MDS-UPDRS2.13", columnType="INTEGER"),
-									TableColumn(name="MDS-UPDRS1.1", columnType="INTEGER")
-							)))
-			
-			synStore(TableSchema("PDQ8 Survey", projectId, list(
-									TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="healthCode", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="createdOn", columnType="DATE"),
-									TableColumn(name="appVersion", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="phoneInfo", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="PDQ8-1", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="PDQ8-2", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="PDQ8-3", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="PDQ8-4", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="PDQ8-5", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="PDQ8-6", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="PDQ8-7", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="PDQ8-8", columnType="STRING", maximumSize=as.integer(200))
-							)))
-			
-			synStore(TableSchema("Memory Activity", projectId, list(
-									TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="healthCode", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="createdOn", columnType="DATE"),
-									TableColumn(name="appVersion", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="phoneInfo", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="MemoryGameResults.json.MemoryGameOverallScore", columnType="INTEGER"),
-									TableColumn(name="MemoryGameResults.json.MemoryGameNumberOfGames", columnType="INTEGER"),
-									TableColumn(name="MemoryGameResults.json.MemoryGameNumberOfFailures", columnType="INTEGER"),
-									TableColumn(name="MemoryGameResults.json.startDate", columnType="DATE"),
-									TableColumn(name="MemoryGameResults.json.endDate", columnType="DATE"),
-									TableColumn(name="MemoryGameResults.json.MemoryGameGameRecords", columnType="FILEHANDLEID"),
-									TableColumn(name="medTimepoint", columnType="STRING", maximumSize=as.integer(200))
-							)))
-			
-			synStore(TableSchema("Tapping Activity", projectId, list(
-									TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="healthCode", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="createdOn", columnType="DATE"),
-									TableColumn(name="appVersion", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="phoneInfo", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="accel_tapping.json.items", columnType="FILEHANDLEID"),
-									TableColumn(name="tapping_results.json.ButtonRectLeft", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="tapping_results.json.ButtonRectRight", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="tapping_results.json.endDate", columnType="DATE"),
-									TableColumn(name="tapping_results.json.startDate", columnType="DATE"),
-									TableColumn(name="tapping_results.json.TappingSamples", columnType="FILEHANDLEID"),
-									TableColumn(name="tapping_results.json.TappingViewSize", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="medTimepoint", columnType="STRING", maximumSize=as.integer(200))
-							)))
-			
-			synStore(TableSchema("Voice Activity", projectId, list(
-									TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="healthCode", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="createdOn", columnType="DATE"),
-									TableColumn(name="appVersion", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="phoneInfo", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="audio_audio.m4a", columnType="FILEHANDLEID"),
-									TableColumn(name="audio_countdown.m4a", columnType="FILEHANDLEID"),
-									TableColumn(name="medTimepoint", columnType="STRING", maximumSize=as.integer(200))							)))
-			
-			synStore(TableSchema("Walking Activity", projectId, list(
-									TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="healthCode", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="createdOn", columnType="DATE"),
-									TableColumn(name="appVersion", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="phoneInfo", columnType="STRING", maximumSize=as.integer(200)),
-									TableColumn(name="accel_walking_outbound.json.items", columnType="FILEHANDLEID"),
-									TableColumn(name="deviceMotion_walking_outbound.json.items", columnType="FILEHANDLEID"),
-									TableColumn(name="pedometer_walking_outbound.json.items", columnType="FILEHANDLEID"),
-									TableColumn(name="accel_walking_return.json.items", columnType="FILEHANDLEID"),
-									TableColumn(name="deviceMotion_walking_return.json.items", columnType="FILEHANDLEID"),
-									TableColumn(name="pedometer_walking_return.json.items", columnType="FILEHANDLEID"),
-									TableColumn(name="accel_walking_rest.json.items", columnType="FILEHANDLEID"),
-									TableColumn(name="deviceMotion_walking_rest.json.items", columnType="FILEHANDLEID"),
-									TableColumn(name="medTimepoint", columnType="STRING", maximumSize=as.integer(200))
-			)))
+			synStore(demographicSurveySchema(projectId))
+			synStore(updrsSurveySchema(projectId))
+			synStore(pdq8SurveySchema(projectId))
+			synStore(memoryActivitySchema(projectId))
+			synStore(tappingActivitySchema(projectId))
+			synStore(voiceActivitySchema(projectId))
+			synStore(walkingActivitySchema(projectId))
 }

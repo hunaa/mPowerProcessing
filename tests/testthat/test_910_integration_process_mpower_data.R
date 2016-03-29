@@ -218,8 +218,12 @@ if (canExecute) {
 	trigger<-Table( bridgeStatusId, data.frame(uploadDate=Sys.time()) )
 	trigger<-synStore(trigger)
 	
-	process_mpower_data(eId, uId, pId, mId, tIds, vId1, vId2, wIds, 
-		outputProjectId, bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId)
+	bridgeExportQueryResult<-checkForAndLockBridgeExportBatch(bridgeStatusId, mPowerBatchStatusId, "", Sys.time())
+	expect_true(!(is.null(bridgeExportQueryResult) || nrow(bridgeExportQueryResult@values)==0))
+		
+	process_mpower_data_bare(eId, uId, pId, mId, tIds, vId1, vId2, wIds, outputProjectId, 
+						bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId)
+	markProcesingComplete(bridgeExportQueryResult, "complete")
 	
 	# TODO verify content
 	
