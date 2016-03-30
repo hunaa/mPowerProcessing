@@ -48,22 +48,6 @@ subsetThis <- function(x, theseOnes){
   x[ order(x$createdOn), ]
 }
 
-
-# given a data frame 'df', subselect the rows such that column 'col' is unique
-# by taking  only the *last* row in df having the repeated value
-takeLastValue<-function(df, col) {
-	# find the unique values in column 'col'
-	uniqueValuesInColumn<-unique(df[[col]])
-	# this function finds the index of the last row in df having value 'value' in column 'col'
-	lastIndexForValueInColumn<-function(value) {
-		max(which(df[[col]]==value))
-	}
-	# now find the last row index for *all* the unique values in column 'col'
-	lastIndexForEachValueInColumn<-sapply(uniqueValuesInColumn, lastIndexForValueInColumn)
-	# finally, return the rows of 'df' corresponding to this collection of 'last rows'
-	df[lastIndexForEachValueInColumn,]
-}
-
 # combine 'new' into 'current', replacing the rows of current with that 
 # of 'new' where the values in column 'col' are the same, otherwise appending
 # the row to the bottom of the data frame
@@ -95,7 +79,6 @@ mergeDataFrames<-function(current, new, col) {
 	} else {
 		rbind(current, new)
 	}
-	
 }
 
 
@@ -334,7 +317,7 @@ process_voice_activity<-function(vId1, vId2, lastProcessedVersion1, lastProcesse
     return(vals)
   })
   vFirst <- do.call(rbind, vFirst)
-	vFirst <- takeLastValue(vFirst, "recordId")
+	vFirst<- vFirst[!duplicated(vFirst$recordId, fromLast=TRUE),]
   rownames(vFirst) <- vFirst$recordId
   
   ## SECOND SET (1) IS AS WE WOULD EXPECT
@@ -343,7 +326,8 @@ process_voice_activity<-function(vId1, vId2, lastProcessedVersion1, lastProcesse
   
   vSecond <- synTableQuery(createQueryString(vId2, lastProcessedVersion2))@values
   maxRowProcessed[[vId2]]<-getMaxRowVersion(vSecond)
-	vSecond <- takeLastValue(vSecond, "recordId")
+	vSecond<- vSecond[!duplicated(vSecond$recordId, fromLast=TRUE),]
+	
 	rownames(vSecond) <- vSecond$recordId
   
   vDat <- rbind(vFirst, vSecond)
