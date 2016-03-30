@@ -45,5 +45,23 @@ with_mock(
 		}
 )
 
+load(v2DataExpectedFile)
+# now add a duplicate row (repeat the last row)
+dfRef<-query@values
+query@values<-dfRef[c(1:nrow(dfRef),nrow(dfRef)),]
+row.names(query@values)<-c(row.names(dfRef), sprintf("%s_0", nrow(dfRef)))
+
+with_mock(
+		synGet=function(id) {schema},
+		synTableQuery=function(sql) {query},
+		{
+			uDat<-process_survey_v2("syn101")
+			uDatFilePath<-file.path(testDataFolder, "uDatExpected.RData")
+			load(uDatFilePath) # creates 'expected'
+			expect_equal(uDat, expected)
+		}
+)
+
+
 
 
