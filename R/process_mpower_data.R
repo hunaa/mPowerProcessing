@@ -47,7 +47,7 @@ checkForAndLockBridgeExportBatch<-function(bridgeStatusId, mPowerBatchStatusId, 
 					batchStatusColumnName)
 		statusTable<-Table(mPowerBatchStatusQueryResult@schema, mPowerBatchStatusValues)
 		synStore(statusTable)
-		mPowerBatchStatusQueryResult<-synTableQuery(sprintf("SELECT * FROM %s WHERE \"%s\"='%s'",
+		mPowerBatchStatusQueryResult<-synTableQuery(sprintf("select * from %s where %s='%s'",
 						mPowerBatchStatusId, bridgeUploadDateColumnName, latestBridgeUploadDate))
 	} else if (nrow(mPowerBatchStatusValues)==1) {
 		# if there IS a row, we can only process it if leaseTimeOut is specified AND
@@ -57,7 +57,7 @@ checkForAndLockBridgeExportBatch<-function(bridgeStatusId, mPowerBatchStatusId, 
 			mPowerBatchStatusQueryResult@values[1,mPowerBatchStartColumnName]<-now
 			mPowerBatchStatusQueryResult@values[1,hostNameColumnName]<-hostname
 			synStore(mPowerBatchStatusQueryResult)
-			mPowerBatchStatusQueryResult<-synTableQuery(sprintf("SELECT * FROM %s WHERE \"%s\"='%s'",
+			mPowerBatchStatusQueryResult<-synTableQuery(sprintf("select * from %s where %s='%s'",
 							mPowerBatchStatusId, bridgeUploadDateColumnName, latestBridgeUploadDate))
 		} else {
 			mPowerBatchStatusQueryResult<-NULL
