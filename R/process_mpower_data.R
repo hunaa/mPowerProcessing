@@ -46,7 +46,9 @@ checkForAndLockBridgeExportBatch<-function(bridgeStatusId, mPowerBatchStatusId, 
 					hostNameColumnName, 
 					batchStatusColumnName)
 		statusTable<-Table(mPowerBatchStatusQueryResult@schema, mPowerBatchStatusValues)
-		mPowerBatchStatusQueryResult<-synStore(statusTable, retrieveData=TRUE)
+		synStore(statusTable)
+		mPowerBatchStatusQueryResult<-synTableQuery(sprintf("select * from %s where %s='%s'",
+						mPowerBatchStatusId, bridgeUploadDateColumnName, latestBridgeUploadDate))
 	} else if (nrow(mPowerBatchStatusValues)==1) {
 		# if there IS a row, we can only process it if leaseTimeOut is specified AND
 		# processing=InProgress AND the start time is too old
@@ -54,13 +56,17 @@ checkForAndLockBridgeExportBatch<-function(bridgeStatusId, mPowerBatchStatusId, 
 				now-mPowerBatchStatusValues[1,mPowerBatchStartColumnName]>leaseTimeOut) {
 			mPowerBatchStatusQueryResult@values[1,mPowerBatchStartColumnName]<-now
 			mPowerBatchStatusQueryResult@values[1,hostNameColumnName]<-hostname
-			mPowerBatchStatusQueryResult<-synStore(mPowerBatchStatusQueryResult, retrieveData=TRUE)
+			synStore(mPowerBatchStatusQueryResult)
+			mPowerBatchStatusQueryResult<-synTableQuery(sprintf("select * from %s where %s='%s'",
+							mPowerBatchStatusId, bridgeUploadDateColumnName, latestBridgeUploadDate))
 		} else {
 			mPowerBatchStatusQueryResult<-NULL
 		}
 	} else {
 		stop(paste0("Expected 0-1 rows but got ", nrow(mPowerBatchStatusValues)))
 	}
+	if (!is.null(mPowerBatchStatusQueryResult) && nrow(mPowerBatchStatusQueryResult@values)!=1)
+		stop("Problem 'locking' the mPower batch for processing.  Expected one row for the batch in the status table but found ", nrow(mPowerBatchStatusQueryResult@values), ".")
 	mPowerBatchStatusQueryResult
 }
 
@@ -116,7 +122,8 @@ process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputPr
 				markProcesingComplete(bridgeExportQueryResult, "failed")
 			})
 }			
-				
+
+# this entry point, which lacks the 'try-catch', is exposed for testing purposes
 process_mpower_data_bare<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputProjectId, 
 		bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId) {
 	lastProcessedQueryResult<-synTableQuery(paste0("SELECT * FROM ", lastProcessedVersionTableId))

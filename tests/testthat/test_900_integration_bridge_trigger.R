@@ -1,4 +1,3 @@
-# TODO: Add comment
 #
 # Test of the table trigger mechanism
 # 
@@ -38,13 +37,13 @@ if (canExecute) {
 	message("...done.  Project ID is ", outputProjectId)
 	
 	# set up bridgeStatusId
-	column<-TableColumn(name="uploadDate", columnType="DATE")
+	column<-TableColumn(name="uploadDate", columnType="STRING")
 	bridgeStatusSchema<-TableSchema("Bridge Status Schema", project, list(column))
 	bridgeStatusSchema<-synStore(bridgeStatusSchema)
 	bridgeStatusId<-propertyValue(bridgeStatusSchema, "id")
 	
 	# set up  mPowerBatchStatusId
-	c1<-TableColumn(name="bridgeUploadDate", columnType="DATE")
+	c1<-TableColumn(name="bridgeUploadDate", columnType="STRING")
 	c2<-TableColumn(name="mPowerBatchStart", columnType="DATE")
 	c3<-TableColumn(name="hostName", columnType="STRING")
 	c4<-TableColumn(name="batchStatus", columnType="STRING")
@@ -53,7 +52,7 @@ if (canExecute) {
 	mPowerBatchStatusId<-propertyValue(mPowerBatchStatusSchema, "id")
 	
 	# write a row into the bridgeStatusId table to kick off the job
-	trigger<-Table( bridgeStatusId, data.frame(uploadDate=Sys.time()) )
+	trigger<-Table( bridgeStatusId, data.frame(uploadDate=as.character(Sys.Date())) )
 	trigger<-synStore(trigger)
 	
 	bridgeExportQueryResult<-checkForAndLockBridgeExportBatch(bridgeStatusId, mPowerBatchStatusId, "hostname", Sys.time())
@@ -67,9 +66,11 @@ if (canExecute) {
 	markProcesingComplete(bridgeExportQueryResult, "complete")
 	
 	# check that the batch has been marked 'complete'
-	jobStatus<-synTableQuery(paste0("select * from ", mPowerBatchStatusId))
+	jobStatus<-synTableQuery(paste0("select * from ", mPowerBatchStatusId,
+					" where bridgeUploadDate='", as.character(Sys.Date()), "'"))
 	expect_equal(nrow(jobStatus@values), 1)
 	expect_equal(jobStatus@values[1,"batchStatus"], "complete")
+	
 	
 	synDelete(project)
 	message("Deleted project ", outputProjectId)

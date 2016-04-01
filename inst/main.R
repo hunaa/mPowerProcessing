@@ -6,6 +6,7 @@
 library(mPowerProcessing)
 library(synapseClient)
 library(bridger)
+library(RJSONIO)
 
 # make sure to be 'logged in' to Synapse as Bridge exporter
 #
