@@ -214,6 +214,12 @@ if (canExecute) {
 	mPowerBatchStatusSchema<-synStore(mPowerBatchStatusSchema)
 	mPowerBatchStatusId<-propertyValue(mPowerBatchStatusSchema, "id")
 	
+	# to test MPOW-14, part (3) write an extra row to the mPowerBatchStatus table
+	mPowerBatchStatusValues<-data.frame(Sys.time()-24*3600, Sys.time()-24*3600, "test", "complete", stringsAsFactors=F)
+	names(mPowerBatchStatusValues)<-c("bridgeUploadDate", "mPowerBatchStart",	"hostName", "batchStatus")
+	statusTable<-Table(mPowerBatchStatusSchema, mPowerBatchStatusValues)
+	synStore(statusTable)
+
 	# write a row into the bridgeStatusId table to kick off the job
 	trigger<-Table( bridgeStatusId, data.frame(uploadDate=Sys.time()) )
 	trigger<-synStore(trigger)
