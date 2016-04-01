@@ -66,9 +66,11 @@ if (canExecute) {
 	markProcesingComplete(bridgeExportQueryResult, "complete")
 	
 	# check that the batch has been marked 'complete'
-	jobStatus<-synTableQuery(paste0("select * from ", mPowerBatchStatusId))
+	jobStatus<-synTableQuery(paste0("select * from ", mPowerBatchStatusId,
+					" where bridgeUploadDate='", as.character(Sys.Date()), "'"))
 	expect_equal(nrow(jobStatus@values), 1)
 	expect_equal(jobStatus@values[1,"batchStatus"], "complete")
+	
 	
 	synDelete(project)
 	message("Deleted project ", outputProjectId)
