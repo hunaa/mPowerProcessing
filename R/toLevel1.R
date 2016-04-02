@@ -438,6 +438,7 @@ store_cleaned_data<-function(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat
   ## FINALLY, STORE THE OUTPUT
   for(i in 1:length(storeThese)){
     thisId <- qq$table.id[qq$table.name == names(storeThese)[i]]
+		cat("\tStoring results in ", thisId, "...\n")
 		# Appending the new data is not sufficient since there may be
 		# rows in the new data that _replace_ rows in the current data.
 		# Instead we have to _merge_, based on the 'recordId' column.
@@ -446,6 +447,7 @@ store_cleaned_data<-function(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat
 		tableContent@values<-mergeDataFrames(tableContent@values, storeThese[[i]]$vals, "recordId")
 		tableContent@values<-formatDF(tableContent@values, synGet(thisId))
 		synStore(tableContent)
+		cat("\t...done.\n")
   }
 }
 

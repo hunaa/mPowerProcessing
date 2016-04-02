@@ -66,3 +66,10 @@ result<-mergeDataFrames(current, new, "foo")
 expected<-new
 expect_equal(result, expected)
 
+# what happens if the columns don't match
+current<-data.frame(foo=c(4,3,2,1), bar=c("a", "b", "c", "d"), stringsAsFactors=FALSE)
+rownames(current)<-c("A", "B", "C", "D")
+new<-data.frame(foo=c(5,6,7), baz=c("x", "y", "z"), stringsAsFactors=FALSE)
+rownames(new)<-c("X", "Y", "Z")
+expect_error(mergeDataFrames(current, new, "foo"))
+
