@@ -446,6 +446,7 @@ store_cleaned_data<-function(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat
 		tableContent<-synTableQuery(sprintf("select * from %s", thisId))
 		tableContent@values<-mergeDataFrames(tableContent@values, storeThese[[i]]$vals, "recordId")
 		tableContent@values<-formatDF(tableContent@values, synGet(thisId))
+		write.csv(tableContent@values[1:20,])
 		synStore(tableContent)
 		cat("\t...done.\n")
   }
