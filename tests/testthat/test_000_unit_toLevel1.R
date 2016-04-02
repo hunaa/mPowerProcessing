@@ -73,3 +73,13 @@ new<-data.frame(foo=c(5,6,7), baz=c("x", "y", "z"), stringsAsFactors=FALSE)
 rownames(new)<-c("X", "Y", "Z")
 expect_error(mergeDataFrames(current, new, "foo"))
 
+# test incompatible column order
+current<-data.frame(foo=c(4,3,2,1), bar=c("a", "b", "c", "d"), stringsAsFactors=FALSE)
+rownames(current)<-c("A", "B", "C", "D")
+new<-data.frame(bar=c("x", "y", "z"), foo=c(5,1,3), stringsAsFactors=FALSE)
+rownames(new)<-c("X", "Y", "Z")
+result<-mergeDataFrames(current, new, "foo")
+expected<-data.frame(foo=c(4,3,2,1,5), bar=c("a", "z", "c", "y", "x"), stringsAsFactors=FALSE)
+rownames(expected)<-c("A", "B", "C", "D", "X")
+expect_equal(result, expected)
+

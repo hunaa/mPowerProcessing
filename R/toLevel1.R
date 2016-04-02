@@ -66,6 +66,11 @@ mergeDataFrames<-function(current, new, col) {
 	if (length(colIndicesInNewThatMatchCurrent)>length(colIndicesInCurrentThatMatchNew))
 		stop("There are multiple rows in 'current' that match rows in 'new'")
 	
+	# we have to make sure that the column order of 'new' matches that of 'current'
+	permuteOrder<-sapply(names(current), function(x){which(names(new)==x)})
+	if (is(permuteOrder, "list")) stop("'new' has rows that 'current' lacks")
+	new<-new[permuteOrder]
+	
 	# the following is only necessary if there are matching rows in the two dataframes
 	if (length(colIndicesInCurrentThatMatchNew)>0) {
 		# Within the space of colIndicesInNewThatMatchCurrent, what is the index in current
