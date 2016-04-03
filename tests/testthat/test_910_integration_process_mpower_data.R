@@ -6,12 +6,12 @@
 ###############################################################################
 library(testthat)
 library(synapseClient)
+library(mPowerProcessing)
+library(bridger)
+library(RJSONIO)
+library(RCurl)
 
 context("test_integration_process_mpower_data")
-
-library(synapseClient)
-library(bridger)
-library(RCurl)
 
 canExecute<-TRUE
 

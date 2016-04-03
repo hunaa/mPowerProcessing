@@ -66,6 +66,11 @@ mergeDataFrames<-function(current, new, col) {
 	if (length(colIndicesInNewThatMatchCurrent)>length(colIndicesInCurrentThatMatchNew))
 		stop("There are multiple rows in 'current' that match rows in 'new'")
 	
+	# we have to make sure that the column order of 'new' matches that of 'current'
+	permuteOrder<-sapply(names(current), function(x){which(names(new)==x)})
+	if (is(permuteOrder, "list")) stop("'current' has rows that 'new' lacks")
+	new<-new[permuteOrder]
+	
 	# the following is only necessary if there are matching rows in the two dataframes
 	if (length(colIndicesInCurrentThatMatchNew)>0) {
 		# Within the space of colIndicesInNewThatMatchCurrent, what is the index in current
@@ -446,6 +451,7 @@ store_cleaned_data<-function(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat
 		tableContent<-synTableQuery(sprintf("select * from %s", thisId))
 		tableContent@values<-mergeDataFrames(tableContent@values, storeThese[[i]]$vals, "recordId")
 		tableContent@values<-formatDF(tableContent@values, synGet(thisId))
+		write.csv(tableContent@values[1:20,])
 		synStore(tableContent)
 		cat("\t...done.\n")
   }
