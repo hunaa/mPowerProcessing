@@ -68,7 +68,7 @@ mergeDataFrames<-function(current, new, col) {
 	
 	# we have to make sure that the column order of 'new' matches that of 'current'
 	permuteOrder<-sapply(names(current), function(x){which(names(new)==x)})
-	if (is(permuteOrder, "list")) stop("'new' has rows that 'current' lacks")
+	if (is(permuteOrder, "list")) stop("'current' has rows that 'new' lacks")
 	new<-new[permuteOrder]
 	
 	# the following is only necessary if there are matching rows in the two dataframes
