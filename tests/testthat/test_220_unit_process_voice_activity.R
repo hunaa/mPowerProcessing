@@ -125,3 +125,43 @@ with_mock(
 		}
 )
 
+
+# test the case that there's no new data:
+lastMaxRowVersion1<-c("syn4961455"=5, "syn4961457"=6, "syn4961464"=7)
+lastMaxRowVersion2<-c("syn4961456"=8)
+
+load(voiceDataExpectedFile)
+with_mock(
+		synGet=function(id) {
+			if (id==vId2) {
+				schema2
+			} else {
+				schemaAndQuery["schema", id][[1]]
+			}
+		},
+		synTableQuery=function(sql) {
+			id<-mPowerProcessing:::getIdFromSql(sql)
+			if (id==vId2) {
+				truncatedQuery<-query2
+			} else {
+				truncatedQuery<-schemaAndQuery["query", id][[1]]
+			}
+			truncatedQuery@values<-truncatedQuery@values[NULL,]
+			truncatedQuery
+		},
+		read_json_from_file=function(file) {# file is a file path with fileHandleId as name
+			result<-fromJSON(fileContent[file]) # this gets the file content.  The name is the file path
+			names(result)<-names(file) # result must map fileHandleId to file content
+			result
+		},
+		synDownloadTableColumns=function(synTable, tableColumns) {
+			vFiles
+		},
+		
+		{
+			vResults<-process_voice_activity(vId1, vId2, lastMaxRowVersion1, lastMaxRowVersion2)
+			expect_equal(nrow(vResults$vDat), 0)
+			expect_equal(vResults$maxRowProcessed[vId1], lastMaxRowVersion1)
+			expect_equal(vResults$maxRowProcessed[vId2], lastMaxRowVersion2)
+		}
+)

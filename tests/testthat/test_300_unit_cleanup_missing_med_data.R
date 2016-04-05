@@ -49,3 +49,12 @@ if (createTestData()) {
 load(cmmFilePath) # creates 'expected'
 expect_equal(cmm, expected)
 
+
+# make sure it works for missing data
+cleanup_missing_med_data(mDat[NULL,], tDat, vDat, wDat)
+cleanup_missing_med_data(mDat, tDat[NULL,], vDat, wDat)
+cleanup_missing_med_data(mDat, tDat, vDat[NULL,], wDat)
+cleanup_missing_med_data(mDat, tDat, vDat, wDat[NULL,])
+cleanup_missing_med_data(mDat[NULL,], tDat[NULL,], vDat[NULL,], wDat[NULL,])
+
+

@@ -105,6 +105,11 @@ process_survey_v1<-function(eId, lastProcessedVersion) {
   eTab <- synTableQuery(createQueryString(eId, lastProcessedVersion))
   
   eDat <- eTab@values
+	
+	if (nrow(eDat)==0) {
+		return(list(maxRowVersion=lastProcessedVersion, eDat=data.frame()))
+	}
+	
 	maxRowVersion<-getMaxRowVersion(eDat)
   for(i in eStringCols){
     eDat[[i]] <- cleanString(eDat[[i]])
@@ -159,6 +164,11 @@ process_survey_v2<-function(uId, lastProcessedVersion) {
   uTab <- synTableQuery(createQueryString(uId, lastProcessedVersion))
   
   uDat <- uTab@values
+	
+	if (nrow(uDat)==0) {
+		return(list(maxRowVersion=lastProcessedVersion, uDat=data.frame()))
+	}
+	
 	maxRowVersion<-getMaxRowVersion(uDat)
 	for(i in uStringCols){
     uDat[[i]] <- cleanString(uDat[[i]])
@@ -189,6 +199,11 @@ process_survey_v3<-function(pId, lastProcessedVersion) {
   pTab <- synTableQuery(createQueryString(pId, lastProcessedVersion))
   
   pDat <- pTab@values
+	
+	if (nrow(pDat)==0) {
+		return(list(maxRowVersion=lastProcessedVersion, pDat=data.frame()))
+	}
+	
 	maxRowVersion<-getMaxRowVersion(pDat)
 	
   for(i in pStringCols){
@@ -214,6 +229,11 @@ process_memory_activity<-function(mId, lastProcessedVersion) {
   
   mTab <- synTableQuery(createQueryString(mId, lastProcessedVersion))
   mDat <- mTab@values
+	
+	if (nrow(mDat)==0) {
+		return(list(mDat=data.frame(), mFilehandleCols=mFilehandleCols, maxRowVersion=lastProcessedVersion))
+	}
+	
 	maxRowVersion<-getMaxRowVersion(mDat)
 	
   mDat$externalId <- NULL
@@ -235,20 +255,29 @@ process_tapping_activity<-function(tId, lastProcessedVersion) {
   maxRowProcessed<-NULL
   
   tAll <- lapply(as.list(tId), function(x){
-    vals <- synTableQuery(createQueryString(x, lastProcessedVersion))@values
-    maxRowProcessed[[x]]<<-getMaxRowVersion(vals)
+    vals <- synTableQuery(createQueryString(x, lastProcessedVersion[x]))@values
+		if (nrow(vals)==0) {
+			maxRowProcessed[x]<<-lastProcessedVersion[x]
+		} else {
+			maxRowProcessed[x]<<-getMaxRowVersion(vals)
+		}
     return(vals)
   })
   tAllNames <- unique(unlist(sapply(tAll, names)))
   tAll <- lapply(tAll, function(x){
-    these <- setdiff(tAllNames, names(x))
-    x[, these] <- NA
-    return(x[, tAllNames])
+				if (nrow(x)==0) {
+					x
+				} else {
+					these <- setdiff(tAllNames, names(x))
+					x[, these] <- NA
+					x[, tAllNames]
+				}
   })
   tDat <- do.call(rbind, tAll)
-	# This is done 19 lines below, _after_ calling 'subsetThis' which remove duplicates
-	# It's not clear why it was done here.  It causes error when duplicate recordIds are present
-	# rownames(tDat) <- tDat$recordId
+	
+	if (nrow(tDat)==0) {
+		return(list(tDat=data.frame(), tFilehandleCols=tFilehandleCols, maxRowProcessed=maxRowProcessed))
+	}
   
   tDat$externalId <- NULL
   tDat$uploadDate <- NULL
@@ -285,60 +314,71 @@ read_json_from_file<-function(file) {
 ## VOICE
 #####
 process_voice_activity<-function(vId1, vId2, lastProcessedVersion1, lastProcessedVersion2) {
-  maxRowProcessed<-NULL
+  maxRowProcessed<-c()
   
   ## FIRST SET OF IDS HAVE TO PARSE INTO momentInDayFormat.json FILES TO EXTRACT MED INFO
-  vFirst <- lapply(as.list(vId1), function(x){
-    vTab <- synTableQuery(createQueryString(x, lastProcessedVersion1))
+  vFirst <- lapply(as.list(vId1), function(x) {
+    vTab <- synTableQuery(createQueryString(x, lastProcessedVersion1[x]))
     vals <- vTab@values
-    maxRowProcessed[[x]]<<-getMaxRowVersion(vals)
+		if (nrow(vals)==0) {
+			maxRowProcessed[x]<<-lastProcessedVersion1[x]
+		} else {
+   		maxRowProcessed[x]<<-getMaxRowVersion(vals)
     
-    vMap <- synDownloadTableColumns(vTab, "momentInDayFormat.json")
-    vMID <- sapply(as.list(rownames(vals)), function(rn){
-      if( is.na(vals[rn, "momentInDayFormat.json"]) ){
-        return(c(choiceAnswers=NA))
-      } else{
-        loc <- vMap[[vals[rn, "momentInDayFormat.json"]]]
-        dat <- try(read_json_from_file(loc))
-        if( class(dat) == "try-error" ){
-          return(c(choiceAnswers=NA))
-        } else{
-          return(unlist(dat))
-        }
-      }
-    })
-    vAllNames <- unique(unlist(sapply(vMID, names)))
-    vMID <- lapply(vMID, function(y){
-      these <- setdiff(vAllNames, names(y))
-      y[ these ] <- NA
-      return(y[ vAllNames ])
-    })
-    vMID <- do.call(rbind, vMID)
-    vMID <- as.data.frame(vMID, stringsAsFactors=FALSE)
-    names(vMID) <- paste("momentInDayFormat.json", names(vMID), sep=".")
-    vals$momentInDayFormat.json <- NULL
-    vals$momentInDayFormat.json.choiceAnswers <- vMID$momentInDayFormat.json.choiceAnswers
-    
+	    vMap <- synDownloadTableColumns(vTab, "momentInDayFormat.json")
+	    vMID <- sapply(as.list(rownames(vals)), function(rn){
+	      if( is.na(vals[rn, "momentInDayFormat.json"]) ){
+	        return(c(choiceAnswers=NA))
+	      } else{
+	        loc <- vMap[[vals[rn, "momentInDayFormat.json"]]]
+	        dat <- try(read_json_from_file(loc))
+	        if( class(dat) == "try-error" ){
+	          return(c(choiceAnswers=NA))
+	        } else{
+	          return(unlist(dat))
+	        }
+	      }
+	    })
+	    vAllNames <- unique(unlist(sapply(vMID, names)))
+	    vMID <- lapply(vMID, function(y){
+	      these <- setdiff(vAllNames, names(y))
+	      y[ these ] <- NA
+	      return(y[ vAllNames ])
+	    })
+	    vMID <- do.call(rbind, vMID)
+	    vMID <- as.data.frame(vMID, stringsAsFactors=FALSE)
+	    names(vMID) <- paste("momentInDayFormat.json", names(vMID), sep=".")
+	    vals$momentInDayFormat.json <- NULL
+	    vals$momentInDayFormat.json.choiceAnswers <- vMID$momentInDayFormat.json.choiceAnswers
+		}
     return(vals)
   })
   vFirst <- do.call(rbind, vFirst)
-	vFirst<- vFirst[!duplicated(vFirst$recordId, fromLast=TRUE),]
-  rownames(vFirst) <- vFirst$recordId
+	if (nrow(vFirst)>0) {
+		vFirst<- vFirst[!duplicated(vFirst$recordId, fromLast=TRUE),]
+	  rownames(vFirst) <- vFirst$recordId
+	}
   
   ## SECOND SET (1) IS AS WE WOULD EXPECT
   vSc <- synGet(vId2)
   vFilehandleCols <- whichFilehandle(vSc@columns)
   
   vSecond <- synTableQuery(createQueryString(vId2, lastProcessedVersion2))@values
-  maxRowProcessed[[vId2]]<-getMaxRowVersion(vSecond)
-	vSecond<- vSecond[!duplicated(vSecond$recordId, fromLast=TRUE),]
-	
-	rownames(vSecond) <- vSecond$recordId
+	if (nrow(vSecond)==0) {
+		maxRowProcessed[vId2]<-lastProcessedVersion2
+	} else {
+		maxRowProcessed[vId2]<-getMaxRowVersion(vSecond)
+		vSecond<- vSecond[!duplicated(vSecond$recordId, fromLast=TRUE),]
+		rownames(vSecond) <- vSecond$recordId
+	}
   
   vDat <- rbind(vFirst, vSecond)
-  vDat$externalId <- NULL
-  vDat$uploadDate <- NULL
-  vDat <- subsetThis(vDat)
+	if (nrow(vDat)>0) {
+		vDat$externalId <- NULL
+		vDat$uploadDate <- NULL
+		vDat <- subsetThis(vDat)
+	}
+	
   list(vDat=vDat, vFilehandleCols=vFilehandleCols, maxRowProcessed=maxRowProcessed)
 }
   
@@ -346,17 +386,25 @@ process_voice_activity<-function(vId1, vId2, lastProcessedVersion1, lastProcesse
 ## WALKING
 #####
 process_walking_activity<-function(wId, lastProcessedVersion) {
-  maxRowProcessed<-NULL
+  maxRowProcessed<-c()
   wAll <- lapply(as.list(wId), function(x){
-    vals <- synTableQuery(createQueryString(x, lastProcessedVersion))@values
-    maxRowProcessed[[x]]<<-getMaxRowVersion(vals)
+    vals <- synTableQuery(createQueryString(x, lastProcessedVersion[x]))@values
+		if (nrow(vals)==0) {
+			maxRowProcessed[x]<<-lastProcessedVersion[x]
+		} else {
+   		maxRowProcessed[x]<<-getMaxRowVersion(vals)
+		}
     return(vals)
   })
   wAllNames <- unique(unlist(sapply(wAll, names)))
   wAll2 <- lapply(wAll, function(x){
-    these <- setdiff(wAllNames, names(x))
-    x[, these] <- NA
-    return(x[, wAllNames])
+				if (nrow(x)==0) {
+					x
+				} else {
+					these <- setdiff(wAllNames, names(x))
+					x[, these] <- NA
+					x[, wAllNames]
+				}
   })
   wDat <- do.call(rbind, wAll2)
   
@@ -441,17 +489,20 @@ store_cleaned_data<-function(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat
   
   ## NOW LETS DO SOMETHING WITH ALL OF THIS DATA
   ## FINALLY, STORE THE OUTPUT
-  for(i in 1:length(storeThese)){
+  for (i in 1:length(storeThese)) {
     thisId <- qq$table.id[qq$table.name == names(storeThese)[i]]
 		cat("\tStoring results in ", thisId, "...\n")
-		# Appending the new data is not sufficient since there may be
-		# rows in the new data that _replace_ rows in the current data.
-		# Instead we have to _merge_, based on the 'recordId' column.
-		rownames(storeThese[[i]]$vals)<-NULL
-		tableContent<-synTableQuery(sprintf("select * from %s", thisId))
-		tableContent@values<-mergeDataFrames(tableContent@values, storeThese[[i]]$vals, "recordId")
-		tableContent@values<-formatDF(tableContent@values, synGet(thisId))
-		synStore(tableContent)
+		# if there's no data there's nothing to do
+		if (nrow(storeThese[[i]]$vals)>0) {
+			# Appending the new data is not sufficient since there may be
+			# rows in the new data that _replace_ rows in the current data.
+			# Instead we have to _merge_, based on the 'recordId' column.
+			rownames(storeThese[[i]]$vals)<-NULL
+			tableContent<-synTableQuery(sprintf("select * from %s", thisId))
+			tableContent@values<-mergeDataFrames(tableContent@values, storeThese[[i]]$vals, "recordId")
+			tableContent@values<-formatDF(tableContent@values, synGet(thisId))
+			synStore(tableContent)
+		}
 		cat("\t...done.\n")
   }
 }

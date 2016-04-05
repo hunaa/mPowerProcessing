@@ -66,6 +66,23 @@ with_mock(
 		}
 )
 
+# test the case that there's no new data:
+lastMaxRowVersion<-c("syn4961463"="5", "syn4961465"="6", "syn4961484"="7")
 
+load(tDataExpectedFile)
+
+with_mock(
+		synGet=function(id) {schemaAndQuery["schema", id][[1]]},
+		synTableQuery=function(sql) {
+			truncatedQuery<-schemaAndQuery["query", mPowerProcessing:::getIdFromSql(sql)][[1]]
+			truncatedQuery@values<-truncatedQuery@values[NULL,]
+			truncatedQuery
+		},
+		{
+			tResults<-process_tapping_activity(ids, lastMaxRowVersion)
+			expect_equal(nrow(tResults$tDat), 0)
+			expect_equal(tResults$maxRowProcessed, lastMaxRowVersion)
+		}
+)
 
 
