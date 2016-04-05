@@ -90,7 +90,7 @@ getLastProcessedVersion<-function(df) {
   names(lastProcessedVersion)<-df[["TABLE_ID"]]
   lastProcessedVersion
 }
-
+ 
 mergeLastProcessVersionIntoToDF<-function(lastProcessedVersion, df) {
 	df[sapply(names(lastProcessedVersion), function(x){which(x==df$TABLE_ID)}),"LAST_VERSION"]<-lastProcessedVersion
 	df
