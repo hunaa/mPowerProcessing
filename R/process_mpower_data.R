@@ -228,9 +228,8 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, out
 
 	cat("Wrapping up...\n")
 	# update the last processed version
-	lastProcessedVersionAsDF<-lastProcessVersionToDF(lastProcessedVersion, lastProcessedQueryResult@values)
-	write.csv(lastProcessedVersionAsDF)
-	lastProcessedQueryResult@values<-lastProcessedVersionAsDF
+	lastProcessedQueryResult@values<-mergeLastProcessVersionIntoToDF(
+			lastProcessedVersion, lastProcessedQueryResult@values)
 	synStore(lastProcessedQueryResult)
 	
 	cat("... ALL DONE!!!\n")
