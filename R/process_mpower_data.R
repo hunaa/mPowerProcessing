@@ -90,11 +90,10 @@ getLastProcessedVersion<-function(df) {
   names(lastProcessedVersion)<-df[["TABLE_ID"]]
   lastProcessedVersion
 }
-
-lastProcessVersionToDF<-function(lastProcessedVersion) {
-	result<-data.frame(TABLE_ID=names(lastProcessedVersion), LAST_VERSION=lastProcessedVersion, stringsAsFactors=F)
-	row.names(result)<-NULL
-	result
+ 
+mergeLastProcessVersionIntoToDF<-function(lastProcessedVersion, df) {
+	df[sapply(names(lastProcessedVersion), function(x){which(x==df$TABLE_ID)}),"LAST_VERSION"]<-lastProcessedVersion
+	df
 }
 
 # given a data frame having row values named according to the Synapse table convention
@@ -229,7 +228,8 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, out
 
 	cat("Wrapping up...\n")
 	# update the last processed version
-	lastProcessedQueryResult@values<-lastProcessVersionToDF(lastProcessedVersion)
+	lastProcessedQueryResult@values<-mergeLastProcessVersionIntoToDF(
+			lastProcessedVersion, lastProcessedQueryResult@values)
 	synStore(lastProcessedQueryResult)
 	
 	cat("... ALL DONE!!!\n")
