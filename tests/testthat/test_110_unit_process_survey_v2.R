@@ -62,6 +62,26 @@ with_mock(
 		}
 )
 
+# check the case that there are no rows
+
+load(v2DataExpectedFile)
+
+lastMaxRowVersion<-5
+
+with_mock(
+		synGet=function(id) {schema},
+		synTableQuery=function(sql) {
+			truncatedQuery<-query
+			truncatedQuery@values<-truncatedQuery@values[NULL,]
+			truncatedQuery
+		},
+		{
+			uDat<-process_survey_v2("syn101", lastMaxRowVersion)
+			expect_equal(nrow(uDat$uDat), 0)
+			expect_equal(uDat$maxRowVersion, lastMaxRowVersion)
+		}
+)
+
 
 
 

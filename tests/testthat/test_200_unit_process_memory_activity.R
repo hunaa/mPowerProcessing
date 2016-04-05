@@ -64,3 +64,24 @@ with_mock(
 )
 
 
+# test the case that there's no new data:
+
+load(mDataExpectedFile)
+
+lastMaxRowVersion<-5
+
+with_mock(
+		synGet=function(id) {schema},
+		synTableQuery=function(sql) {
+			truncatedQuery<-query
+			truncatedQuery@values<-truncatedQuery@values[NULL,]
+			truncatedQuery
+		},
+		{
+			mResults<-process_memory_activity("syn101", lastMaxRowVersion)
+			expect_equal(nrow(mResults$mDat), 0)
+			expect_equal(mResults$maxRowVersion, lastMaxRowVersion)
+		}
+)
+
+

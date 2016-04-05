@@ -50,7 +50,7 @@ with_mock(
 			result
 		}, 
 		{
-			eDat<-process_survey_v1("syn101")
+			eDat<-process_survey_v1("syn101", NULL)
 			eDatFilePath<-file.path(testDataFolder, "eDatExpected.RData")
 			# Here's how we created the 'expected' data frame:
 			if (createTestData()) {
@@ -61,3 +61,28 @@ with_mock(
 			expect_equal(eDat, expected)
 		}
 )
+
+lastMaxRowVersion<-5
+
+# test the case that there's no new data:
+with_mock(
+		synGet=function(id) {schema},
+		synTableQuery=function(sql) {
+			truncatedQuery<-query
+			truncatedQuery@values<-truncatedQuery@values[NULL,]
+			truncatedQuery
+		},
+		synDownloadTableColumns=function(synTable, tableColumns) {eComFiles},
+		readLines=function(x) { # x is a file path with fileHandleId as name
+			result<-eComContent[x] # this gets the file content.  The name is the file path
+			names(result)<-names(x) # result must map fileHandleId to file content
+			result
+		}, 
+		{
+			eDat<-process_survey_v1("syn101", lastMaxRowVersion)
+			expect_equal(nrow(eDat$eDat), 0)
+			expect_equal(eDat$maxRowVersion, lastMaxRowVersion)
+		}
+)
+
+
