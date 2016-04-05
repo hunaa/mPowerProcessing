@@ -8,6 +8,7 @@ library(testthat)
 context("test_unit_process_mpower_data")
 
 df<-data.frame("TABLE_ID"=c("syn101", "syn202", "syn303"), "LAST_VERSION"=as.integer(c(3,2,1)), stringsAsFactors=F)
+rownames(df)<-c("1_2", "2_0", "3_1")
 lastProcessedVersion <- getLastProcessedVersion(df)
 
 # Note: This doesn't work: expect_equal(as.integer(1), lastProcessedVersion["syn101"], tolerance=.000001)
@@ -16,7 +17,7 @@ expect_lt(abs(lastProcessedVersion["syn101"]-3), .00001)
 expect_true(is.na(lastProcessedVersion["syn404"]))
 
 # now let's check the conversion back to a data frame
-expect_equal(df, lastProcessVersionToDF(lastProcessedVersion))
+expect_equal(df, mergeLastProcessVersionIntoToDF(lastProcessedVersion, df))
 
 
 # test getMaxRowVersion()
