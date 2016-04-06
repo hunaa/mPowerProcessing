@@ -54,7 +54,7 @@ fetchActivityFeatureTables<-function(tables, features) {
 
 
 #' Transforms the output of NormalizeFeature.
-#' 
+#'
 #' Given the output of NormalizeFeature - a list one entry per activity of
 #' a list of fdat, controlMean, controlUpper and controlLower - transform the
 #' data.frame fdat into one containing columns "date", "pre" and "post".
