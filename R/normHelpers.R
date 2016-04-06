@@ -1,3 +1,11 @@
+#' Find age match controls for the given patient age.
+#'
+#' @param patientAge integer. Patient's age
+#' @param ageInterval integer. Find healthy subjects + or - this many years from patient age
+#' @param demo data.frame. Demographics table
+#'
+#' @return a list of health codes for healthy controls within an age
+#'         interval around the patient's age
 GetAgeMatchedControlIds <- function(patientAge, ageInterval = 5, demo){
   controlAges <- demo[which(!demo$`professional-diagnosis`), c("healthCode", "age")]
   controlAges[which(controlAges$age <= 17), "age"] <- NA
@@ -8,6 +16,15 @@ GetAgeMatchedControlIds <- function(patientAge, ageInterval = 5, demo){
   return(controlAges$healthCode[idx])
 }
 
+#' Return summary statistics for the given feature over a population
+#' of age matched controls.
+#'
+#' @param dat data.frame. Feature data.
+#' @param controlIds A list of health codes (strings).
+#' @param featName string, a feature name that is a column in dat.
+#'
+#' @return a list of summary statistics of the requested feature
+#'         for the cohort of control subjects
 GetControlFeatureSummaryStats <- function(dat, controlIds, featName){
   idx <- dat$healthCode %in% controlIds
   pdat <- dat[idx, featName]
@@ -74,7 +91,10 @@ NormalizeFeature <- function(dat,
 #' Find cases who have performed activities withing the date
 #' window and at pre or post medication time points
 #'
-#' @param lists a list of lists
+#' @param demo data.frame. Demographics table.
+#' @param featureTables List of data.frames indexed by activity name.
+#' @param window List with start date and end date.
+#'
 #' @return a list of health codes
 findCasesWithPrepostActivity <- function(demo, featureTables, window) {
   # find participants with a PD diagnosis
