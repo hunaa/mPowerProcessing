@@ -5,7 +5,7 @@
 coreNames <- c("recordId", "healthCode", "createdOn", "appVersion", "phoneInfo")
 
 # Registered versions of the app (anything else is taken as test data)
-releaseVersions <- c("version 1.0, build 7", "version 1.0.5, build 12", "version 1.1, build 22")
+releaseVersions <- c("version 1.0, build 7", "version 1.0.5, build 12", "version 1.1, build 22", "version 1.2, build 31", "version 1.3, build 42")
 
 ## x IS EXPECTED TO BE A CHARACTER VECTOR TO BE CLEANED UP
 cleanString <- function(x){
