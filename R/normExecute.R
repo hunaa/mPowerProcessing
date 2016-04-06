@@ -184,7 +184,7 @@ visDataToJSON <- function(healthCode, normdata) {
           controlMax=normdata$balance$controlUpper
         )))
   })
-  return(toJSON(towardJSON))
+  return(rjson::toJSON(towardJSON))
 }
 
 

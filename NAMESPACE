@@ -4,4 +4,3 @@ export("process_mpower_data")
 
 import(synapseClient)
 import(RCurl)
-importFrom(rjson, toJSON, fromJSON)
