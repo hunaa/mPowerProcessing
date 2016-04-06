@@ -91,9 +91,14 @@ getLastProcessedVersion<-function(df) {
   lastProcessedVersion
 }
  
+lastProcessVersionToDF<-function(lastProcessedVersion) {
+	result<-data.frame(TABLE_ID=names(lastProcessedVersion), LAST_VERSION=lastProcessedVersion, stringsAsFactors=F)
+	row.names(result)<-NULL
+	result
+}
+
 mergeLastProcessVersionIntoToDF<-function(lastProcessedVersion, df) {
-	df[sapply(names(lastProcessedVersion), function(x){which(x==df$TABLE_ID)}),"LAST_VERSION"]<-lastProcessedVersion
-	df
+	mergeDataFrames(df, lastProcessVersionToDF(lastProcessedVersion), "TABLE_ID")
 }
 
 # given a data frame having row values named according to the Synapse table convention
