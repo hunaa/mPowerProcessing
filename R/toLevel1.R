@@ -38,11 +38,11 @@ createQueryString<-function(id, lastProcessedVersion) {
 subsetThis <- function(x, theseOnes){
   xSub <- x[, setdiff(names(x), coreNames)]
   xIdx <- rowSums(is.na(xSub)) != ncol(xSub)
-  x <- x[ xIdx, ]
+  x <- x[ which(xIdx), ]
   #  anything before the firstDate is erroneous and prior to study 'launch'
   firstDate <- as.Date("2015-03-09")
-  x <- x[ as.Date(x$createdOn) >= firstDate, ]
-  x <- x[ x$appVersion %in% releaseVersions, ]
+  x <- x[ which(as.Date(x$createdOn) >= firstDate), ]
+  x <- x[ which(x$appVersion %in% releaseVersions), ]
   if (!missing(theseOnes)) x <- x[ which(!(x$healthCode %in% theseOnes)), ]
   x <- x[ which(!duplicated(x[, c("healthCode", "createdOn")])), ]
   x[ order(x$createdOn), ]
