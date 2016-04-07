@@ -5,7 +5,7 @@
 coreNames <- c("recordId", "healthCode", "createdOn", "appVersion", "phoneInfo")
 
 # Registered versions of the app (anything else is taken as test data)
-releaseVersions <- c("version 1.0, build 7", "version 1.0.5, build 12", "version 1.1, build 22")
+releaseVersions <- c("version 1.0, build 7", "version 1.0.5, build 12", "version 1.1, build 22", "version 1.2, build 31", "version 1.3, build 42")
 
 ## x IS EXPECTED TO BE A CHARACTER VECTOR TO BE CLEANED UP
 cleanString <- function(x){
@@ -38,11 +38,11 @@ createQueryString<-function(id, lastProcessedVersion) {
 subsetThis <- function(x, theseOnes){
   xSub <- x[, setdiff(names(x), coreNames)]
   xIdx <- rowSums(is.na(xSub)) != ncol(xSub)
-  x <- x[ xIdx, ]
+  x <- x[ which(xIdx), ]
   #  anything before the firstDate is erroneous and prior to study 'launch'
   firstDate <- as.Date("2015-03-09")
-  x <- x[ as.Date(x$createdOn) >= firstDate, ]
-  x <- x[ x$appVersion %in% releaseVersions, ]
+  x <- x[ which(as.Date(x$createdOn) >= firstDate), ]
+  x <- x[ which(x$appVersion %in% releaseVersions), ]
   if (!missing(theseOnes)) x <- x[ which(!(x$healthCode %in% theseOnes)), ]
   x <- x[ which(!duplicated(x[, c("healthCode", "createdOn")])), ]
   x[ order(x$createdOn), ]
