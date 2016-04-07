@@ -8,6 +8,7 @@
 #' All lists are indexed by activity name ('balance', 'gait', 'tap', 'voice').
 #'
 fetchActivityFeatureTables<-function(tables, features) {
+  ## TODO: consider time zone in the use of as.Date here ignores time zone
   ## GET TAPPING FEATURES
   tapTable <- synTableQuery(sprintf('SELECT * FROM %s WHERE "tapping_results.json.TappingSamples" is not null', tables$tapping))
   tap <- tapTable@values
@@ -53,7 +54,7 @@ fetchActivityFeatureTables<-function(tables, features) {
 
 
 #' Transforms the output of NormalizeFeature.
-#' 
+#'
 #' Given the output of NormalizeFeature - a list one entry per activity of
 #' a list of fdat, controlMean, controlUpper and controlLower - transform the
 #' data.frame fdat into one containing columns "date", "pre" and "post".
@@ -183,7 +184,7 @@ visDataToJSON <- function(healthCode, normdata) {
           controlMax=normdata$balance$controlUpper
         )))
   })
-  return(toJSON(towardJSON))
+  return(rjson::toJSON(towardJSON))
 }
 
 

@@ -4,7 +4,6 @@
 ###############################################################################
 
 require(testthat)
-require(synapseClient)
 
 context("test_unit_normalization")
 
