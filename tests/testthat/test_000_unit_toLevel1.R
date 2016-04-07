@@ -142,7 +142,7 @@ preDf <- current
 preDf[2, c("healthCode", "createdOn")] <- preDf[1, c("healthCode", "createdOn")]
 expect_equal(subsetThis(preDf), preDf[-2, ])
 
-## Test the asdfasdf
+## Test the ordering of createdOn
 preDf <- current
 preDf$createdOn[4] <- as.Date("2016-01-02")
 expect_equal(subsetThis(preDf), preDf[c(4, 1:3, 5:7), ])
