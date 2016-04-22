@@ -13,7 +13,7 @@ RUN Rscript -e "devtools::install_github('brian-bot/bridger')"
 # Note: There are required ENV param's: SYNAPSE_USERNAME, SYNAPSE_APIKEY, BRIDGE_USERNAME, BRIDGE_PASSWORD
 CMD "Rscript" "-e" "source(system.file('main.R',package='mPowerProcessing'))"
 
-ADD . /mPowerProcessing
+COPY . /mPowerProcessing
 
 # Note:  Omitting '--no-manual' below results in "Error in texi2dvi(...):  pdflatex is not available"
 RUN cd /mPowerProcessing && R CMD check  --no-manual .
