@@ -107,7 +107,7 @@ process_survey_v1<-function(eId, lastProcessedVersion) {
   eDat <- eTab@values
 	
 	if (nrow(eDat)==0) {
-		return(list(maxRowVersion=lastProcessedVersion, eDat=data.frame()))
+		return(list(maxRowVersion=lastProcessedVersion, eDat=eDat))
 	}
 	
 	maxRowVersion<-getMaxRowVersion(eDat)
@@ -166,7 +166,7 @@ process_survey_v2<-function(uId, lastProcessedVersion) {
   uDat <- uTab@values
 	
 	if (nrow(uDat)==0) {
-		return(list(maxRowVersion=lastProcessedVersion, uDat=data.frame()))
+		return(list(maxRowVersion=lastProcessedVersion, uDat=uDat))
 	}
 	
 	maxRowVersion<-getMaxRowVersion(uDat)
@@ -201,7 +201,7 @@ process_survey_v3<-function(pId, lastProcessedVersion) {
   pDat <- pTab@values
 	
 	if (nrow(pDat)==0) {
-		return(list(maxRowVersion=lastProcessedVersion, pDat=data.frame()))
+		return(list(maxRowVersion=lastProcessedVersion, pDat=pDat))
 	}
 	
 	maxRowVersion<-getMaxRowVersion(pDat)
@@ -231,7 +231,7 @@ process_memory_activity<-function(mId, lastProcessedVersion) {
   mDat <- mTab@values
 	
 	if (nrow(mDat)==0) {
-		return(list(mDat=data.frame(), mFilehandleCols=mFilehandleCols, maxRowVersion=lastProcessedVersion))
+		return(list(mDat=mDat, mFilehandleCols=mFilehandleCols, maxRowVersion=lastProcessedVersion))
 	}
 	
 	maxRowVersion<-getMaxRowVersion(mDat)
@@ -276,7 +276,7 @@ process_tapping_activity<-function(tId, lastProcessedVersion) {
   tDat <- do.call(rbind, tAll)
 	
 	if (nrow(tDat)==0) {
-		return(list(tDat=data.frame(), tFilehandleCols=tFilehandleCols, maxRowProcessed=maxRowProcessed))
+		return(list(tDat=tDat, tFilehandleCols=tFilehandleCols, maxRowProcessed=maxRowProcessed))
 	}
   
   tDat$externalId <- NULL
