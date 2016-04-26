@@ -53,6 +53,10 @@ if (canExecute) {
 	createOutputTables(outputProjectId)
 	message("...done.")
 	
+	message("Creating feature tables...")
+	featureTableIds<-createFeatureTables(outputProjectId)
+	message("...done.")
+	
 	## create and populate the source tables
 	testDataFolder<-system.file("testdata", package="mPowerProcessing")
 	
@@ -228,9 +232,18 @@ if (canExecute) {
 	expect_true(!(is.null(bridgeExportQueryResult) || nrow(bridgeExportQueryResult@values)==0))
 		
 	process_mpower_data_bare(eId, uId, pId, mId, tIds, vId1, vId2, wIds, outputProjectId, 
-						bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId)
+			featureTableIds$tfSchemaId, featureTableIds$vfSchemaId, featureTableIds$bfSchemaId, featureTableIds$gfSchemaId, 
+			bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId)
 	markProcesingComplete(bridgeExportQueryResult, "complete")
 	
+	tappingFeatures<-synTableQuery(sprintf("select * from %s", featureTableIds$tfSchemaId))@values
+	# TODO verify content
+	print(tappingFeatures@values)
+	voiceFeatures<-synTableQuery(sprintf("select * from %s", featureTableIds$vfSchemaId))@values
+	# TODO verify content
+	gaitFeatures<-synTableQuery(sprintf("select * from %s", featureTableIds$gfSchemaId))@values
+	# TODO verify content
+	balanceFeatures<-synTableQuery(sprintf("select * from %s", featureTableIds$bfSchemaId))@values
 	# TODO verify content
 	
 	# check that the batch has been marked 'complete'

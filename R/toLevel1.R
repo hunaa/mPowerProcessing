@@ -489,8 +489,11 @@ store_cleaned_data<-function(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat
   
   ## NOW LETS DO SOMETHING WITH ALL OF THIS DATA
   ## FINALLY, STORE THE OUTPUT
+	nameToTableIdMap<-NULL
   for (i in 1:length(storeThese)) {
-    thisId <- qq$table.id[qq$table.name == names(storeThese)[i]]
+		tableName<-names(storeThese)[i]
+    thisId <- qq$table.id[qq$table.name == tableName]
+		nameToTableIdMap$tableName<-thisId
 		cat("\tStoring results in ", thisId, "...\n")
 		# if there's no data there's nothing to do
 		if (nrow(storeThese[[i]]$vals)>0) {
@@ -505,6 +508,7 @@ store_cleaned_data<-function(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat
 		}
 		cat("\t...done.\n")
   }
+	nameToTableIdMap
 }
 
 # given a dataframe and a schema, format the data frame

@@ -229,3 +229,47 @@ createOutputTables<-function(projectId) {
 			synStore(voiceActivitySchema(projectId))
 			synStore(walkingActivitySchema(projectId))
 }
+
+tappingFeatureSchema<-function(projectId) {
+	TableSchema("Tapping Features", projectId, list(
+					TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="is-computed", columnType="BOOLEAN"),
+					TableColumn(name="tap-count", columnType="INTEGER")
+			))
+}
+
+voiceFeatureSchema<-function(projectId) {
+	TableSchema("Voice Features", projectId, list(
+					TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="is-computed", columnType="BOOLEAN"),
+					TableColumn(name="medianF0", columnType="DOUBLE")
+			))
+}
+
+balanceFeatureSchema<-function(projectId) {
+	TableSchema("Balance Features", projectId, list(
+					TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="is-computed", columnType="BOOLEAN"),
+					TableColumn(name="zcrAA", columnType="DOUBLE")
+			))
+}
+
+gaitFeatureSchema<-function(projectId) {
+	TableSchema("Gait Features", projectId, list(
+					TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
+					TableColumn(name="is-computed", columnType="BOOLEAN"),
+					TableColumn(name="F0XY", columnType="DOUBLE")
+			))
+}
+
+createFeatureTables<-function(projectId) {
+	tfSchema<-synStore(tappingFeatureSchema(projectId))
+	vfSchema<-synStore(voiceFeatureSchema(projectId))
+	bfSchema<-synStore(balanceFeatureSchema(projectId))
+	gfSchema<-synStore(gaitFeatureSchema(projectId))
+	list(tfSchemaId=propertyValue(tfSchema, "id"), 
+			vfSchemaId=propertyValue(vfSchema, "id"), 
+			bfSchemaId=propertyValue(bfSchema, "id"), 
+			gfSchemaId=propertyValue(gfSchema, "id"))
+}
+

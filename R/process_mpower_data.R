@@ -109,7 +109,8 @@ getMaxRowVersion<-function(df) {
 }
 
 process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputProjectId, 
-		bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId) {
+		tappingFeatureTableId, voiceFeatureTableId, balanceFeatureTableId, gaitFeatureTableId,
+	bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId) {
 	# check if Bridge is done.  If not, exit
 	hostname<-getHostname()
 	leaseTimeout<-as.difftime("06:00:00") # not used at this time
@@ -118,6 +119,7 @@ process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputPr
 	
 	tryCatch({
 				process_mpower_data_bare(eId, uId, pId, mId, tId, vId1, vId2, wId, outputProjectId, 
+						tappingFeatureTableId, voiceFeatureTableId, balanceFeatureTableId, gaitFeatureTableId,
 						bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId)
 				markProcesingComplete(bridgeExportQueryResult, "complete")
 			}, 
@@ -129,6 +131,7 @@ process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputPr
 
 # this entry point, which lacks the 'try-catch', is exposed for testing purposes
 process_mpower_data_bare<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputProjectId, 
+		tappingFeatureTableId, voiceFeatureTableId, balanceFeatureTableId, gaitFeatureTableId,
 		bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId) {
 	lastProcessedQueryResult<-synTableQuery(paste0("SELECT * FROM ", lastProcessedVersionTableId))
 	lastProcessedVersion<-getLastProcessedVersion(lastProcessedQueryResult@values)
@@ -202,12 +205,33 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, out
 	cat("... done.\n")
 	
 	cat("Storing cleaned data...\n")
-	store_cleaned_data(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat, wDat, mFilehandleCols, tFilehandleCols, vFilehandleCols)
+	nameToTableIdMap<-store_cleaned_data(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat, wDat, mFilehandleCols, tFilehandleCols, vFilehandleCols)
 	cat("... done.\n")
 	
-	# **** other steps go here ****
+	# update the last processed version for the cleaned data tables
+	cat("Updating 'last processed' table for cleaned data tables...\n")
+	lastProcessedQueryResult@values<-mergeLastProcessVersionIntoToDF(
+			lastProcessedVersion, lastProcessedQueryResult@values)
+	synStore(lastProcessedQueryResult)
+	cat("... done.\n")
 	
-	# Now call the Visualization Data API 
+	# **** compute features ****
+	lastProcessedQueryResult<-synTableQuery(paste0("SELECT * FROM ", lastProcessedVersionTableId))
+	lastProcessedVersion<-getLastProcessedVersion(lastProcessedQueryResult@values)
+	
+	tappingCleanedDataId<-nameToTableIdMap[["Tapping Activity"]]
+	newLastProcessedVersion<-computeTappingFeatures(tappingCleanedDataId, lastProcessedVersion[tappingCleanedDataId], tappingFeatureTableId)
+	lastProcessedVersion[tappingCleanedDataId]<-newLastProcessedVersion
+	# TODO compute voice, gait, and balance features
+		
+	# update the last processed version for the feature data tables
+	cat("Updating 'last processed' table for feature tables...\n")
+	lastProcessedQueryResult@values<-mergeLastProcessVersionIntoToDF(
+			lastProcessedVersion, lastProcessedQueryResult@values)
+	synStore(lastProcessedQueryResult)
+	cat("... done.\n")
+
+# Now call the Visualization Data API 
 	#https://sagebionetworks.jira.com/wiki/display/BRIDGE/mPower+Visualization#mPowerVisualization-WritemPowerVisualizationData
 	cat("Invoking visualization API...\n")
 	# place holder
@@ -231,11 +255,5 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, out
 	# response is "Visualization created."
 	cat("... done.\n")
 
-	cat("Wrapping up...\n")
-	# update the last processed version
-	lastProcessedQueryResult@values<-mergeLastProcessVersionIntoToDF(
-			lastProcessedVersion, lastProcessedQueryResult@values)
-	synStore(lastProcessedQueryResult)
-	
 	cat("... ALL DONE!!!\n")
 }
