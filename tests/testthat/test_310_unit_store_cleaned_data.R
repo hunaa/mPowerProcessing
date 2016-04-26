@@ -138,7 +138,10 @@ with_mock(
 			table
 		},
 		{
-			store_cleaned_data(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat, wDat, 
+			result<-store_cleaned_data(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat, wDat, 
 					mFilehandleCols, tFilehandleCols, vFilehandleCols)
+			expect_equal("syn5511439", result[["Tapping Activity"]])
+			expect_equal("syn5511449", result[["Walking Activity"]])
+			expect_equal("syn5511444", result[["Voice Activity"]])
 		}
 )

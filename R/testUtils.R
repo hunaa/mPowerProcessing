@@ -233,15 +233,15 @@ createOutputTables<-function(projectId) {
 tappingFeatureSchema<-function(projectId) {
 	TableSchema("Tapping Features", projectId, list(
 					TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
-					TableColumn(name="is-computed", columnType="BOOLEAN"),
-					TableColumn(name="tap-count", columnType="INTEGER")
+					TableColumn(name="is_computed", columnType="BOOLEAN"),
+					TableColumn(name="tap_count", columnType="INTEGER")
 			))
 }
 
 voiceFeatureSchema<-function(projectId) {
 	TableSchema("Voice Features", projectId, list(
 					TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
-					TableColumn(name="is-computed", columnType="BOOLEAN"),
+					TableColumn(name="is_computed", columnType="BOOLEAN"),
 					TableColumn(name="medianF0", columnType="DOUBLE")
 			))
 }
@@ -249,7 +249,7 @@ voiceFeatureSchema<-function(projectId) {
 balanceFeatureSchema<-function(projectId) {
 	TableSchema("Balance Features", projectId, list(
 					TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
-					TableColumn(name="is-computed", columnType="BOOLEAN"),
+					TableColumn(name="is_computed", columnType="BOOLEAN"),
 					TableColumn(name="zcrAA", columnType="DOUBLE")
 			))
 }
@@ -257,7 +257,7 @@ balanceFeatureSchema<-function(projectId) {
 gaitFeatureSchema<-function(projectId) {
 	TableSchema("Gait Features", projectId, list(
 					TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
-					TableColumn(name="is-computed", columnType="BOOLEAN"),
+					TableColumn(name="is_computed", columnType="BOOLEAN"),
 					TableColumn(name="F0XY", columnType="DOUBLE")
 			))
 }

@@ -162,7 +162,7 @@ if (canExecute) {
 	tappingAttachments<-c(
 	"accel_tapping.json.items"="default-json-files",
 	"accelerometer_tapping.items"="default-json-files",
-	"tapping_results.json.TappingSamples"="default-json-files")
+	"tapping_results.json.TappingSamples"="tapping_results.json.TappingSamples")
 	tIds<-createMultipleTablesFromRDataFile(project, "tappingTaskInput.RData", "Tapping Task Raw Input", tappingAttachments)
 	
 	voiceTaskInputFile<-file.path(testDataFolder, "voiceTaskInput.RData")
@@ -237,8 +237,10 @@ if (canExecute) {
 	markProcesingComplete(bridgeExportQueryResult, "complete")
 	
 	tappingFeatures<-synTableQuery(sprintf("select * from %s", featureTableIds$tfSchemaId))@values
-	# TODO verify content
+	# verify content
 	print(tappingFeatures@values)
+	expect_true(all(tappingFeatures@values[['is_computed']]==TRUE))
+	expect_true(all(tappingFeatures@values[['tap_count']]==as.integer(155)))
 	voiceFeatures<-synTableQuery(sprintf("select * from %s", featureTableIds$vfSchemaId))@values
 	# TODO verify content
 	gaitFeatures<-synTableQuery(sprintf("select * from %s", featureTableIds$gfSchemaId))@values

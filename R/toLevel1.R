@@ -493,7 +493,7 @@ store_cleaned_data<-function(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat
   for (i in 1:length(storeThese)) {
 		tableName<-names(storeThese)[i]
     thisId <- qq$table.id[qq$table.name == tableName]
-		nameToTableIdMap$tableName<-thisId
+		nameToTableIdMap[[tableName]]<-thisId
 		cat("\tStoring results in ", thisId, "...\n")
 		# if there's no data there's nothing to do
 		if (nrow(storeThese[[i]]$vals)>0) {

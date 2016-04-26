@@ -29,8 +29,8 @@ with_mock(
 		synStore=function(table) {
 			expect_equal(table@schema, "syn999")
 			expect_equal(table@values$recordId, c("AA", "BB", "CC"))
-			expect_equal(table@values[["is-computed"]], c(T,T,T))
-			expect_equal(table@values[["tap-count"]], c(as.integer(7),as.integer(7),as.integer(7)))
+			expect_equal(table@values[["is_computed"]], c(T,T,T))
+			expect_equal(table@values[["tap_count"]], c(as.integer(7),as.integer(7),as.integer(7)))
 		},
 		{
 			newLastProcessedVersion<-computeTappingFeatures(cleanDataTableId, lastProcessedVersion, featureTableId)

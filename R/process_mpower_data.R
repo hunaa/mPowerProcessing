@@ -220,6 +220,7 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, out
 	lastProcessedVersion<-getLastProcessedVersion(lastProcessedQueryResult@values)
 	
 	tappingCleanedDataId<-nameToTableIdMap[["Tapping Activity"]]
+	if (is.null(tappingCleanedDataId)) stop("No cleaned Tapping Activity data")
 	newLastProcessedVersion<-computeTappingFeatures(tappingCleanedDataId, lastProcessedVersion[tappingCleanedDataId], tappingFeatureTableId)
 	lastProcessedVersion[tappingCleanedDataId]<-newLastProcessedVersion
 	# TODO compute voice, gait, and balance features
