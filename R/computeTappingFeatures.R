@@ -7,7 +7,7 @@
 
 computeTappingFeatures<-function(cleanDataTableId, lastProcessedVersion, featureTableId) {
 	# retrieve
-	if (is.na(lastProcessedVersion) || is.null(lastProcessedVersion)) {
+	if (is.na(lastProcessedVersion)) {
 		queryString<-paste0("SELECT * FROM ", cleanDataTableId)
 	} else {
 		queryString<-paste0("SELECT * FROM ", cleanDataTableId, " WHERE ROW_VERSION > ", lastProcessedVersion)
@@ -25,7 +25,8 @@ computeTappingFeatures<-function(cleanDataTableId, lastProcessedVersion, feature
 	featureDataFrame<-data.frame(
 			recordId=recordIds, 
 			"is-computed"=rep(FALSE, n), 
-			"tap-count"=rep(NA, n))
+			"tap-count"=rep(NA, n),
+			stringsAsFactors=FALSE)
 
 	# now compute the features
 	tappingFiles<-synDownloadTableColumns(queryResults, "tapping_results.json.TappingSamples")
@@ -34,7 +35,7 @@ computeTappingFeatures<-function(cleanDataTableId, lastProcessedVersion, feature
 		if (is.na(fileHandleId) || is.null(fileHandleId)) next
 		tappingFile<-tappingFiles[fileHandleId]
 		tappingData<-fromJSON(tappingFile)
-		featureDataFrame[i,"tap-count"] <- mPowerStatistics::tappingCountStatistic(tappingData)
+		featureDataFrame[i,"tap-count"] <- tappingCountStatistic(tappingData)
 		featureDataFrame[i,"is-computed"] <- TRUE
 	}
 	
@@ -45,4 +46,5 @@ computeTappingFeatures<-function(cleanDataTableId, lastProcessedVersion, feature
 	# return the last processed version
 	getMaxRowVersion(queryResults@values)
 }
+
 
