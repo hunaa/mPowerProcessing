@@ -238,9 +238,9 @@ if (canExecute) {
 	
 	tappingFeatures<-synTableQuery(sprintf("select * from %s", featureTableIds$tfSchemaId))@values
 	# verify content
-	print(tappingFeatures@values)
-	expect_true(all(tappingFeatures@values[['is_computed']]==TRUE))
-	expect_true(all(tappingFeatures@values[['tap_count']]==as.integer(155)))
+	expect_true(all(tappingFeatures[['is_computed']]==TRUE))
+	expect_true(all(tappingFeatures[['tap_count']]==as.integer(155)))
+	
 	voiceFeatures<-synTableQuery(sprintf("select * from %s", featureTableIds$vfSchemaId))@values
 	# TODO verify content
 	gaitFeatures<-synTableQuery(sprintf("select * from %s", featureTableIds$gfSchemaId))@values
