@@ -24,8 +24,14 @@ main<-function() {
 	lastProcessedVersionTableId <- "syn5706434" ## NOTE: THIS WAS MOVED INTO TEST PROJECT
 	bridgeStatusId <- "syn5720756"
 	mPowerBatchStatusId <- "syn5762675" # NOTE: THIS IS IN THE TEST PROJECT
+	tappingFeatureTableId <-"syn5987315"
+	voiceFeatureTableId <- "syn5987316"
+	balanceFeatureTableId <- "syn5987317"
+  gaitFeatureTableId <- "syn5987318"
+
 	
 	mPowerProcessing::process_mpower_data(eId, uId, pId, mId, tId, vId1, vId2, wId, outputProjectId, 
+			tappingFeatureTableId, voiceFeatureTableId, balanceFeatureTableId, gaitFeatureTableId,
 			bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId)
 }
 

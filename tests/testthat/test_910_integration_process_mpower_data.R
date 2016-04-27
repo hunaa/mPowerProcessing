@@ -53,6 +53,10 @@ if (canExecute) {
 	createOutputTables(outputProjectId)
 	message("...done.")
 	
+	message("Creating feature tables...")
+	featureTableIds<-createFeatureTables(outputProjectId)
+	message("...done.")
+	
 	## create and populate the source tables
 	testDataFolder<-system.file("testdata", package="mPowerProcessing")
 	
@@ -158,7 +162,7 @@ if (canExecute) {
 	tappingAttachments<-c(
 	"accel_tapping.json.items"="default-json-files",
 	"accelerometer_tapping.items"="default-json-files",
-	"tapping_results.json.TappingSamples"="default-json-files")
+	"tapping_results.json.TappingSamples"="tapping_results.json.TappingSamples")
 	tIds<-createMultipleTablesFromRDataFile(project, "tappingTaskInput.RData", "Tapping Task Raw Input", tappingAttachments)
 	
 	voiceTaskInputFile<-file.path(testDataFolder, "voiceTaskInput.RData")
@@ -228,9 +232,20 @@ if (canExecute) {
 	expect_true(!(is.null(bridgeExportQueryResult) || nrow(bridgeExportQueryResult@values)==0))
 		
 	process_mpower_data_bare(eId, uId, pId, mId, tIds, vId1, vId2, wIds, outputProjectId, 
-						bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId)
+			featureTableIds$tfSchemaId, featureTableIds$vfSchemaId, featureTableIds$bfSchemaId, featureTableIds$gfSchemaId, 
+			bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId)
 	markProcesingComplete(bridgeExportQueryResult, "complete")
 	
+	tappingFeatures<-synTableQuery(sprintf("select * from %s", featureTableIds$tfSchemaId))@values
+	# verify content
+	expect_true(all(tappingFeatures[['is_computed']]==TRUE))
+	expect_true(all(tappingFeatures[['tap_count']]==as.integer(155)))
+	
+	voiceFeatures<-synTableQuery(sprintf("select * from %s", featureTableIds$vfSchemaId))@values
+	# TODO verify content
+	gaitFeatures<-synTableQuery(sprintf("select * from %s", featureTableIds$gfSchemaId))@values
+	# TODO verify content
+	balanceFeatures<-synTableQuery(sprintf("select * from %s", featureTableIds$bfSchemaId))@values
 	# TODO verify content
 	
 	# check that the batch has been marked 'complete'

@@ -9,6 +9,7 @@ FROM rocker/rstudio
 RUN Rscript -e "source('http://depot.sagebase.org/CRAN.R'); pkgInstall('synapseClient', stack='staging')"
 RUN Rscript -e "install.packages(c('devtools','testthat','RJSONIO','fractal','pracma','changepoint','lomb','uuid','crayon','RCurl'), repo='http://cran.mirrors.hoobly.com')"
 RUN Rscript -e "devtools::install_github('brian-bot/bridger')"
+RUN Rscript -e "devtools::install_github('Sage-Bionetworks/mPowerStatistics')"
 
 # Note: There are required ENV param's: SYNAPSE_USERNAME, SYNAPSE_APIKEY, BRIDGE_USERNAME, BRIDGE_PASSWORD
 CMD "Rscript" "-e" "source(system.file('main.R',package='mPowerProcessing'))"
