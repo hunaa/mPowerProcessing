@@ -1,4 +1,4 @@
-#' Retreive feature data from Synapse and load
+#' Retrieve feature data from Synapse and load
 #'
 #' @param tables a named list of Synapse IDs of feature metadata tables
 #' @param features a named list of Synapse IDs of feature files
@@ -12,19 +12,17 @@ fetchActivityFeatureTables<-function(tables, features) {
   ## GET TAPPING FEATURES
   tapTable <- synTableQuery(sprintf('SELECT * FROM %s WHERE "tapping_results.json.TappingSamples" is not null', tables$tapping))
   tap <- tapTable@values
-  tapFile <- synGet(features$tapping)
-  tapFeat <- read.delim(getFileLocation(tapFile), sep="\t", stringsAsFactors=FALSE, row.names = "filehandle")
-  tapFeat <- tapFeat[tap$tapping_results.json.TappingSamples, ]
-  tap <- cbind(tap, tapFeat)
+	tapFeat <- synTableQuery(sprintf('SELECT * FROM %s', features$tapping))@values
+	tap<-merge(tap, tapFeat, by="recordId", all=FALSE) # inner join
   tap$date <- as.Date(tap$createdOn)
   message("Got tapping table")
 
   ## GET VOICE FEATURES
-  # voiceTable <- synTableQuery('SELECT * FROM syn5511444 WHERE "audio_audio.m4a" is not null')
-  # voice <- voiceTable@values
-  voiceFile <- synGet(features$voice)
-  voice <- read.delim(getFileLocation(voiceFile), sep=",", stringsAsFactors=FALSE)
-  voice$date <- as.Date(voice$createdOn)
+  voiceTable <- synTableQuery((sprintf('SELECT * FROM %s WHERE "audio_audio.m4a" is not null', tables$voice)))
+  voice <- voiceTable@values
+	voiceFeat <- synTableQuery(sprintf('SELECT * FROM %s', features$voice))@values
+	voice<-merge(voice, voiceFeat, by="recordId", all=FALSE) # inner join
+	voice$date <- as.Date(voice$createdOn)
   message("Got voice features")
 
   ## GET WALKING TEST METADATA FOR BOTH GAIT AND BALANCE
@@ -35,18 +33,14 @@ fetchActivityFeatureTables<-function(tables, features) {
   message("Got walking table")
 
   ## GET GAIT FEATURES
-  gaitFile <- synGet(features$gait)
-  gaitFeat <- read.delim(getFileLocation(gaitFile), sep=",", stringsAsFactors=FALSE, row.names = 1)
-  gait <- walk[rownames(gaitFeat), ]
-  gait <- cbind(gait, gaitFeat)
+	gaitFeat <- synTableQuery(sprintf('SELECT * FROM %s', features$gait))@values
+	gait<-merge(walk, gaitFeat, by="recordId", all=FALSE) # inner join
   message("Got gait features")
 
   ## GET BALANCE FEATURES
-  balanceFile <- synGet(features$balance)
-  balanceFeat <- read.delim(getFileLocation(balanceFile), sep=",", stringsAsFactors=FALSE, row.names = 1)
-  balance <- walk[rownames(balanceFeat), ]
-  balance <- cbind(balance, balanceFeat)
-  message("Got balance features")
+	balanceFeat <- synTableQuery(sprintf('SELECT * FROM %s', features$balance))@values
+	balance<-merge(walk, balanceFeat, by="recordId", all=FALSE) # inner join
+	message("Got balance features")
 
   ## Return a feature table for each type of activity
   return(list(balance=balance, gait=gait, tap=tap, voice=voice))
