@@ -98,7 +98,7 @@ transformNormalizedData <- function(norms, window) {
 #'    [1] 0.4040358
 #' }
 getVisData <- function(healthCode, featureNames, featureTables, window, demo, ageInterval=5) {
-  activityTypes <- names(featureTables)
+  activityTypes <- names(featureNames)
   norms <- lapply(activityTypes, function(activity) {
     NormalizeFeature(featureTables[[activity]], healthCode, featureNames[[activity]], demo, ageInterval=ageInterval)
   })
@@ -257,13 +257,12 @@ testNormalization <- function(participantId, featureNames, featureTables, window
 #'    # call Bridge Visualization API here
 #'  }
 #'
-runNormalization <- function(tables, features, window) {
+runNormalization <- function(tables, features, featureNames, window) {
   # demographics table
   demoTb <- synTableQuery(sprintf("SELECT * FROM %s", tables$demographics))
   demo <- demoTb@values
 
   featureTables <- fetchActivityFeatureTables(tables, features)
-  featureNames <- list(balance='rangeAA', gait='medianZ', tap='numberTaps', voice='shimmerLocaldB_sma3nz_amean')
 
   casesWithPrepostActivity <- findCasesWithPrepostActivity(demo, featureTables, window)
 

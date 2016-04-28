@@ -254,7 +254,10 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, out
 	features<-list(tapping=tappingFeatureTableId, gait=gaitFeatureTableId, 
 			balance=balanceFeatureTableId, voice=voiceFeatureTableId)
 	thirtyDayWindow <- list(start=Sys.Date()-as.difftime(30, units="days"), end=Sys.Date())
-	normalizedFeatures<-runNormalization(tables, features, thirtyDayWindow)
+	
+	# TODO add voice feature featureNames <- list(balance='zcrAA', gait='F0XY', tap='tap_count', voice='???')
+	featureNames <- list(balance='zcrAA', gait='F0XY', tap='tap_count')
+	normalizedFeatures<-runNormalization(tables, features, featureNames, thirtyDayWindow)
 	
 	print(normalizedFeatures)
 	
