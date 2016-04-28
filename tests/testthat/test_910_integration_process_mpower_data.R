@@ -179,7 +179,7 @@ if (canExecute) {
 	vId2<-createTable(project, schema2, query2, "Voice Raw Input 2", v2MockAttachmentFolders)
 	
 	walkingAttachments<-c("accel_walking_outbound.json.items"="default-json-files",      
-		"deviceMotion_walking_outbound.json.items"="default-json-files",
+		"deviceMotion_walking_outbound.json.items"="deviceMotion_walking_outbound.json.items",
 		"pedometer_walking_outbound.json.items"="default-json-files",
 		"pedometer_walking.outbound.items"="default-json-files",
 		"accel_walking_return.json.items"="default-json-files",
@@ -187,7 +187,7 @@ if (canExecute) {
 		"pedometer_walking_return.json.items"="default-json-files",
 		"accel_walking_rest.json.items"="default-json-files",    
 		"accelerometer_walking.rest.items"="default-json-files",    
-		"deviceMotion_walking_rest.json.items"="default-json-files", 
+		"deviceMotion_walking_rest.json.items"="deviceMotion_walking_rest.json.items", 
 		"deviceMotion_walking.rest.items"="default-json-files")
 	wIds<-createMultipleTablesFromRDataFile(project, "walkingTaskInput.RData", "Walking Task Raw Input", walkingAttachments)
 	

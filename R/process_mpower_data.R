@@ -223,16 +223,47 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, out
 	if (is.null(tappingCleanedDataId)) stop("No cleaned Tapping Activity data")
 	newLastProcessedVersion<-computeTappingFeatures(tappingCleanedDataId, lastProcessedVersion[tappingCleanedDataId], tappingFeatureTableId)
 	lastProcessedVersion[tappingCleanedDataId]<-newLastProcessedVersion
-	# TODO compute voice, gait, and balance features
-		
+
+	walkingCleanedDataId<-nameToTableIdMap[["Walking Activity"]]
+	if (is.null(walkingCleanedDataId)) stop("No cleaned Walking Activity data")
+	# compute gait and balance features
+	lastProcessedGaitVersion<-computeGaitFeatures(walkingCleanedDataId, 
+		lastProcessedVersion[walkingCleanedDataId], gaitFeatureTableId)
+	lastProcessedBalanceVersion<-computeBalanceFeatures(walkingCleanedDataId, 
+		lastProcessedVersion[walkingCleanedDataId], balanceFeatureTableId)
+	# lastProcessedGaitVersion and lastProcessedBalanceVersion ought to be the same
+	lastProcessedVersion[walkingCleanedDataId]<-min(lastProcessedGaitVersion, lastProcessedBalanceVersion)
+
+	voiceCleanedDataId<-nameToTableIdMap[["Voice Activity"]]
+	if (is.null(voiceCleanedDataId)) stop("No cleaned Voice Activity data")
+	# TODO compute voice features
+	
 	# update the last processed version for the feature data tables
 	cat("Updating 'last processed' table for feature tables...\n")
 	lastProcessedQueryResult@values<-mergeLastProcessVersionIntoToDF(
 			lastProcessedVersion, lastProcessedQueryResult@values)
 	synStore(lastProcessedQueryResult)
 	cat("... done.\n")
+	
+	# Now compute the normalized features
+	demographicsCleanedDataId<-nameToTableIdMap[["Demographics Survey"]]
+	if (is.null(demographicsCleanedDataId)) stop("No cleaned Demographics Survey data")
 
-# Now call the Visualization Data API 
+	tables<-list(demographics=demographicsCleanedDataId, tapping=tappingCleanedDataId, 
+			voice=voiceCleanedDataId, walking=walkingCleanedDataId)
+	features<-list(tapping=tappingFeatureTableId, gait=gaitFeatureTableId, 
+			balance=balanceFeatureTableId, voice=voiceFeatureTableId)
+	thirtyDayWindow <- list(start=Sys.Date()-as.difftime(30, units="days"), end=Sys.Date())
+	
+	# TODO add voice feature featureNames <- list(balance='zcrAA', gait='F0XY', tap='tap_count', voice='???')
+	featureNames <- list(balance='zcrAA', gait='F0XY', tap='tap_count')
+	normalizedFeatures<-runNormalization(tables, features, featureNames, thirtyDayWindow)
+	
+	print(normalizedFeatures)
+	
+	# TODO call the Bridge API
+
+	# Now call the Visualization Data API 
 	#https://sagebionetworks.jira.com/wiki/display/BRIDGE/mPower+Visualization#mPowerVisualization-WritemPowerVisualizationData
 	cat("Invoking visualization API...\n")
 	# place holder
@@ -240,14 +271,10 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, out
 		"healthCode"="test-d9c31718-481f-4d75-b7d8-49154653504a",
 		"date"="2016-03-04",
 		"visualization"=list(
-			"standingPreMedication"=0.8,
-			"standingPostMedication"=0.9,
-			"tappingPreMedication"=0.4,
-			"tappingPostMedication"=0.6,
-			"voicePreMedication"=0.7,
-			"voicePostMedication"=0.8,
-			"walkingPreMedication"=0.5,
-			"walkingPostMedication"=0.8
+				"tap"=list(pre=0.8, post=0.9, controlMin=0.5, controlMax=0.99),
+				"gait"=list(pre=0.8, post=0.9, controlMin=0.5, controlMax=0.99),
+				"balance"= list(pre=0.8, post=0.9, controlMin=0.5, controlMax=0.99),
+				"voice"=list(pre=0.8, post=0.9, controlMin=0.5, controlMax=0.99)
 		)
 	)			
 	url <- bridger:::uriToUrl("/parkinson/visualization", bridger:::.getBridgeCache("bridgeEndpoint"))
