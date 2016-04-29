@@ -22,6 +22,7 @@ main<-function() {
 	wId <- c("syn3809915", "syn3809914", "syn3420243")
 	outputProjectId <- "syn5761747" ## NOTE: THIS IS A TEST PROJECT
 	lastProcessedVersionTableId <- "syn5706434" ## NOTE: THIS WAS MOVED INTO TEST PROJECT
+	lastProcessedFeatureVersionTableId <- "synXXXXXX" ## NOTE: THIS IS IN THE TEST PROJECT
 	bridgeStatusId <- "syn5720756"
 	mPowerBatchStatusId <- "syn5762675" # NOTE: THIS IS IN THE TEST PROJECT
 	tappingFeatureTableId <-"syn5987315"
@@ -32,7 +33,7 @@ main<-function() {
 	
 	mPowerProcessing::process_mpower_data(eId, uId, pId, mId, tId, vId1, vId2, wId, outputProjectId, 
 			tappingFeatureTableId, voiceFeatureTableId, balanceFeatureTableId, gaitFeatureTableId,
-			bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId)
+			bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId, lastProcessedFeatureVersionTableId)
 }
 
 username<-Sys.getenv("SYNAPSE_USERNAME")

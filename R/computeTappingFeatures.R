@@ -6,6 +6,7 @@
 ###############################################################################
 
 computeTappingFeatures<-function(cleanDataTableId, lastProcessedVersion, featureTableId) {
+	cat("Computing tapping features...\n")
 	jsonColName<-"tapping_results.json.TappingSamples"
 	# retrieve
 	if (is.na(lastProcessedVersion)) {
@@ -17,7 +18,10 @@ computeTappingFeatures<-function(cleanDataTableId, lastProcessedVersion, feature
 	queryResults<-synTableQuery(queryString)
 	
 	# if no results, just return
-	if (nrow(queryResults@values)==0) return(lastProcessedVersion)
+	if (nrow(queryResults@values)==0) {
+		cat("...done.\n")
+		return(lastProcessedVersion)
+	}
 	
 	recordIds<-queryResults@values$recordId
 	n<-length(recordIds)
@@ -43,6 +47,8 @@ computeTappingFeatures<-function(cleanDataTableId, lastProcessedVersion, feature
 	# store the results
 	featureTable<-Table(featureTableId, featureDataFrame)
 	synStore(featureTable)
+	
+	cat("...done.\n")
 	
 	# return the last processed version
 	getMaxRowVersion(queryResults@values)

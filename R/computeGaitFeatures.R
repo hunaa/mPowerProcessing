@@ -6,6 +6,7 @@
 ###############################################################################
 
 computeGaitFeatures<-function(cleanDataTableId, lastProcessedVersion, featureTableId) {
+	cat("Computing gait features...\n")
 	jsonColName<-"deviceMotion_walking_outbound.json.items"
 	# retrieve
 	if (is.na(lastProcessedVersion)) {
@@ -16,7 +17,10 @@ computeGaitFeatures<-function(cleanDataTableId, lastProcessedVersion, featureTab
 	queryResults<-synTableQuery(queryString)
 	
 	# if no results, just return
-	if (nrow(queryResults@values)==0) return(lastProcessedVersion)
+	if (nrow(queryResults@values)==0) {
+		cat("...done.\n")
+		return(lastProcessedVersion)
+	}
 	
 	recordIds<-queryResults@values$recordId
 	n<-length(recordIds)
@@ -42,6 +46,8 @@ computeGaitFeatures<-function(cleanDataTableId, lastProcessedVersion, featureTab
 	# store the results
 	featureTable<-Table(featureTableId, featureDataFrame)
 	synStore(featureTable)
+	
+	cat("...done.\n")
 	
 	# return the last processed version
 	getMaxRowVersion(queryResults@values)
