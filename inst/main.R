@@ -22,7 +22,7 @@ main<-function() {
 	wId <- c("syn3809915", "syn3809914", "syn3420243")
 	outputProjectId <- "syn5761747" ## NOTE: THIS IS A TEST PROJECT
 	lastProcessedVersionTableId <- "syn5706434" ## NOTE: THIS WAS MOVED INTO TEST PROJECT
-	lastProcessedFeatureVersionTableId <- "synXXXXXX" ## NOTE: THIS IS IN THE TEST PROJECT
+	lastProcessedFeatureVersionTableId <- "syn6035530" ## NOTE: THIS IS IN THE TEST PROJECT
 	bridgeStatusId <- "syn5720756"
 	mPowerBatchStatusId <- "syn5762675" # NOTE: THIS IS IN THE TEST PROJECT
 	tappingFeatureTableId <-"syn5987315"
