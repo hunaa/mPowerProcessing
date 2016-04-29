@@ -44,7 +44,8 @@ computeGaitFeatures<-function(cleanDataTableId, lastProcessedVersion, featureTab
 	}
 	
 	# store the results
-	featureTable<-Table(featureTableId, featureDataFrame)
+	featureTable<-synTableQuery(paste0('SELECT * FROM ',featureTableId))
+	featureTable@values<-mergeDataFrames(featureTable@values, featureDataFrame, recordId, delta=TRUE)
 	synStore(featureTable)
 	
 	cat("...done.\n")

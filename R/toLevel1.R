@@ -51,9 +51,17 @@ subsetThis <- function(x, theseOnes){
 # combine 'new' into 'current', replacing the rows of current with that 
 # of 'new' where the values in column 'col' are the same, otherwise appending
 # the row to the bottom of the data frame
-mergeDataFrames<-function(current, new, col) {
+# if 'delta' is true, return the *update* of 'current' by 'new', with only
+# those rows of 'current' that have changed (along with the new rows)
+mergeDataFrames<-function(current, new, col, delta=FALSE) {
 	if (nrow(current)==0) return(new)
-	if (nrow(new)==0) return(current)
+	if (nrow(new)==0) {
+		if (delta) {
+			return(current[NULL,]) # there is no new content
+		} else {
+			return(current)
+		}
+	}
 	if (is.null(current[[col]])) stop("'current' has no column ", col)
 	if (is.null(new[[col]])) stop("'new' has no column ", col)
 	# these are the indices in 'current' that require merging
@@ -68,7 +76,7 @@ mergeDataFrames<-function(current, new, col) {
 	
 	# we have to make sure that the column order of 'new' matches that of 'current'
 	permuteOrder<-sapply(names(current), function(x){which(names(new)==x)})
-	if (is(permuteOrder, "list")) stop("'current' has rows that 'new' lacks")
+	if (is(permuteOrder, "list")) stop("'current' has columns that 'new' lacks")
 	new<-new[permuteOrder]
 	
 	# the following is only necessary if there are matching rows in the two dataframes
@@ -80,12 +88,19 @@ mergeDataFrames<-function(current, new, col) {
 		current[colIndicesInCurrentThatMatchNew,]<-new[colIndicesInNewThatMatchCurrent[subIndex],]
 		# now append the values of new that were not merged in to current
 		# and return the result
-		rbind(current, new[-colIndicesInNewThatMatchCurrent,])
+		if (delta) {
+			rbind(current[colIndicesInCurrentThatMatchNew,], new[-colIndicesInNewThatMatchCurrent,])
+		} else {
+			rbind(current, new[-colIndicesInNewThatMatchCurrent,])
+		}
 	} else {
-		rbind(current, new)
+		if (delta) {
+			new
+		} else {
+			rbind(current, new)
+		}
 	}
 }
-
 
 #####
 ## ENROLLMENT for first survey: parkinson-EnrollmentSurvey-v1
@@ -377,6 +392,8 @@ process_voice_activity<-function(vId1, vId2, lastProcessedVersion1, lastProcesse
 		vDat$externalId <- NULL
 		vDat$uploadDate <- NULL
 		vDat <- subsetThis(vDat)
+	} else {
+		names(vDat)<-replace(names(vDat), which(names(vDat)=="momentInDayFormat.json"), "momentInDayFormat.json.choiceAnswers")
 	}
 	
   list(vDat=vDat, vFilehandleCols=vFilehandleCols, maxRowProcessed=maxRowProcessed)
@@ -502,7 +519,7 @@ store_cleaned_data<-function(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat
 			# Instead we have to _merge_, based on the 'recordId' column.
 			rownames(storeThese[[i]]$vals)<-NULL
 			tableContent<-synTableQuery(sprintf("select * from %s", thisId))
-			tableContent@values<-mergeDataFrames(tableContent@values, storeThese[[i]]$vals, "recordId")
+			tableContent@values<-mergeDataFrames(tableContent@values, storeThese[[i]]$vals, "recordId", delta=TRUE)
 			tableContent@values<-formatDF(tableContent@values, synGet(thisId))
 			synStore(tableContent)
 		}

@@ -4,6 +4,7 @@
 ###############################################################################
 
 library(mPowerProcessing)
+library(mPowerStatistics)
 library(synapseClient)
 library(bridger)
 library(RJSONIO)
