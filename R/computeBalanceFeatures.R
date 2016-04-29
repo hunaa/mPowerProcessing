@@ -6,6 +6,7 @@
 ###############################################################################
 
 computeBalanceFeatures<-function(cleanDataTableId, lastProcessedVersion, featureTableId) {
+	cat("Computing balance features...\n")
 	jsonColName<-"deviceMotion_walking_rest.json.items"
 	# retrieve
 	if (is.na(lastProcessedVersion)) {
@@ -16,7 +17,10 @@ computeBalanceFeatures<-function(cleanDataTableId, lastProcessedVersion, feature
 	queryResults<-synTableQuery(queryString)
 	
 	# if no results, just return
-	if (nrow(queryResults@values)==0) return(lastProcessedVersion)
+	if (nrow(queryResults@values)==0) {
+		cat("...done.\n")
+		return(lastProcessedVersion)
+	}
 	
 	recordIds<-queryResults@values$recordId
 	n<-length(recordIds)
@@ -42,6 +46,8 @@ computeBalanceFeatures<-function(cleanDataTableId, lastProcessedVersion, feature
 	# store the results
 	featureTable<-Table(featureTableId, featureDataFrame)
 	synStore(featureTable)
+	
+	cat("...done.\n")
 	
 	# return the last processed version
 	getMaxRowVersion(queryResults@values)
