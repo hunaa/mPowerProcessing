@@ -101,6 +101,19 @@ mergeLastProcessVersionIntoToDF<-function(lastProcessedVersion, df) {
 	mergeDataFrames(df, lastProcessVersionToDF(lastProcessedVersion), "TABLE_ID")
 }
 
+# the the last row version of the given cleaned data table for which the given feature was computed
+lastProcessedFeatureVersion<-function(lastProcessedFeatureVersionTableId, cleanedTableId, featureName) {
+	queryResult<-synTableQuery(paste0("SELECT * FROM ", 
+					lastProcessedFeatureVersionTableId, " WHERE TABLE_ID='", 
+					cleanedTableId, "' AND FEATURE='", featureName, "'"))
+	if (nrow(queryResult@values)==0) {
+		queryResult@values[1,"TABLE_ID"]<-cleanedTableId
+		queryResult@values[1,"FEATURE"]<-featureName
+		queryResult@values[1,"LAST_VERSION"]<-NA
+	}
+	queryResult
+}
+
 # given a data frame having row values named according to the Synapse table convention
 # find the maximum value
 getMaxRowVersion<-function(df) {
@@ -110,7 +123,7 @@ getMaxRowVersion<-function(df) {
 
 process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputProjectId, 
 		tappingFeatureTableId, voiceFeatureTableId, balanceFeatureTableId, gaitFeatureTableId,
-	bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId) {
+	bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId, lastProcessedFeatureVersionTableId) {
 	# check if Bridge is done.  If not, exit
 	hostname<-getHostname()
 	leaseTimeout<-as.difftime("06:00:00") # not used at this time
@@ -120,7 +133,7 @@ process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputPr
 	tryCatch({
 				process_mpower_data_bare(eId, uId, pId, mId, tId, vId1, vId2, wId, outputProjectId, 
 						tappingFeatureTableId, voiceFeatureTableId, balanceFeatureTableId, gaitFeatureTableId,
-						bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId)
+						bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId, lastProcessedFeatureVersionTableId)
 				markProcesingComplete(bridgeExportQueryResult, "complete")
 			}, 
 			error=function(e) {
@@ -132,7 +145,7 @@ process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputPr
 # this entry point, which lacks the 'try-catch', is exposed for testing purposes
 process_mpower_data_bare<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputProjectId, 
 		tappingFeatureTableId, voiceFeatureTableId, balanceFeatureTableId, gaitFeatureTableId,
-		bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId) {
+		bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId, lastProcessedFeatureVersionTableId) {
 	lastProcessedQueryResult<-synTableQuery(paste0("SELECT * FROM ", lastProcessedVersionTableId))
 	lastProcessedVersion<-getLastProcessedVersion(lastProcessedQueryResult@values)
 	
@@ -216,34 +229,38 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, out
 	cat("... done.\n")
 	
 	# **** compute features ****
-	lastProcessedQueryResult<-synTableQuery(paste0("SELECT * FROM ", lastProcessedVersionTableId))
-	lastProcessedVersion<-getLastProcessedVersion(lastProcessedQueryResult@values)
-	
 	tappingCleanedDataId<-nameToTableIdMap[["Tapping Activity"]]
 	if (is.null(tappingCleanedDataId)) stop("No cleaned Tapping Activity data")
-	newLastProcessedVersion<-computeTappingFeatures(tappingCleanedDataId, lastProcessedVersion[tappingCleanedDataId], tappingFeatureTableId)
-	lastProcessedVersion[tappingCleanedDataId]<-newLastProcessedVersion
+	lp<-lastProcessedFeatureVersion(lastProcessedFeatureVersionTableId, tappingCleanedDataId, "tap_count")
+	newLastProcessedVersion<-computeTappingFeatures(tappingCleanedDataId, lp@values[1, "LAST_VERSION"], tappingFeatureTableId)
+	if (!is.na(newLastProcessedVersion)) {
+		lp@values[1, "LAST_VERSION"]<-newLastProcessedVersion
+		synStore(lp)
+	}
 
 	walkingCleanedDataId<-nameToTableIdMap[["Walking Activity"]]
 	if (is.null(walkingCleanedDataId)) stop("No cleaned Walking Activity data")
 	# compute gait and balance features
+	lp<-lastProcessedFeatureVersion(lastProcessedFeatureVersionTableId, walkingCleanedDataId, "F0XY")
 	lastProcessedGaitVersion<-computeGaitFeatures(walkingCleanedDataId, 
-		lastProcessedVersion[walkingCleanedDataId], gaitFeatureTableId)
-	lastProcessedBalanceVersion<-computeBalanceFeatures(walkingCleanedDataId, 
-		lastProcessedVersion[walkingCleanedDataId], balanceFeatureTableId)
-	# lastProcessedGaitVersion and lastProcessedBalanceVersion ought to be the same
-	lastProcessedVersion[walkingCleanedDataId]<-min(lastProcessedGaitVersion, lastProcessedBalanceVersion)
+			lp@values[1, "LAST_VERSION"], gaitFeatureTableId)
+	if (!is.na(lastProcessedGaitVersion)) {
+		lp@values[1, "LAST_VERSION"]<-lastProcessedGaitVersion
+		synStore(lp)
+	}
 
+	lp<-lastProcessedFeatureVersion(lastProcessedFeatureVersionTableId, walkingCleanedDataId, "zcrAA")
+	lastProcessedBalanceVersion<-computeBalanceFeatures(walkingCleanedDataId, 
+			lp@values[1, "LAST_VERSION"], balanceFeatureTableId)
+	if (!is.na(lastProcessedBalanceVersion)) {
+		lp@values[1, "LAST_VERSION"]<-lastProcessedBalanceVersion
+		synStore(lp)
+	}
+	
 	voiceCleanedDataId<-nameToTableIdMap[["Voice Activity"]]
 	if (is.null(voiceCleanedDataId)) stop("No cleaned Voice Activity data")
-	# TODO compute voice features
 	
-	# update the last processed version for the feature data tables
-	cat("Updating 'last processed' table for feature tables...\n")
-	lastProcessedQueryResult@values<-mergeLastProcessVersionIntoToDF(
-			lastProcessedVersion, lastProcessedQueryResult@values)
-	synStore(lastProcessedQueryResult)
-	cat("... done.\n")
+	# TODO compute voice features
 	
 	# Now compute the normalized features
 	demographicsCleanedDataId<-nameToTableIdMap[["Demographics Survey"]]
@@ -259,10 +276,17 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, out
 	featureNames <- list(balance='zcrAA', gait='F0XY', tap='tap_count')
 	normalizedFeatures<-runNormalization(tables, features, featureNames, thirtyDayWindow)
 	
-	print(normalizedFeatures)
+	for (healthCode in names(normalizedFeatures)) {
+		normdata <- normalizedFeatures[[healthCode]]
+		if (inherits(normdata, "try-error")) {
+			message(sprintf('skipping %s due to error in processing', healthCode))
+		} else {
+			jsonString <- visDataToJSON(healthCode, normalizedFeatures[[healthCode]])
+			print(jsonString)
+			# TODO call Bridge Visualization API here
+		}
+	}
 	
-	# TODO call the Bridge API
-
 	# Now call the Visualization Data API 
 	#https://sagebionetworks.jira.com/wiki/display/BRIDGE/mPower+Visualization#mPowerVisualization-WritemPowerVisualizationData
 	cat("Invoking visualization API...\n")

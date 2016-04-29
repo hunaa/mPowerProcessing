@@ -273,3 +273,16 @@ createFeatureTables<-function(projectId) {
 			gfSchemaId=propertyValue(gfSchema, "id"))
 }
 
+# create 'lastProcessedFeatureVersion' table
+createLastProcessedFeatureVersionTable<-function(project) {
+	columns<-list(
+			TableColumn(name="TABLE_ID", columnType="ENTITYID"), 
+			TableColumn(name="FEATURE", columnType="STRING", maximumSize=as.integer(200)), 
+			TableColumn(name="LAST_VERSION", columnType="INTEGER"))
+	schema<-TableSchema("Last Processed For Feature", project, columns)
+	schema<-synStore(schema)
+	# no content initially
+	propertyValue(schema, "id")
+}
+
+

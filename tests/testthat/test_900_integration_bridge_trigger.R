@@ -10,9 +10,6 @@ library(synapseClient)
 
 context("test_integration_bridge_trigger")
 
-library(synapseClient)
-library(bridger)
-
 canExecute<-TRUE
 
 username<-Sys.getenv("SYNAPSE_USERNAME")

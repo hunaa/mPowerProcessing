@@ -203,13 +203,15 @@ if (canExecute) {
 	}
 	lastProcessedVersionTableId <- createLastProcessedVersionTable()
 	
+	lastProcessedFeatureVersionTableId <- createLastProcessedFeatureVersionTable(propertyValue(project, "id"))
+	
 	# set up bridgeStatusId
 	column<-TableColumn(name="uploadDate", columnType="STRING")
 	bridgeStatusSchema<-TableSchema("Bridge Status Schema", project, list(column))
 	bridgeStatusSchema<-synStore(bridgeStatusSchema)
 	bridgeStatusId<-propertyValue(bridgeStatusSchema, "id")
 	
-	# set up  mPowerBatchStatusId
+	# set up mPowerBatchStatusId
 	c1<-TableColumn(name="bridgeUploadDate", columnType="STRING")
 	c2<-TableColumn(name="mPowerBatchStart", columnType="DATE")
 	c3<-TableColumn(name="hostName", columnType="STRING")
@@ -233,7 +235,7 @@ if (canExecute) {
 		
 	process_mpower_data_bare(eId, uId, pId, mId, tIds, vId1, vId2, wIds, outputProjectId, 
 			featureTableIds$tfSchemaId, featureTableIds$vfSchemaId, featureTableIds$bfSchemaId, featureTableIds$gfSchemaId, 
-			bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId)
+			bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId, lastProcessedFeatureVersionTableId)
 	markProcesingComplete(bridgeExportQueryResult, "complete")
 	
 	tappingFeatures<-synTableQuery(sprintf("select * from %s", featureTableIds$tfSchemaId))@values

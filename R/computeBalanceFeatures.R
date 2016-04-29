@@ -1,4 +1,4 @@
-# This computes gait features on cleaned data
+# This computes balance features on cleaned data
 #
 # returns new last-processed version
 # 
