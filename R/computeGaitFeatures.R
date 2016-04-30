@@ -39,8 +39,13 @@ computeGaitFeatures<-function(cleanDataTableId, lastProcessedVersion, featureTab
 		if (is.na(fileHandleId) || is.null(fileHandleId)) next
 		file<-jsonFiles[[fileHandleId]]
 		data<-fromJSON(file)
-		featureDataFrame[i,"F0XY"] <- gait_F0XY(data)
-		featureDataFrame[i,"is_computed"] <- TRUE
+		f0XY<-try(gait_F0XY(data), silent=T)
+		if (is(f0XY, "try-error")) {
+			cat("computeGaitFeatures:  gait_F0XY failed for i=", i, ", fileHandleId=", fileHandleId, "\n")
+		} else {
+			featureDataFrame[i,"F0XY"] <- f0XY
+			featureDataFrame[i,"is_computed"] <- TRUE
+		}
 	}
 	
 	# store the results

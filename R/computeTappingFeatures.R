@@ -40,8 +40,13 @@ computeTappingFeatures<-function(cleanDataTableId, lastProcessedVersion, feature
 		if (is.na(fileHandleId) || is.null(fileHandleId)) next
 		tappingFile<-tappingFiles[[fileHandleId]]
 		tappingData<-fromJSON(tappingFile)
-		featureDataFrame[i,"tap_count"] <- tappingCountStatistic(tappingData)
-		featureDataFrame[i,"is_computed"] <- TRUE
+		tapCount<-try(tappingCountStatistic(tappingData), silent=T)
+		if (is(tapCount, "try-error")) {
+			cat("computeTappingFeatures:  tappingCountStatistic failed for i=", i, ", fileHandleId=", fileHandleId, "\n")
+		} else {
+			featureDataFrame[i,"tap_count"] <- tapCount
+			featureDataFrame[i,"is_computed"] <- TRUE
+		}
 	}
 	
 	# store the results
