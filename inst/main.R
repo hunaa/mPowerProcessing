@@ -58,6 +58,11 @@ if (nchar(bridgePassword)==0) {
 	q("no")
 }
 
+cacheDir<-Sys.getenv("CACHE_DIR")
+if (nchar(cacheDir)>0) {
+	synapseCacheDir(cacheDir)
+}
+
 # log in to Synapse
 synapseLogin(username=username, apiKey=apiKey, rememberMe=F)
 
