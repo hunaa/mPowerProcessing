@@ -46,7 +46,7 @@ computeTappingFeatures<-function(cleanDataTableId, lastProcessedVersion, feature
 	
 	# store the results
 	featureTable<-synTableQuery(paste0('SELECT * FROM ',featureTableId))
-	featureTable@values<-mergeDataFrames(featureTable@values, featureDataFrame, recordId, delta=TRUE)
+	featureTable@values<-mergeDataFrames(featureTable@values, featureDataFrame, "recordId", delta=TRUE)
 	synStore(featureTable)
 	
 	cat("...done.\n")
