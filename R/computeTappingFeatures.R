@@ -38,9 +38,11 @@ computeTappingFeatures<-function(cleanDataTableId, lastProcessedVersion, feature
 	for (i in 1:n) {
 		fileHandleId<-queryResults@values[i,jsonColName]
 		if (is.na(fileHandleId) || is.null(fileHandleId)) next
-		tappingFile<-tappingFiles[[fileHandleId]]
-		tappingData<-fromJSON(tappingFile)
-		tapCount<-try(tappingCountStatistic(tappingData), silent=T)
+		tapCount<-try({
+					tappingFile<-tappingFiles[[fileHandleId]]
+					tappingData<-fromJSON(tappingFile)
+					tappingCountStatistic(tappingData)
+				}, silent=T)
 		if (is(tapCount, "try-error")) {
 			cat("computeTappingFeatures:  tappingCountStatistic failed for i=", i, ", fileHandleId=", fileHandleId, "\n")
 		} else {

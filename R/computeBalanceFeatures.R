@@ -37,9 +37,11 @@ computeBalanceFeatures<-function(cleanDataTableId, lastProcessedVersion, feature
 	for (i in 1:n) {
 		fileHandleId<-queryResults@values[i,jsonColName]
 		if (is.na(fileHandleId) || is.null(fileHandleId)) next
-		file<-jsonFiles[[fileHandleId]]
-		data<-fromJSON(file)		
-		zcrAA<-try(balance_zcrAA(data), silent=T)
+		zcrAA<-try({
+					file<-jsonFiles[[fileHandleId]]
+					data<-fromJSON(file)		
+					balance_zcrAA(data)
+				}, silent=T)
 		if (is(zcrAA, "try-error")) {
 			cat("computeBalanceFeatures:  balance_zcrAA failed for i=", i, ", fileHandleId=", fileHandleId, "\n")
 		} else {
