@@ -37,14 +37,22 @@ computeGaitFeatures<-function(cleanDataTableId, lastProcessedVersion, featureTab
 	for (i in 1:n) {
 		fileHandleId<-queryResults@values[i,jsonColName]
 		if (is.na(fileHandleId) || is.null(fileHandleId)) next
-		file<-jsonFiles[[fileHandleId]]
-		data<-fromJSON(file)
-		featureDataFrame[i,"F0XY"] <- gait_F0XY(data)
-		featureDataFrame[i,"is_computed"] <- TRUE
+		f0XY<-try({
+					file<-jsonFiles[[fileHandleId]]
+					data<-fromJSON(file)
+					gait_F0XY(data)
+				}, silent=T)
+		if (is(f0XY, "try-error")) {
+			cat("computeGaitFeatures:  gait_F0XY failed for i=", i, ", fileHandleId=", fileHandleId, "\n")
+		} else {
+			featureDataFrame[i,"F0XY"] <- f0XY
+			featureDataFrame[i,"is_computed"] <- TRUE
+		}
 	}
 	
 	# store the results
-	featureTable<-Table(featureTableId, featureDataFrame)
+	featureTable<-synTableQuery(paste0('SELECT * FROM ',featureTableId))
+	featureTable@values<-mergeDataFrames(featureTable@values, featureDataFrame, "recordId", delta=TRUE)
 	synStore(featureTable)
 	
 	cat("...done.\n")

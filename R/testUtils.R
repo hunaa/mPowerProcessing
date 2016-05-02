@@ -34,6 +34,7 @@ getIdFromSql<-function(sql) {
 	sql<-tolower(sql)
 	start<-pracma::strfind(sql, "syn")
 	end<-pracma::strfind(sql, " where")
+	if (is.null(end)) end<-1+nchar(sql)
 	substr(sql, start, end-1)
 }
 

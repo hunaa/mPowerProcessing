@@ -38,14 +38,22 @@ computeTappingFeatures<-function(cleanDataTableId, lastProcessedVersion, feature
 	for (i in 1:n) {
 		fileHandleId<-queryResults@values[i,jsonColName]
 		if (is.na(fileHandleId) || is.null(fileHandleId)) next
-		tappingFile<-tappingFiles[[fileHandleId]]
-		tappingData<-fromJSON(tappingFile)
-		featureDataFrame[i,"tap_count"] <- tappingCountStatistic(tappingData)
-		featureDataFrame[i,"is_computed"] <- TRUE
+		tapCount<-try({
+					tappingFile<-tappingFiles[[fileHandleId]]
+					tappingData<-fromJSON(tappingFile)
+					tappingCountStatistic(tappingData)
+				}, silent=T)
+		if (is(tapCount, "try-error")) {
+			cat("computeTappingFeatures:  tappingCountStatistic failed for i=", i, ", fileHandleId=", fileHandleId, "\n")
+		} else {
+			featureDataFrame[i,"tap_count"] <- tapCount
+			featureDataFrame[i,"is_computed"] <- TRUE
+		}
 	}
 	
 	# store the results
-	featureTable<-Table(featureTableId, featureDataFrame)
+	featureTable<-synTableQuery(paste0('SELECT * FROM ',featureTableId))
+	featureTable@values<-mergeDataFrames(featureTable@values, featureDataFrame, "recordId", delta=TRUE)
 	synStore(featureTable)
 	
 	cat("...done.\n")

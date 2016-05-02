@@ -4,6 +4,7 @@
 ###############################################################################
 
 library(mPowerProcessing)
+library(mPowerStatistics)
 library(synapseClient)
 library(bridger)
 library(RJSONIO)
@@ -55,6 +56,11 @@ bridgePassword<-Sys.getenv("BRIDGE_PASSWORD")
 if (nchar(bridgePassword)==0) {
 	cat("ERROR: Environment variable BRIDGE_PASSWORD is missing.\n")
 	q("no")
+}
+
+cacheDir<-Sys.getenv("CACHE_DIR")
+if (nchar(cacheDir)>0) {
+	synapseCacheDir(cacheDir)
 }
 
 # log in to Synapse

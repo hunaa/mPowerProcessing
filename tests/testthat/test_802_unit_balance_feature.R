@@ -22,7 +22,16 @@ rownames(cleanedWalkingData)<-c("1_1", "2_1", "3_8")
 queryResults<-Table("syn000", cleanedWalkingData)
 		
 with_mock(
-		synTableQuery=function(sql) {queryResults},
+		synTableQuery=function(sql) {
+			tableId<-getIdFromSql(sql)
+			if (tableId=="syn000") {
+				queryResults
+			} else if (tableId=="syn999") {
+				Table("syn999", data.frame())
+			} else {
+				stop(paste0("Unexpected table id <", tableId, ">"))
+			}
+		},
 		synDownloadTableColumns=function(table, columns){c("111"="file1", "222"="file2", "333"="file3")},
 		fromJSON=function(file){"[]"},
 		balance_zcrAA=function(data){as.integer(7)},
