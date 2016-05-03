@@ -23,7 +23,8 @@ batchVoiceProcess<-function(voiceInputTableId, voiceFeatureTableId, batchTableId
 			print("All batches have been processed!")
 			return()
 		}
-		batchToProcess<-sample(availableBatches, 1)
+		# the next batch
+		batchToProcess<-min(availableBatches)
 		# lock it
 		if (nrow(batchQueryResult@values)==0) {
 			batchQueryResult@values<-

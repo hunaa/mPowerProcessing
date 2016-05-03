@@ -40,6 +40,13 @@ if (nchar(cacheDir)>0) {
 	synapseCacheDir(cacheDir)
 }
 
+if (nchar(Sys.getenv("STAGING")>0)) {
+	synSetEndpoints(
+			"https://repo-staging.prod.sagebase.org/repo/v1", 
+			"https://repo-staging.prod.sagebase.org/auth/v1", 
+			"https://repo-staging.prod.sagebase.org/file/v1")
+}
+
 # log in to Synapse
 synapseLogin(username=username, apiKey=apiKey, rememberMe=F)
 
