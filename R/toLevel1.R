@@ -65,13 +65,13 @@ mergeDataFrames<-function(current, new, col, delta=FALSE) {
 	if (is.null(current[[col]])) stop("'current' has no column ", col)
 	if (is.null(new[[col]])) stop("'new' has no column ", col)
 	# these are the indices in 'current' that require merging
-	colIndicesInCurrentThatMatchNew<-which(sapply(current[[col]], function(x) any(new[[col]]==x)))
+	rowIndicesInCurrentThatMatchNew<-which(sapply(current[[col]], function(x) any(new[[col]]==x)))
 	# these are the indices in 'new' to be merged into 'current'
-	colIndicesInNewThatMatchCurrent<-which(sapply(new[[col]], function(x) any(current[[col]]==x)))
+	rowIndicesInNewThatMatchCurrent<-which(sapply(new[[col]], function(x) any(current[[col]]==x)))
 	# the two vectors should be the same length
-	if (length(colIndicesInCurrentThatMatchNew)>length(colIndicesInNewThatMatchCurrent))
+	if (length(rowIndicesInCurrentThatMatchNew)>length(rowIndicesInNewThatMatchCurrent))
 		stop("There are multiple rows in 'new' that match rows in 'current'")
-	if (length(colIndicesInNewThatMatchCurrent)>length(colIndicesInCurrentThatMatchNew))
+	if (length(rowIndicesInNewThatMatchCurrent)>length(rowIndicesInCurrentThatMatchNew))
 		stop("There are multiple rows in 'current' that match rows in 'new'")
 	
 	# we have to make sure that the column order of 'new' matches that of 'current'
@@ -81,18 +81,18 @@ mergeDataFrames<-function(current, new, col, delta=FALSE) {
 	new<-new[permuteOrder]
 	
 	# the following is only necessary if there are matching rows in the two dataframes
-	if (length(colIndicesInCurrentThatMatchNew)>0) {
-		# Within the space of colIndicesInNewThatMatchCurrent, what is the index in current
+	if (length(rowIndicesInCurrentThatMatchNew)>0) {
+		# Within the space of rowIndicesInNewThatMatchCurrent, what is the index in current
 		# that holds the matching value?
-		subIndex<-sapply(new[colIndicesInNewThatMatchCurrent,col], function(x) which(current[colIndicesInCurrentThatMatchNew, col]==x))
+		subIndex<-sapply(new[rowIndicesInNewThatMatchCurrent,col], function(x) which(current[rowIndicesInCurrentThatMatchNew, col]==x))
 		if (is(subIndex, "list")) stop("There are multiple matches in the given key column between 'current' and 'new'")
-		current[colIndicesInCurrentThatMatchNew,]<-new[colIndicesInNewThatMatchCurrent[subIndex],]
+		current[rowIndicesInCurrentThatMatchNew,]<-new[rowIndicesInNewThatMatchCurrent[subIndex],]
 		# now append the values of new that were not merged in to current
 		# and return the result
 		if (delta) {
-			rbind(current[colIndicesInCurrentThatMatchNew,], new[-colIndicesInNewThatMatchCurrent,])
+			rbind(current[rowIndicesInCurrentThatMatchNew,], new[-rowIndicesInNewThatMatchCurrent,])
 		} else {
-			rbind(current, new[-colIndicesInNewThatMatchCurrent,])
+			rbind(current, new[-rowIndicesInNewThatMatchCurrent,])
 		}
 	} else {
 		if (delta) {

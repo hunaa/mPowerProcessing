@@ -286,4 +286,14 @@ createLastProcessedFeatureVersionTable<-function(project) {
 	propertyValue(schema, "id")
 }
 
+# set up mPowerBatchStatusId
+createVoiceBatchTable<-function(project) {
+	c1<-TableColumn(name="batchNumber", columnType="INTEGER")
+	c2<-TableColumn(name="batchStart", columnType="DATE")
+	c3<-TableColumn(name="hostName", columnType="STRING")
+	c4<-TableColumn(name="batchStatus", columnType="STRING")
+	schema<-TableSchema("Voice Batch Status Schema", project, list(c1,c2,c3,c4))
+	schema<-synStore(schema)
+	propertyValue(schema, "id")
+}
 
