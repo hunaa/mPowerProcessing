@@ -121,8 +121,8 @@ getMaxRowVersion<-function(df) {
   max(synapseClient:::parseRowAndVersion(row.names(df))[2,])
 }
 
-process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputProjectId, 
-		tappingFeatureTableId, voiceFeatureTableId, balanceFeatureTableId, gaitFeatureTableId,
+process_mpower_data<-function(eId, uId, pId, mId, tId, tlrId, vId1, vId2, wId, outputProjectId, 
+		tappingFeatureTableId, tappingLeftFeatureTableId, tappingRightFeatureTableId, voiceFeatureTableId, balanceFeatureTableId, gaitFeatureTableId,
 	bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId, lastProcessedFeatureVersionTableId) {
 	# check if Bridge is done.  If not, exit
 	hostname<-getHostname()
@@ -131,8 +131,8 @@ process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputPr
 	if (is.null(bridgeExportQueryResult) || nrow(bridgeExportQueryResult@values)==0) return(NULL)
 	
 	tryCatch({
-				process_mpower_data_bare(eId, uId, pId, mId, tId, vId1, vId2, wId, outputProjectId, 
-						tappingFeatureTableId, voiceFeatureTableId, balanceFeatureTableId, gaitFeatureTableId,
+				process_mpower_data_bare(eId, uId, pId, mId, tId, tlrId, vId1, vId2, wId, outputProjectId, 
+						tappingFeatureTableId, tappingLeftFeatureTableId, tappingRightFeatureTableId, voiceFeatureTableId, balanceFeatureTableId, gaitFeatureTableId,
 						bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId, lastProcessedFeatureVersionTableId)
 				markProcesingComplete(bridgeExportQueryResult, "complete")
 			}, 
@@ -143,8 +143,8 @@ process_mpower_data<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputPr
 }			
 
 # this entry point, which lacks the 'try-catch', is exposed for testing purposes
-process_mpower_data_bare<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, outputProjectId, 
-		tappingFeatureTableId, voiceFeatureTableId, balanceFeatureTableId, gaitFeatureTableId,
+process_mpower_data_bare<-function(eId, uId, pId, mId, tId, tlrId, vId1, vId2, wId, outputProjectId, 
+		tappingFeatureTableId, tappingLeftFeatureTableId, tappingRightFeatureTableId, voiceFeatureTableId, balanceFeatureTableId, gaitFeatureTableId,
 		bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId, lastProcessedFeatureVersionTableId) {
 	lastProcessedQueryResult<-synTableQuery(paste0("SELECT * FROM ", lastProcessedVersionTableId))
 	lastProcessedVersion<-getLastProcessedVersion(lastProcessedQueryResult@values)
@@ -188,6 +188,17 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, out
 	}
 	cat("\n")
 	
+	cat("Processing tapping activity left/right ...\n")
+	tlrResults<-process_tapping_left_activity(tlrId, lastProcessedVersion[tlrId])
+	tlrDat<-tlrResults$tlrDat
+	tlrFilehandleCols<-tlrResults$tlrFilehandleCols
+	cat("... done.  # rows: ", nrow(tlrDat))
+	for (id in names(tlrResults$maxRowProcessed)) {
+	  lastProcessedVersion[id]<-tlrResults$maxRowProcessed[[id]]
+	  cat(", max row version for ", id, ": ", tlrResults$maxRowProcessed[[id]])
+	}
+	cat("\n")
+	
 	cat("Processing voice activity...\n")
 	vResults<-process_voice_activity(vId1, vId2, lastProcessedVersion[vId1], lastProcessedVersion[vId2])
 	vDat<-vResults$vDat
@@ -218,7 +229,7 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, out
 	cat("... done.\n")
 	
 	cat("Storing cleaned data...\n")
-	nameToTableIdMap<-store_cleaned_data(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat, wDat, mFilehandleCols, tFilehandleCols, vFilehandleCols)
+	nameToTableIdMap<-store_cleaned_data(outputProjectId, eDat, uDat, pDat, mDat, tDat, tlrDat, vDat, wDat, mFilehandleCols, tFilehandleCols, tlrFilehandleCols, vFilehandleCols)
 	cat("... done.\n")
 	
 	# update the last processed version for the cleaned data tables
@@ -237,7 +248,25 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, vId1, vId2, wId, out
 		lp@values[1, "LAST_VERSION"]<-newLastProcessedVersion
 		synStore(lp)
 	}
-
+	
+	## NOW DO FOR TAPPING - PER HAND
+	tappingLeftrightCleanedDataId<-nameToTableIdMap[["Tapping Activity - Left and Right"]]
+	if (is.null(tappingLeftrightCleanedDataId)) stop("No cleaned Tapping Left and Right Activity data")
+	## LEFT
+	lp<-lastProcessedFeatureVersion(lastProcessedFeatureVersionTableId, tappingLeftrightCleanedDataId, "tap_count")
+	newLastProcessedVersion<-computeTappingFeatures(tappingCleanedDataId, lp@values[1, "LAST_VERSION"], tappingLeftFeatureTableId, "left")
+	if (!is.na(newLastProcessedVersion)) {
+	  lp@values[1, "LAST_VERSION"]<-newLastProcessedVersion
+	  synStore(lp)
+	}
+	## RIGHT
+	lp<-lastProcessedFeatureVersion(lastProcessedFeatureVersionTableId, tappingLeftrightCleanedDataId, "tap_count")
+	newLastProcessedVersion<-computeTappingFeatures(tappingCleanedDataId, lp@values[1, "LAST_VERSION"], tappingRightFeatureTableId, "right")
+	if (!is.na(newLastProcessedVersion)) {
+	  lp@values[1, "LAST_VERSION"]<-newLastProcessedVersion
+	  synStore(lp)
+	}
+	
 	walkingCleanedDataId<-nameToTableIdMap[["Walking Activity"]]
 	if (is.null(walkingCleanedDataId)) stop("No cleaned Walking Activity data")
 	# compute gait and balance features

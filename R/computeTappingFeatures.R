@@ -5,9 +5,20 @@
 # Author: bhoff
 ###############################################################################
 
-computeTappingFeatures<-function(cleanDataTableId, lastProcessedVersion, featureTableId) {
+computeTappingFeatures<-function(cleanDataTableId, lastProcessedVersion, featureTableId, hand=NA) {
 	cat("Computing tapping features...\n")
-	jsonColName<-"tapping_results.json.TappingSamples"
+  
+  ## PICK THE RIGHT COLUMN NAME DEPENDING ON 'HAND'
+  if(is.na(hand)){
+    jsonColName<-"tapping_results.json.TappingSamples"
+  } else if(hand=="left"){
+    jsonColName<-"tapping_left.json.TappingSamples"
+  } else if(hand=="right"){
+    jsonColName<-"tapping_right.json.TappingSamples"
+  } else{
+    stop(paste0("Unexpected hand specified for tapping feature extraction: ", hand))
+  }
+  
 	# retrieve
 	if (is.na(lastProcessedVersion)) {
 		queryString<-paste0('SELECT "recordId", "', jsonColName, '" FROM ', cleanDataTableId)

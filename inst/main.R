@@ -18,6 +18,7 @@ main<-function() {
 	pId <- c("syn3420263")
 	mId <- c("syn4216473")
 	tId <- c("syn3420272", "syn3809916", "syn3809917")
+	tlrId <- c("syn5556502") ## LEFT / RIGHT TAPPING
 	vId1 <- c("syn3420254") ## NOTE: ONLY ONE HERE INSTEAD OF THREE
 	vId2 <- c("syn4601589")
 	wId <- c("syn3809915", "syn3809914", "syn3420243")
@@ -27,13 +28,15 @@ main<-function() {
 	bridgeStatusId <- "syn5720756"
 	mPowerBatchStatusId <- "syn5762675" # NOTE: THIS IS IN THE TEST PROJECT
 	tappingFeatureTableId <-"syn5987315"
+	tappingLeftFeatureTableId <- ""
+	tappingRightFeatureTableId <- ""
 	voiceFeatureTableId <- "syn5987316"
 	balanceFeatureTableId <- "syn5987317"
   gaitFeatureTableId <- "syn5987318"
 
 	
-	mPowerProcessing::process_mpower_data(eId, uId, pId, mId, tId, vId1, vId2, wId, outputProjectId, 
-			tappingFeatureTableId, voiceFeatureTableId, balanceFeatureTableId, gaitFeatureTableId,
+	mPowerProcessing::process_mpower_data(eId, uId, pId, mId, tId, tlrId, vId1, vId2, wId, outputProjectId, 
+			tappingFeatureTableId, tappingLeftFeatureTableId, tappingRightFeatureTableId, voiceFeatureTableId, balanceFeatureTableId, gaitFeatureTableId,
 			bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId, lastProcessedFeatureVersionTableId)
 }
 
