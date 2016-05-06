@@ -81,7 +81,7 @@ with_mock(
 		{
 			tlrResults<-process_tapping_leftright_activity(ids, lastMaxRowVersion)
 			expect_equal(nrow(tlrResults$tlrDat), 0)
-			expect_equal(tlrResults$maxRowProcessed, lastMaxRowVersion)
+			expect_equal(tlrResults$maxRowVersion, lastMaxRowVersion)
 		}
 )
 
