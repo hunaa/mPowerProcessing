@@ -28,8 +28,8 @@ main<-function() {
 	bridgeStatusId <- "syn5720756"
 	mPowerBatchStatusId <- "syn5762675" # NOTE: THIS IS IN THE TEST PROJECT
 	tappingFeatureTableId <-"syn5987315"
-	tappingLeftFeatureTableId <- ""
-	tappingRightFeatureTableId <- ""
+	tappingLeftFeatureTableId <- "syn6040984"
+	tappingRightFeatureTableId <- "syn6040985"
 	voiceFeatureTableId <- "syn5987316"
 	balanceFeatureTableId <- "syn5987317"
   gaitFeatureTableId <- "syn5987318"

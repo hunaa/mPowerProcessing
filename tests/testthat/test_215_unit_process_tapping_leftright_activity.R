@@ -9,7 +9,7 @@ library(synapseClient)
 context("test_unit_process_tapping_leftright_activity")
 
 testDataFolder<-system.file("testdata", package="mPowerProcessing")
-tlrDataExpectedFile<-file.path(testDataFolder, "tappingLeftrightTaskInput.RData")
+tlrDataInputFile<-file.path(testDataFolder, "tappingLeftrightTaskInput.RData")
 
 ids<-c("syn5556502")
 
@@ -24,32 +24,32 @@ createtExpected<-function() {
 				query@values <- vals[1:min(nrow(vals), 100), ]
 				c(schema=schema, query=query)
 			})
-	save(schemaAndQuery, file=tlrDataExpectedFile, ascii=TRUE)
+	save(schemaAndQuery, file=tlrDataInputFile, ascii=TRUE)
 }
 
 if (createTestData()) createtExpected()
 
 # Mock the schema and table content
-expect_true(file.exists(tlrDataExpectedFile))
-load(tlrDataExpectedFile)
+expect_true(file.exists(tlrDataInputFile))
+load(tlrDataInputFile)
 
 with_mock(
 		synGet=function(id) {schemaAndQuery["schema", id][[1]]},
 		synTableQuery=function(sql) {schemaAndQuery["query", mPowerProcessing:::getIdFromSql(sql)][[1]]},
 		{
 			tlrResults<-process_tapping_leftright_activity(ids, NA)
-			tlrDatFilePath<-file.path(testDataFolder, "tlrDatExpected.RData")
+			tlrDataExpectedPath<-file.path(testDataFolder, "tlrDatExpected.RData")
 			# Here's how we created the 'expected' data frame:
 			if (createTestData()) {
 				expected<-tlrResults
-				save(expected, file=tlrDatFilePath, ascii=TRUE)
+				save(expected, file=tlrDataExpectedPath, ascii=TRUE)
 			}
-			load(tlrDatFilePath) # creates 'expected'
+			load(tlrDataExpectedPath) # creates 'expected'
 			expect_equal(tlrResults, expected)
 		}
 )
 
-load(tlrDataExpectedFile)
+load(tlrDataInputFile)
 # now add a duplicate row (repeat the last row)
 dfRef<-schemaAndQuery["query", "syn5556502"][[1]]@values
 schemaAndQuery["query", "syn5556502"][[1]]@values<-dfRef[c(1:nrow(dfRef),nrow(dfRef)),]
@@ -60,8 +60,8 @@ with_mock(
 		synTableQuery=function(sql) {schemaAndQuery["query", mPowerProcessing:::getIdFromSql(sql)][[1]]},
 		{
 			tlrResults<-process_tapping_leftright_activity(ids, NA)
-			tlrDatFilePath<-file.path(testDataFolder, "tlrDatExpected.RData")
-			load(tlrDatFilePath) # creates 'expected'
+			tlrDataExpectedPath<-file.path(testDataFolder, "tlrDatExpected.RData")
+			load(tlrDataExpectedPath) # creates 'expected'
 			expect_equal(tlrResults, expected)
 		}
 )
@@ -69,7 +69,7 @@ with_mock(
 # test the case that there's no new data:
 lastMaxRowVersion<-c("syn5556502"="99")
 
-load(tlrDataExpectedFile)
+load(tlrDataInputFile)
 
 with_mock(
 		synGet=function(id) {schemaAndQuery["schema", id][[1]]},

@@ -24,6 +24,13 @@ tResults<-expected
 tDat<-tResults$tDat
 tFilehandleCols<-tResults$tFilehandleCols
 
+# load tlrDat:
+tlrDatFilePath<-file.path(testDataFolder, "tlrDatExpected.RData")
+load(tlrDatFilePath) # creates 'expected'
+tlrResults<-expected
+tlrDat<-tlrResults$tlrDat
+tlrFilehandleCols<-tlrResults$tlrFilehandleCols
+
 # load vDat:
 vDatFilePath<-file.path(testDataFolder, "vDatExpected.RData")
 load(vDatFilePath) # creates 'expected'
@@ -56,7 +63,7 @@ load(pDatFilePath) # creates 'expected'
 pDat<-expected$pDat
 
 # this is the parent project of all the tables
-outputProjectId<-"syn4993293"
+outputProjectId<-"syn5761747"
 
 qqFilePath<-file.path(testDataFolder, "qq.RData")
 
@@ -73,6 +80,7 @@ uDatId<- qq[which(qq$table.name=="UPDRS Survey"), "table.id"]
 pDatId<- qq[which(qq$table.name=="PDQ8 Survey"), "table.id"]
 mDatId<- qq[which(qq$table.name=="Memory Activity"), "table.id"]
 tDatId<- qq[which(qq$table.name=="Tapping Activity"), "table.id"]
+tlrDatId<- qq[which(qq$table.name=="Tapping Activity - Left and Right"), "table.id"]
 vDatId<- qq[which(qq$table.name=="Voice Activity"), "table.id"]
 wDatId<- qq[which(qq$table.name=="Walking Activity"), "table.id"]
 
@@ -104,7 +112,9 @@ getSchemaForId<-function(id) {
 	} else if (id==mDatId) {
 		memoryActivitySchema(id)
 	} else if (id==tDatId) {
-		tappingActivitySchema(id)
+	  tappingActivitySchema(id)
+	} else if (id==tlrDatId) {
+	  tappingLeftrightActivitySchema(id)
 	} else if (id==vDatId) {
 		voiceActivitySchema(id)
 	} else if (id==wDatId) {
@@ -138,10 +148,11 @@ with_mock(
 			table
 		},
 		{
-			result<-store_cleaned_data(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat, wDat, 
-					mFilehandleCols, tFilehandleCols, vFilehandleCols)
-			expect_equal("syn5511439", result[["Tapping Activity"]])
-			expect_equal("syn5511449", result[["Walking Activity"]])
-			expect_equal("syn5511444", result[["Voice Activity"]])
+			result<-store_cleaned_data(outputProjectId, eDat, uDat, pDat, mDat, tDat, tlrDat, vDat, wDat, 
+					mFilehandleCols, tFilehandleCols, tlrFilehandleCols, vFilehandleCols)
+			expect_equal("syn5762680", result[["Tapping Activity"]])
+			expect_equal("syn6041013", result[["Tapping Activity - Left and Right"]])
+			expect_equal("syn5762682", result[["Walking Activity"]])
+			expect_equal("syn5762681", result[["Voice Activity"]])
 		}
 )

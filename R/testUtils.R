@@ -211,7 +211,8 @@ tappingLeftrightActivitySchema<-function(projectId) {
     TableColumn(name="tapping_left.json.TappingSamples", columnType="FILEHANDLEID"),
     TableColumn(name="tapping_right.json.TappingViewSize", columnType="STRING", maximumSize=as.integer(200)),
     TableColumn(name="tapping_left.json.TappingViewSize", columnType="STRING", maximumSize=as.integer(200)),
-    TableColumn(name="medTimepoint", columnType="STRING", maximumSize=as.integer(200))
+    TableColumn(name="medTimepoint", columnType="STRING", maximumSize=as.integer(200)),
+    TableColumn(name="dataGroups", columnType="STRING", maximumSize=as.integer(200))
   ))
 }
 
@@ -307,13 +308,17 @@ gaitFeatureSchema<-function(projectId) {
 
 createFeatureTables<-function(projectId) {
 	tfSchema<-synStore(tappingFeatureSchema(projectId))
+	tlfSchema<-synStore(tappingLeftFeatureSchema(projectId))
+	trfSchema<-synStore(tappingRightFeatureSchema(projectId))
 	vfSchema<-synStore(voiceFeatureSchema(projectId))
 	bfSchema<-synStore(balanceFeatureSchema(projectId))
 	gfSchema<-synStore(gaitFeatureSchema(projectId))
 	list(tfSchemaId=propertyValue(tfSchema, "id"), 
-			vfSchemaId=propertyValue(vfSchema, "id"), 
-			bfSchemaId=propertyValue(bfSchema, "id"), 
-			gfSchemaId=propertyValue(gfSchema, "id"))
+	     tlfSchemaId=propertyValue(tlfSchema, "id"), 
+	     trfSchemaId=propertyValue(trfSchema, "id"), 
+	     vfSchemaId=propertyValue(vfSchema, "id"), 
+	     bfSchemaId=propertyValue(bfSchema, "id"), 
+	     gfSchemaId=propertyValue(gfSchema, "id"))
 }
 
 # create 'lastProcessedFeatureVersion' table

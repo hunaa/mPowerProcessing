@@ -189,7 +189,7 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, tlrId, vId1, vId2, w
 	cat("\n")
 	
 	cat("Processing tapping activity left/right ...\n")
-	tlrResults<-process_tapping_left_activity(tlrId, lastProcessedVersion[tlrId])
+	tlrResults<-process_tapping_leftright_activity(tlrId, lastProcessedVersion[tlrId])
 	tlrDat<-tlrResults$tlrDat
 	tlrFilehandleCols<-tlrResults$tlrFilehandleCols
 	cat("... done.  # rows: ", nrow(tlrDat))
