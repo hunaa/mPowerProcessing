@@ -165,11 +165,11 @@ if (canExecute) {
 	"tapping_results.json.TappingSamples"="tapping_results.json.TappingSamples")
 	tIds<-createMultipleTablesFromRDataFile(project, "tappingTaskInput.RData", "Tapping Task Raw Input", tappingAttachments)
 	
-	tlrId<-createTableFromRDataFile(project, "tappingLeftrightTaskInput.RData", "Tapping Left Right Task Raw Input",
-	                                c("accel_tapping_right.json.items"="default-json-files",
-	                                  "accel_tapping_left.json.items"="default-json-files",
-	                                  "tapping_left.json.TappingSamples"="tapping_results.json.TappingSamples",
-	                                  "tapping_right.json.TappingSamples"="tapping_results.json.TappingSamples"))
+	tlrId<-createMultipleTablesFromRDataFile(project, "tappingLeftrightTaskInput.RData", "Tapping Left Right Task Raw Input",
+	                                         c("accel_tapping_right.json.items"="default-json-files",
+	                                           "accel_tapping_left.json.items"="default-json-files",
+	                                           "tapping_left.json.TappingSamples"="tapping_results.json.TappingSamples",
+	                                           "tapping_right.json.TappingSamples"="tapping_results.json.TappingSamples"))
 	
 	voiceTaskInputFile<-file.path(testDataFolder, "voiceTaskInput.RData")
 	load(voiceTaskInputFile) # brings into namespace: schemaAndQuery, schema2, query2, fileContent, vFiles
