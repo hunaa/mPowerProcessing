@@ -190,6 +190,32 @@ tappingActivitySchema<-function(projectId) {
 			))
 }
 
+tappingLeftrightActivitySchema<-function(projectId) {
+  TableSchema("Tapping Activity - Left and Right", projectId, list(
+    TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
+    TableColumn(name="healthCode", columnType="STRING", maximumSize=as.integer(200)),
+    TableColumn(name="createdOn", columnType="DATE"),
+    TableColumn(name="appVersion", columnType="STRING", maximumSize=as.integer(200)),
+    TableColumn(name="phoneInfo", columnType="STRING", maximumSize=as.integer(200)),
+    TableColumn(name="accel_tapping_right.json.items", columnType="FILEHANDLEID"),
+    TableColumn(name="accel_tapping_left.json.items", columnType="FILEHANDLEID"),
+    TableColumn(name="tapping_right.json.ButtonRectLeft", columnType="STRING", maximumSize=as.integer(200)),
+    TableColumn(name="tapping_left.json.ButtonRectLeft", columnType="STRING", maximumSize=as.integer(200)),
+    TableColumn(name="tapping_right.json.ButtonRectRight", columnType="STRING", maximumSize=as.integer(200)),
+    TableColumn(name="tapping_left.json.ButtonRectRight", columnType="STRING", maximumSize=as.integer(200)),
+    TableColumn(name="tapping_right.json.endDate", columnType="DATE"),
+    TableColumn(name="tapping_left.json.endDate", columnType="DATE"),
+    TableColumn(name="tapping_right.json.startDate", columnType="DATE"),
+    TableColumn(name="tapping_left.json.startDate", columnType="DATE"),
+    TableColumn(name="tapping_right.json.TappingSamples", columnType="FILEHANDLEID"),
+    TableColumn(name="tapping_left.json.TappingSamples", columnType="FILEHANDLEID"),
+    TableColumn(name="tapping_right.json.TappingViewSize", columnType="STRING", maximumSize=as.integer(200)),
+    TableColumn(name="tapping_left.json.TappingViewSize", columnType="STRING", maximumSize=as.integer(200)),
+    TableColumn(name="medTimepoint", columnType="STRING", maximumSize=as.integer(200)),
+    TableColumn(name="dataGroups", columnType="STRING", maximumSize=as.integer(200))
+  ))
+}
+
 voiceActivitySchema<-function(projectId) {
 	TableSchema("Voice Activity", projectId, list(
 					TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
@@ -227,6 +253,7 @@ createOutputTables<-function(projectId) {
 			synStore(pdq8SurveySchema(projectId))
 			synStore(memoryActivitySchema(projectId))
 			synStore(tappingActivitySchema(projectId))
+			synStore(tappingLeftrightActivitySchema(projectId))
 			synStore(voiceActivitySchema(projectId))
 			synStore(walkingActivitySchema(projectId))
 }
@@ -237,6 +264,22 @@ tappingFeatureSchema<-function(projectId) {
 					TableColumn(name="is_computed", columnType="BOOLEAN"),
 					TableColumn(name="tap_count", columnType="INTEGER")
 			))
+}
+
+tappingLeftFeatureSchema<-function(projectId) {
+  TableSchema("Tapping Features - Left", projectId, list(
+    TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
+    TableColumn(name="is_computed", columnType="BOOLEAN"),
+    TableColumn(name="tap_count", columnType="INTEGER")
+  ))
+}
+
+tappingRightFeatureSchema<-function(projectId) {
+  TableSchema("Tapping Features - Right", projectId, list(
+    TableColumn(name="recordId", columnType="STRING", maximumSize=as.integer(200)),
+    TableColumn(name="is_computed", columnType="BOOLEAN"),
+    TableColumn(name="tap_count", columnType="INTEGER")
+  ))
 }
 
 voiceFeatureSchema<-function(projectId) {
@@ -265,13 +308,17 @@ gaitFeatureSchema<-function(projectId) {
 
 createFeatureTables<-function(projectId) {
 	tfSchema<-synStore(tappingFeatureSchema(projectId))
+	tlfSchema<-synStore(tappingLeftFeatureSchema(projectId))
+	trfSchema<-synStore(tappingRightFeatureSchema(projectId))
 	vfSchema<-synStore(voiceFeatureSchema(projectId))
 	bfSchema<-synStore(balanceFeatureSchema(projectId))
 	gfSchema<-synStore(gaitFeatureSchema(projectId))
 	list(tfSchemaId=propertyValue(tfSchema, "id"), 
-			vfSchemaId=propertyValue(vfSchema, "id"), 
-			bfSchemaId=propertyValue(bfSchema, "id"), 
-			gfSchemaId=propertyValue(gfSchema, "id"))
+	     tlfSchemaId=propertyValue(tlfSchema, "id"), 
+	     trfSchemaId=propertyValue(trfSchema, "id"), 
+	     vfSchemaId=propertyValue(vfSchema, "id"), 
+	     bfSchemaId=propertyValue(bfSchema, "id"), 
+	     gfSchemaId=propertyValue(gfSchema, "id"))
 }
 
 # create 'lastProcessedFeatureVersion' table

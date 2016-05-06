@@ -314,6 +314,33 @@ process_tapping_activity<-function(tId, lastProcessedVersion) {
   list(tDat=tDat, tFilehandleCols=tFilehandleCols, maxRowProcessed=maxRowProcessed)
 }
 
+## FOR THE NEW TAPPING ACTIVITY WHICH INCLUDES TESTS FOR EACH HAND (LEFT / RIGHT)
+process_tapping_leftright_activity <- function(tlrId, lastProcessedVersion){
+  tlrSc <- synGet(tlrId)
+  tlrFilehandleCols <- whichFilehandle(tlrSc@columns)
+  
+  maxRowProcessed<-NULL
+  
+  tlrTab <- synTableQuery(createQueryString(tlrId, lastProcessedVersion))
+  tlrDat <- tlrTab@values
+  
+  if (nrow(tlrDat)==0) {
+    return(list(tlrDat=tlrDat, tlrFilehandleCols=tlrFilehandleCols, maxRowVersion=lastProcessedVersion))
+  }
+  
+  maxRowVersion<-getMaxRowVersion(tlrDat)
+  
+  tlrDat$externalId <- NULL
+  tlrDat$uploadDate <- NULL
+  tlrDat$medTimepoint <- cleanString(tlrDat$momentInDayFormat.json.choiceAnswers)
+  tlrDat$momentInDayFormat.json.choiceAnswers <- NULL
+  
+  tlrDat <- subsetThis(tlrDat)
+  rownames(tlrDat) <- tlrDat$recordId
+  list(tlrDat=tlrDat, tlrFilehandleCols=tlrFilehandleCols, maxRowVersion=maxRowVersion)
+}
+
+
 # we introduce a 'mockable' function
 read_json_from_file<-function(file) {
   if (is.na(file)) return(NA)
@@ -492,13 +519,14 @@ cleanup_missing_med_data<-function(mDat, tDat, vDat, wDat) {
 ## STORE BACK TO SYNAPSE
 ## LOG IN AS BRIDGE EXPORTER TO STORE BACK
 # synapseLogout()
-store_cleaned_data<-function(outputProjectId, eDat, uDat, pDat, mDat, tDat, vDat, wDat, 
-		mFilehandleCols, tFilehandleCols, vFilehandleCols) {
+store_cleaned_data<-function(outputProjectId, eDat, uDat, pDat, mDat, tDat, tlrDat, vDat, wDat, 
+		mFilehandleCols, tFilehandleCols, tlrFilehandleCols, vFilehandleCols) {
   storeThese <- list('Demographics Survey' = list(vals=eDat, fhCols=NULL),
                      'UPDRS Survey' = list(vals=uDat, fhCols=NULL),
                      'PDQ8 Survey' = list(vals=pDat, fhCols=NULL),
                      'Memory Activity' = list(vals=mDat, fhCols=intersect(names(mDat), mFilehandleCols)),
                      'Tapping Activity' = list(vals=tDat, fhCols=intersect(names(tDat), tFilehandleCols)),
+                     'Tapping Activity - Left and Right' = list(vals=tlrDat, fhCols=intersect(names(tlrDat), tlrFilehandleCols)),
                      'Voice Activity' = list(vals=vDat, fhCols=intersect(names(vDat), vFilehandleCols)),
                      'Walking Activity' = list(vals=wDat, fhCols=grep("json.items", names(wDat), value = TRUE)))
   

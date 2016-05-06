@@ -165,6 +165,12 @@ if (canExecute) {
 	"tapping_results.json.TappingSamples"="tapping_results.json.TappingSamples")
 	tIds<-createMultipleTablesFromRDataFile(project, "tappingTaskInput.RData", "Tapping Task Raw Input", tappingAttachments)
 	
+	tlrId<-createTableFromRDataFile(project, "tappingLeftrightTaskInput.RData", "Tapping Left Right Task Raw Input",
+	                                c("accel_tapping_right.json.items"="default-json-files",
+	                                  "accel_tapping_left.json.items"="default-json-files",
+	                                  "tapping_left.json.TappingSamples"="tapping_results.json.TappingSamples",
+	                                  "tapping_right.json.TappingSamples"="tapping_results.json.TappingSamples"))
+	
 	voiceTaskInputFile<-file.path(testDataFolder, "voiceTaskInput.RData")
 	load(voiceTaskInputFile) # brings into namespace: schemaAndQuery, schema2, query2, fileContent, vFiles
 	v1MockAttachmentFolders<-c(
@@ -233,8 +239,8 @@ if (canExecute) {
 	bridgeExportQueryResult<-checkForAndLockBridgeExportBatch(bridgeStatusId, mPowerBatchStatusId, "", Sys.time())
 	expect_true(!(is.null(bridgeExportQueryResult) || nrow(bridgeExportQueryResult@values)==0))
 		
-	process_mpower_data_bare(eId, uId, pId, mId, tIds, vId1, vId2, wIds, outputProjectId, 
-			featureTableIds$tfSchemaId, featureTableIds$vfSchemaId, featureTableIds$bfSchemaId, featureTableIds$gfSchemaId, 
+	process_mpower_data_bare(eId, uId, pId, mId, tIds, tlrId, vId1, vId2, wIds, outputProjectId, 
+			featureTableIds$tfSchemaId, featureTableIds$tlfSchemaId, featureTableIds$trfSchemaId, featureTableIds$vfSchemaId, featureTableIds$bfSchemaId, featureTableIds$gfSchemaId, 
 			bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId, lastProcessedFeatureVersionTableId)
 	markProcesingComplete(bridgeExportQueryResult, "complete")
 	
@@ -242,6 +248,16 @@ if (canExecute) {
 	# verify content
 	expect_true(all(tappingFeatures[['is_computed']]==TRUE))
 	expect_true(all(tappingFeatures[['tap_count']]==as.integer(155)))
+	
+	tappingLeftFeatures<-synTableQuery(sprintf("select * from %s", featureTableIds$tlfSchemaId))@values
+	# verify content
+	expect_true(all(tappingLeftFeatures[['is_computed']]==TRUE))
+	expect_true(all(tappingLeftFeatures[['tap_count']]==as.integer(155)))
+	
+	tappingRightFeatures<-synTableQuery(sprintf("select * from %s", featureTableIds$trfSchemaId))@values
+	# verify content
+	expect_true(all(tappingRightFeatures[['is_computed']]==TRUE))
+	expect_true(all(tappingRightFeatures[['tap_count']]==as.integer(155)))
 	
 	voiceFeatures<-synTableQuery(sprintf("select * from %s", featureTableIds$vfSchemaId))@values
 	# TODO verify content
