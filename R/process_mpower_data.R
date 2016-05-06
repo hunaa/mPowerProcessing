@@ -254,14 +254,14 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, tlrId, vId1, vId2, w
 	if (is.null(tappingLeftrightCleanedDataId)) stop("No cleaned Tapping Left and Right Activity data")
 	## LEFT
 	lp<-lastProcessedFeatureVersion(lastProcessedFeatureVersionTableId, tappingLeftrightCleanedDataId, "tap_count")
-	newLastProcessedVersion<-computeTappingFeatures(tappingCleanedDataId, lp@values[1, "LAST_VERSION"], tappingLeftFeatureTableId, "left")
+	newLastProcessedVersion<-computeTappingFeatures(tappingLeftrightCleanedDataId, lp@values[1, "LAST_VERSION"], tappingLeftFeatureTableId, "left")
 	if (!is.na(newLastProcessedVersion)) {
 	  lp@values[1, "LAST_VERSION"]<-newLastProcessedVersion
 	  synStore(lp)
 	}
 	## RIGHT
 	lp<-lastProcessedFeatureVersion(lastProcessedFeatureVersionTableId, tappingLeftrightCleanedDataId, "tap_count")
-	newLastProcessedVersion<-computeTappingFeatures(tappingCleanedDataId, lp@values[1, "LAST_VERSION"], tappingRightFeatureTableId, "right")
+	newLastProcessedVersion<-computeTappingFeatures(tappingLeftrightCleanedDataId, lp@values[1, "LAST_VERSION"], tappingRightFeatureTableId, "right")
 	if (!is.na(newLastProcessedVersion)) {
 	  lp@values[1, "LAST_VERSION"]<-newLastProcessedVersion
 	  synStore(lp)
