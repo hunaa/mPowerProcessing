@@ -1,18 +1,19 @@
-language: r
+sudo: required
 
-cache: packages
+language: ruby
 
-warnings_are_errors: false
+services:
+  - docker
 
-addons:
-    apt:
-        packages:
-            - sshpass
+before_install:
+  - docker build -t sagebionetworks/mpower-processing .
+
+script:
+  - docker run -d -e SYNAPSE_USERNAME=$SYNAPSE_USERNAME -e SYNAPSE_APIKEY=$SYNAPSE_APIKEY \
+  -e BRIDGE_USERNAME=$BRIDGE_USERNAME -e BRIDGE_PASSWORD=$BRIDGE_PASSWORD sagebionetworks/mpower-processing \
+  R CMD CHECK .
             
 after_success:
-    - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "deploy" && mkdir build
-    - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "deploy" && mv * build
-    - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "deploy" && tar -czf package.tgz build
-    - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "deploy" && export SSHPASS=$DEPLOY_PASS 
-    - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "deploy" && sshpass -e scp -o StrictHostKeyChecking=no package.tgz $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH
-    
+	- docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD" https://index.docker.io/v1
+	- docker push sagebionetworks/power-processing
+     
