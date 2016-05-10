@@ -6,7 +6,7 @@ FROM rocker/rstudio
 # Also doesn't seem to work to override the testing default
 # RUN apt-get install -o APT::Default-Release=stable libcurl4-openssl-dev
 
-RUN Rscript -e "source('http://depot.sagebase.org/CRAN.R'); pkgInstall('synapseClient', stack='staging')"
+RUN Rscript -e "source('http://depot.sagebase.org/CRAN.R'); pkgInstall('synapseClient')"
 RUN Rscript -e "install.packages(c('devtools','testthat','RJSONIO','fractal','pracma','changepoint','lomb','uuid','crayon','RCurl'), repo='http://cran.mirrors.hoobly.com')"
 RUN Rscript -e "devtools::install_github('brian-bot/bridger')"
 RUN Rscript -e "devtools::install_github('Sage-Bionetworks/mPowerStatistics')"
