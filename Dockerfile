@@ -18,6 +18,4 @@ CMD "Rscript" "-e" "source(system.file('main.R',package='mPowerProcessing'))"
 
 COPY . /mPowerProcessing
 
-# Note:  Omitting '--no-manual' below results in "Error in texi2dvi(...):  pdflatex is not available"
-RUN cd /mPowerProcessing && R CMD check  --no-manual .
 RUN cd /mPowerProcessing && R CMD INSTALL .
