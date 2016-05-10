@@ -42,7 +42,7 @@ batchVoiceProcess<-function(voiceInputTableId, voiceFeatureTableId, batchTableId
 	}
 	if (is(synStoreResult, "try-error")) stop("Failed to select a batch to process.")
 	# process the batch from batchSize*(batchToProcess-1) to batchSize*batchToProcess-1
-	dataColName<-"audio_audio.m4a" # TODO is this right?
+	dataColName<-"audio_audio.m4a"
 	voiceBatch<-synTableQuery(paste0('SELECT "recordId", "', dataColName, '" FROM ', 
 					voiceInputTableId, ' LIMIT ', batchSize, 
 					' OFFSET ', batchSize*(batchToProcess-1)))
