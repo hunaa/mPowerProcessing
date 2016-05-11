@@ -18,3 +18,4 @@ after_success:
  - test $TRAVIS_PULL_REQUEST == "false" && docker push sagebionetworks/mpower-processing
  # Delete the cached registry credentials
  - test $TRAVIS_PULL_REQUEST == "false" && rm /home/travis/.docker/config.json
+ 
