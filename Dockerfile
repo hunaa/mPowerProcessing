@@ -1,4 +1,6 @@
-FROM rocker/rstudio
+# Note we specify a specific version of rocker/rstudio which we know to use v 3.2 of R
+# This is temporary, until synapseClient is released for R 3.3.
+FROM rocker/rstudio@sha256:d700e386bd73e3581b12309e338d88e035c145cce6b8d2edfbbfd420d26a5b7b
 # Note:  The following is needed if starting from r-base, but doesn't work 
 # because r-base is based on the 'testing' versions of Debian libraries, 
 # and libcurl does not seem to be available
@@ -16,6 +18,4 @@ CMD "Rscript" "-e" "source(system.file('main.R',package='mPowerProcessing'))"
 
 COPY . /mPowerProcessing
 
-# Note:  Omitting '--no-manual' below results in "Error in texi2dvi(...):  pdflatex is not available"
-RUN cd /mPowerProcessing && R CMD check  --no-manual .
 RUN cd /mPowerProcessing && R CMD INSTALL .
