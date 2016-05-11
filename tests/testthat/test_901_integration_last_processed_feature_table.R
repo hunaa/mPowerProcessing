@@ -37,9 +37,10 @@ if (canExecute) {
 	
 	cleanedTableId<-"syn101"
 	featureName<-"some feature"
-	queryResult<-lastProcessedFeatureVersion(lastProcessedFeatureVersionTableId, cleanedTableId, featureName)
+	featureTableId<-"syn202"
+	queryResult<-lastProcessedFeatureVersion(lastProcessedFeatureVersionTableId, cleanedTableId, featureName, featureTableId)
 	df<-queryResult@values
-	expected<-data.frame(TABLE_ID=cleanedTableId, FEATURE=featureName, LAST_VERSION=as.integer(0), stringsAsFactors=F)
+	expected<-data.frame(TABLE_ID=cleanedTableId, FEATURE=featureName, LAST_VERSION=as.integer(0), OUTPUT_TABLE_ID=featureTableId, stringsAsFactors=F)
 	expected[1,"LAST_VERSION"]<-NA
 	rownames(expected)<-"1"
 	expect_equal(expected, df)
@@ -48,9 +49,9 @@ if (canExecute) {
 	synStore(queryResult)
 	
 	# now get it again, the stored value should be there
-	queryResult<-lastProcessedFeatureVersion(lastProcessedFeatureVersionTableId, cleanedTableId, featureName)
+	queryResult<-lastProcessedFeatureVersion(lastProcessedFeatureVersionTableId, cleanedTableId, featureName, featureTableId)
 	df<-queryResult@values
-	expected<-data.frame(TABLE_ID=cleanedTableId, FEATURE=featureName, LAST_VERSION=as.integer(10), stringsAsFactors=F)
+	expected<-data.frame(TABLE_ID=cleanedTableId, FEATURE=featureName, LAST_VERSION=as.integer(10), OUTPUT_TABLE_ID=featureTableId, stringsAsFactors=F)
 	rownames(expected)<-"0_0"
 	expect_equal(expected, df)
 	

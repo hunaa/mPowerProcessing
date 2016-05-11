@@ -102,13 +102,14 @@ mergeLastProcessVersionIntoToDF<-function(lastProcessedVersion, df) {
 }
 
 # the the last row version of the given cleaned data table for which the given feature was computed
-lastProcessedFeatureVersion<-function(lastProcessedFeatureVersionTableId, cleanedTableId, featureName) {
+lastProcessedFeatureVersion<-function(lastProcessedFeatureVersionTableId, cleanedTableId, featureName, featureTableId) {
 	queryResult<-synTableQuery(paste0("SELECT * FROM ", 
 					lastProcessedFeatureVersionTableId, " WHERE TABLE_ID='", 
-					cleanedTableId, "' AND FEATURE='", featureName, "'"))
+					cleanedTableId, "' AND FEATURE='", featureName, "' AND OUTPUT_TABLE_ID='", featureTableId, "'"))
 	if (nrow(queryResult@values)==0) {
 		queryResult@values[1,"TABLE_ID"]<-cleanedTableId
 		queryResult@values[1,"FEATURE"]<-featureName
+		queryResult@values[1,"OUTPUT_TABLE_ID"]<-featureTableId
 		queryResult@values[1,"LAST_VERSION"]<-NA
 	}
 	queryResult
@@ -242,7 +243,7 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, tlrId, vId1, vId2, w
 	# **** compute features ****
 	tappingCleanedDataId<-nameToTableIdMap[["Tapping Activity"]]
 	if (is.null(tappingCleanedDataId)) stop("No cleaned Tapping Activity data")
-	lp<-lastProcessedFeatureVersion(lastProcessedFeatureVersionTableId, tappingCleanedDataId, "tap_count")
+	lp<-lastProcessedFeatureVersion(lastProcessedFeatureVersionTableId, tappingCleanedDataId, "tap_count", tappingFeatureTableId)
 	newLastProcessedVersion<-computeTappingFeatures(tappingCleanedDataId, lp@values[1, "LAST_VERSION"], tappingFeatureTableId)
 	if (!is.na(newLastProcessedVersion)) {
 		lp@values[1, "LAST_VERSION"]<-newLastProcessedVersion
@@ -253,14 +254,14 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, tlrId, vId1, vId2, w
 	tappingLeftrightCleanedDataId<-nameToTableIdMap[["Tapping Activity - Left and Right"]]
 	if (is.null(tappingLeftrightCleanedDataId)) stop("No cleaned Tapping Left and Right Activity data")
 	## LEFT
-	lp<-lastProcessedFeatureVersion(lastProcessedFeatureVersionTableId, tappingLeftrightCleanedDataId, "tap_count")
+	lp<-lastProcessedFeatureVersion(lastProcessedFeatureVersionTableId, tappingLeftrightCleanedDataId, "tap_count", tappingLeftFeatureTableId)
 	newLastProcessedVersion<-computeTappingFeatures(tappingLeftrightCleanedDataId, lp@values[1, "LAST_VERSION"], tappingLeftFeatureTableId, "left")
 	if (!is.na(newLastProcessedVersion)) {
 	  lp@values[1, "LAST_VERSION"]<-newLastProcessedVersion
 	  synStore(lp)
 	}
 	## RIGHT
-	lp<-lastProcessedFeatureVersion(lastProcessedFeatureVersionTableId, tappingLeftrightCleanedDataId, "tap_count")
+	lp<-lastProcessedFeatureVersion(lastProcessedFeatureVersionTableId, tappingLeftrightCleanedDataId, "tap_count", tappingRightFeatureTableId)
 	newLastProcessedVersion<-computeTappingFeatures(tappingLeftrightCleanedDataId, lp@values[1, "LAST_VERSION"], tappingRightFeatureTableId, "right")
 	if (!is.na(newLastProcessedVersion)) {
 	  lp@values[1, "LAST_VERSION"]<-newLastProcessedVersion
@@ -270,7 +271,7 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, tlrId, vId1, vId2, w
 	walkingCleanedDataId<-nameToTableIdMap[["Walking Activity"]]
 	if (is.null(walkingCleanedDataId)) stop("No cleaned Walking Activity data")
 	# compute gait and balance features
-	lp<-lastProcessedFeatureVersion(lastProcessedFeatureVersionTableId, walkingCleanedDataId, "F0XY")
+	lp<-lastProcessedFeatureVersion(lastProcessedFeatureVersionTableId, walkingCleanedDataId, "F0XY", gaitFeatureTableId)
 	lastProcessedGaitVersion<-computeGaitFeatures(walkingCleanedDataId, 
 			lp@values[1, "LAST_VERSION"], gaitFeatureTableId)
 	if (!is.na(lastProcessedGaitVersion)) {
@@ -278,7 +279,7 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, tlrId, vId1, vId2, w
 		synStore(lp)
 	}
 
-	lp<-lastProcessedFeatureVersion(lastProcessedFeatureVersionTableId, walkingCleanedDataId, "zcrAA")
+	lp<-lastProcessedFeatureVersion(lastProcessedFeatureVersionTableId, walkingCleanedDataId, "zcrAA", balanceFeatureTableId)
 	lastProcessedBalanceVersion<-computeBalanceFeatures(walkingCleanedDataId, 
 			lp@values[1, "LAST_VERSION"], balanceFeatureTableId)
 	if (!is.na(lastProcessedBalanceVersion)) {
