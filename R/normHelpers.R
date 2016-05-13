@@ -52,6 +52,7 @@ GetControlFeatureSummaryStats <- function(dat, controlIds, featName){
 #'         and featName, with the feature column normalized to fall between
 #'         0 and 1.
 NormalizeFeature <- function(dat,
+                             normDat,
                              patientId,
                              featName,
                              demo,
@@ -61,7 +62,7 @@ NormalizeFeature <- function(dat,
                              reverse = FALSE){
   patientAge <- demo$age[match(patientId, demo$healthCode)]
   controlIds <- GetAgeMatchedControlIds(patientAge, ageInterval, demo)
-  controlStats <- GetControlFeatureSummaryStats(dat, controlIds, featName)
+  controlStats <- GetControlFeatureSummaryStats(normDat, controlIds, featName)
   fdat <- dat[dat$healthCode %in% patientId, c("medTimepoint", "date", featName)]
   z <- (fdat[, featName] - controlStats$mean)/controlStats$sd
   alpha <- (1 - floorCeilingRange)/2
