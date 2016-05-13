@@ -130,7 +130,8 @@ dat_cases_other <- data.frame(
 
 dat <- rbind(dat_controls, dat_cases_pre, dat_cases_post, dat_cases_other)
 dat <- dat[order(dat$date),]
-
+normDat <- dat
+normDat$featureX <- normDat$featureX + 7
 
 ## test age matched controls
 ## We know the mean value of the controls will fall in specific
@@ -168,10 +169,11 @@ cppa <- countPrepostActivity(demo, featureTables, window)
 for (healthCode in cases) {
   message('testing ', healthCode)
   norm <- NormalizeFeature(dat,
-                   patientId=healthCode,
-                   featName='featureX',
-                   demo=demo,
-                   ageInterval=5)
+                           dat,
+                           patientId=healthCode,
+                           featName='featureX',
+                           demo=demo,
+                           ageInterval=5)
   mpre <- mean(norm$fdat$featureX[norm$fdat$medTimepoint==timepoints[1]], na.rm=TRUE)
   mpost <- mean(norm$fdat$featureX[norm$fdat$medTimepoint==timepoints[2]], na.rm=TRUE)
   expect_true(mpre < mpost)
@@ -182,5 +184,18 @@ for (healthCode in cases) {
                cppa[[healthCode]]$days[ cppa[[healthCode]]$medTimepoint=='pre' ])
   expect_equal(sum(!is.na(tnorms$foo$fdat$post)),
                cppa[[healthCode]]$days[ cppa[[healthCode]]$medTimepoint=='post' ])
+  
+  ## TEST WITH A DIFFERENT NORMALIZATION DATASET (SAME FEATURE)
+  ## NORM DATA IS CONSISTENTLY LARGER - SO NORMALIZED DATA SHOULD BE SMALLER
+  normLR <- NormalizeFeature(dat,
+                             normDat,
+                             patientId=healthCode,
+                             featName='featureX',
+                             demo=demo,
+                             ageInterval=5)
+  mpreLR <- mean(normLR$fdat$featureX[norm$fdat$medTimepoint==timepoints[1]], na.rm=TRUE)
+  mpostLR <- mean(normLR$fdat$featureX[norm$fdat$medTimepoint==timepoints[2]], na.rm=TRUE)
+  expect_true(mpre > mpreLR)
+  expect_true(mpost > mpostLR)
 }
 

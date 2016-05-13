@@ -16,7 +16,20 @@ fetchActivityFeatureTables<-function(tables, features) {
 	tap<-merge(tap, tapFeat, by="recordId", all=FALSE) # inner join
   tap$date <- as.Date(tap$createdOn)
   message("Got tapping table")
-
+  
+  tapLeftRightTable <- synTableQuery(sprintf('SELECT * FROM %s', tables$tappingLeftright))
+  tapLeftright <- tapLeftRightTable@values
+  tapLeftright$date <- as.Date(tapLeftright$createdOn)
+  ## LEFT HANDED TAPPING
+  tapLeftFeat <- synTableQuery(sprintf('SELECT * FROM %s', features$tappingLeft))@values
+  tapLeft<-merge(tapLeftright, tapLeftFeat, by="recordId", all=FALSE) # inner join
+  message("Got tapping table - left hand")
+  
+  ## RIGHT HANDED TAPPING
+  tapRightFeat <- synTableQuery(sprintf('SELECT * FROM %s', features$tappingRight))@values
+  tapRight<-merge(tapLeftright, tapRightFeat, by="recordId", all=FALSE) # inner join
+  message("Got tapping table - right hand")
+  
   ## GET VOICE FEATURES
   voiceTable <- synTableQuery((sprintf('SELECT * FROM %s WHERE "audio_audio.m4a" is not null', tables$voice)))
   voice <- voiceTable@values
@@ -43,7 +56,7 @@ fetchActivityFeatureTables<-function(tables, features) {
 	message("Got balance features")
 
   ## Return a feature table for each type of activity
-  return(list(balance=balance, gait=gait, tap=tap, voice=voice))
+  return(list(balance=balance, gait=gait, tap=tap, tapLeft=tapLeft, tapRight=tapRight, voice=voice))
 }
 
 
@@ -100,7 +113,12 @@ transformNormalizedData <- function(norms, window) {
 getVisData <- function(healthCode, featureNames, featureTables, window, demo, ageInterval=5) {
   activityTypes <- names(featureNames)
   norms <- lapply(activityTypes, function(activity) {
-    NormalizeFeature(featureTables[[activity]], healthCode, featureNames[[activity]], demo, ageInterval=ageInterval)
+    ## FOR HANDED TAPPING - USE THE ORIGINAL TAPPING FOR NORMALIZATION
+    if(activity %in% c("tapLeft", "tapRight")){
+      NormalizeFeature(featureTables[[activity]], featureTables[["tap"]], healthCode, featureNames[[activity]], demo, ageInterval=ageInterval)
+    } else{
+      NormalizeFeature(featureTables[[activity]], featureTables[[activity]], healthCode, featureNames[[activity]], demo, ageInterval=ageInterval)
+    }
   })
   names(norms) <- activityTypes
 
