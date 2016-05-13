@@ -82,7 +82,6 @@ batchVoiceProcess<-function(voiceInputTableId, voiceFeatureTableId, batchTableId
 	synStore(batchQueryResult)
 }
 
-# TODO replace this placeholder
 computeMedianF0<-function(file) {
-	1
+	medianF0(convert_to_wav(paths[i]))
 }
