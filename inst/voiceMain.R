@@ -40,7 +40,7 @@ if (nchar(cacheDir)>0) {
 	synapseCacheDir(cacheDir)
 }
 
-if (nchar(Sys.getenv("STAGING")>0)) {
+if (nchar(Sys.getenv("STAGING"))>0) {
 	synSetEndpoints(
 			"https://repo-staging.prod.sagebase.org/repo/v1", 
 			"https://repo-staging.prod.sagebase.org/auth/v1", 
