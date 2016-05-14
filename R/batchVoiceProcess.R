@@ -1,4 +1,5 @@
 # Process a batch of voice data
+# return TRUE iff all batches have been processed
 # 
 # Author: bhoff
 ###############################################################################
@@ -21,7 +22,7 @@ batchVoiceProcess<-function(voiceInputTableId, voiceFeatureTableId, batchTableId
 		}
 		if (length(availableBatches)==0) {
 			print("All batches have been processed!")
-			return()
+			return(TRUE)
 		}
 		# the next batch
 		batchToProcess<-min(availableBatches)
@@ -81,6 +82,7 @@ batchVoiceProcess<-function(voiceInputTableId, voiceFeatureTableId, batchTableId
 	if (nrow(batchQueryResult@values)!=1) stop("Expected 1 row for batch ", batchToProcess, " but found ", nrow(batchQueryResult@values))
 	batchQueryResult@values[1, 'batchStatus']<-"COMPLETED"
 	synStore(batchQueryResult)
+	return(FALSE)
 }
 
 computeMedianF0<-function(file) {

@@ -9,19 +9,22 @@ library(synapseClient)
 
 # make sure to be 'logged in' to Synapse as Bridge exporter
 #
-voiceMain<-function() {
+voiceMain<-function(batchCount) {
 	voiceInputTableId <- "syn5762681"
 	voiceFeatureTableId <- "syn5987316"
 	batchTableId <- "syn6038352"
 	batchSize<-100
+	for (i in 1:batchCount) {
+		allProcessed<-mPowerProcessing::batchVoiceProcess(
+				voiceInputTableId, 
+				voiceFeatureTableId, 
+				batchTableId, 
+				batchSize, 
+				hostName=Sys.getenv("HOSTNAME")
+		)
+		if (allProcessed) break
+	}
 	
-	mPowerProcessing::batchVoiceProcess(
-			voiceInputTableId, 
-			voiceFeatureTableId, 
-			batchTableId, 
-			batchSize, 
-			hostName=Sys.getenv("HOSTNAME")
-	)
 }
 
 username<-Sys.getenv("SYNAPSE_USERNAME")
@@ -34,6 +37,13 @@ if (nchar(apiKey)==0) {
 	cat("ERROR: Environment variable SYNAPSE_APIKEY is missing.\n")
 	q("no")
 }
+
+batchCount<-Sys.getenv("BATCH_COUNT")
+if (nchar(batchCount)==0) {
+	batchCount<-1
+}
+
+
 
 cacheDir<-Sys.getenv("CACHE_DIR")
 if (nchar(cacheDir)>0) {
@@ -50,4 +60,4 @@ if (nchar(Sys.getenv("STAGING"))>0) {
 # log in to Synapse
 synapseLogin(username=username, apiKey=apiKey, rememberMe=F)
 
-voiceMain()
+voiceMain(batchCount)
