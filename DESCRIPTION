@@ -10,3 +10,4 @@ License: GPL
 Imports: mPowerStatistics, synapseClient, bridger, RJSONIO, rjson, fractal, pracma, changepoint, lomb, uuid, crayon, RCurl
 Remotes: github::Sage-Bionetworks/rSynapseClient, github::brian-bot/bridger, github::Sage-Bionetworks/mPowerStatistics
 Suggests: testthat
+
