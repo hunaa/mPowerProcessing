@@ -43,6 +43,7 @@ batchVoiceProcess<-function(voiceInputTableId, voiceFeatureTableId, batchTableId
 	if (is(synStoreResult, "try-error")) stop("Failed to select a batch to process.")
 	# process the batch from batchSize*(batchToProcess-1) to batchSize*batchToProcess-1
 	dataColName<-"audio_audio.m4a"
+  audioIndex<-2 # i.e. the audio file handles are in the second column of the query result
 	voiceBatch<-synTableQuery(paste0('SELECT "recordId", "', dataColName, '" FROM ', 
 					voiceInputTableId, ' LIMIT ', batchSize, 
 					' OFFSET ', batchSize*(batchToProcess-1)))
@@ -57,9 +58,9 @@ batchVoiceProcess<-function(voiceInputTableId, voiceFeatureTableId, batchTableId
 			stringsAsFactors=FALSE)
 	
 	# now compute the features
-	dataFiles<-synDownloadTableColumns(voiceBatch, dataColName)
+	dataFiles<-synDownloadTableColumns(voiceBatch, names(voiceBatch@values[audioIndex]))
 	for (i in 1:n) {
-		fileHandleId<-voiceBatch@values[i,dataColName]
+		fileHandleId<-voiceBatch@values[i,audioIndex]
 		if (is.na(fileHandleId) || is.null(fileHandleId)) next
 		medianF0<-try({
 					file<-dataFiles[[fileHandleId]]

@@ -1,8 +1,5 @@
-exportPattern("^[[[:alnum:]]_]+")
+exportPattern("^[[:alnum:]]+")
 export("read_json_from_file")
-export("process_mpower_data")
-export("computeMedianF0")
-export("batchVoiceProcess")
 
 import(synapseClient)
 import(mPowerStatistics)
