@@ -10,9 +10,10 @@ batchVoiceProcess<-function(voiceInputTableId, voiceFeatureTableId, batchTableId
 	recordCount <- recordCountQuery@values[1,1]
 	for (i in 1:10) { # try the following 10 times, retrying if there is a concurrency error
 		# find a batch
-		# TODO look at status and start time to find batches that we need to restart
-		batchQueryResult<-synTableQuery(paste0(
-						"SELECT batchNumber, batchStart, hostName, batchStatus FROM ", batchTableId))
+		# time out is two hours ago
+		batchTimeOutEpochMillis<-as.numeric(Sys.time()-as.difftime(2, units="hours"))*1000
+		batchQueryResult<-synTableQuery(paste0("SELECT batchNumber, batchStart, hostName, batchStatus FROM ", 
+			batchTableId, " where batchStatus='COMPLETED' OR ( batchStatus='PROCESSING' and batchStart<",  batchTimeOutEpochMillis, ")"))
 		processedBatches<-batchQueryResult@values$batchNumber
 		totalBatches<-(1:(ceiling(recordCount/batchSize)))
 		if (length(processedBatches)==0) {
