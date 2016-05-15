@@ -28,15 +28,18 @@ batchVoiceProcess<-function(voiceInputTableId, voiceFeatureTableId, batchTableId
 		# the next batch
 		batchToProcess<-min(availableBatches)
 		# lock it
-		if (nrow(batchQueryResult@values)==0) {
-			batchQueryResult@values<-
-					data.frame(batchNumber=batchToProcess, batchStart=Sys.time(), 
-							hostName=hostName, batchStatus="PROCESSING", stringsAsFactors=FALSE)
+		rowToLock<-batchQueryResult@values[which(batchQueryResult@values$batchNumber==batch),]
+		if (nrow(rowToLoc)==0) {
+			rowToLock<-data.frame(batchNumber=batchToProcess, batchStart=Sys.time(), 
+					hostName=hostName, batchStatus="PROCESSING", stringsAsFactors=FALSE)
 		} else {
-			batchQueryResult@values<-rbind(batchQueryResult@values, 
-					list(batchNumber=batchToProcess, batchStart=Sys.time(), 
-							hostName=hostName, batchStatus="PROCESSING"))
+			# here we retain the row label of the original row
+			rowToLock$batchStart=Sys.time()
+			rowToLock$hostName=hostName
+			rowToLock$batchStatus="PROCESSING"
 		}
+		batchQueryResult@values<-rowToLock
+
 		synStoreResult<-try(synStore(batchQueryResult))
 		if (!is(synStoreResult, "try-error")) break
 		print(synStoreResult[[1]])
@@ -85,6 +88,7 @@ batchVoiceProcess<-function(voiceInputTableId, voiceFeatureTableId, batchTableId
 	synStore(batchQueryResult)
 	return(FALSE)
 }
+
 
 computeMedianF0<-function(file) {
 	medianF0(convert_to_wav(file))
