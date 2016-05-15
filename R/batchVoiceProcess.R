@@ -28,7 +28,7 @@ batchVoiceProcess<-function(voiceInputTableId, voiceFeatureTableId, batchTableId
 		# the next batch
 		batchToProcess<-min(availableBatches)
 		# lock it
-		rowToLock<-batchQueryResult@values[which(batchQueryResult@values$batchNumber==batch),]
+		rowToLock<-batchQueryResult@values[which(batchQueryResult@values$batchNumber==batchToProcess),]
 		if (nrow(rowToLoc)==0) {
 			rowToLock<-data.frame(batchNumber=batchToProcess, batchStart=Sys.time(), 
 					hostName=hostName, batchStatus="PROCESSING", stringsAsFactors=FALSE)
