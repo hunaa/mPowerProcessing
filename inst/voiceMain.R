@@ -15,14 +15,14 @@ voiceMain<-function(batchCount) {
 	batchTableId <- "syn6038352"
 	batchSize<-100
 	for (i in 1:batchCount) {
-		allProcessed<-mPowerProcessing::batchVoiceProcess(
+		allProcessed<-try(mPowerProcessing::batchVoiceProcess(
 				voiceInputTableId, 
 				voiceFeatureTableId, 
 				batchTableId, 
 				batchSize, 
 				hostName=Sys.getenv("HOSTNAME")
-		)
-		if (allProcessed) break
+		))
+		if (!is(allProcessed, "try-error") && allProcessed) break
 	}
 	
 }
