@@ -13,7 +13,7 @@ batchVoiceProcess<-function(voiceInputTableId, voiceFeatureTableId, batchTableId
 		# time out is two hours ago
 		batchTimeOutEpochMillis<-as.numeric(Sys.time()-as.difftime(2, units="hours"))*1000
 		batchQueryResult<-synTableQuery(paste0("SELECT batchNumber, batchStart, hostName, batchStatus FROM ", 
-			batchTableId, " where batchStatus='COMPLETED' OR ( batchStatus='PROCESSING' and batchStart<",  batchTimeOutEpochMillis, ")"))
+			batchTableId, " where batchStatus='COMPLETED' OR ( batchStatus='PROCESSING' and batchStart>",  batchTimeOutEpochMillis, ")"))
 		processedBatches<-batchQueryResult@values$batchNumber
 		totalBatches<-(1:(ceiling(recordCount/batchSize)))
 		if (length(processedBatches)==0) {
