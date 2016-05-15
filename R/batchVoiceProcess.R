@@ -29,7 +29,7 @@ batchVoiceProcess<-function(voiceInputTableId, voiceFeatureTableId, batchTableId
 		batchToProcess<-min(availableBatches)
 		# lock it
 		rowToLock<-batchQueryResult@values[which(batchQueryResult@values$batchNumber==batchToProcess),]
-		if (nrow(rowToLoc)==0) {
+		if (nrow(rowToLock)==0) {
 			rowToLock<-data.frame(batchNumber=batchToProcess, batchStart=Sys.time(), 
 					hostName=hostName, batchStatus="PROCESSING", stringsAsFactors=FALSE)
 		} else {
@@ -39,7 +39,6 @@ batchVoiceProcess<-function(voiceInputTableId, voiceFeatureTableId, batchTableId
 			rowToLock$batchStatus="PROCESSING"
 		}
 		batchQueryResult@values<-rowToLock
-
 		synStoreResult<-try(synStore(batchQueryResult))
 		if (!is(synStoreResult, "try-error")) break
 		print(synStoreResult[[1]])
