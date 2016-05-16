@@ -60,7 +60,7 @@ batchVoiceProcess<-function(voiceInputTableId, voiceFeatureTableId, batchTableId
 	dataFiles<-synDownloadTableColumns(voiceBatch, names(voiceBatch@values[audioIndex]))
 	for (i in 1:n) {
 		fileHandleId<-voiceBatch@values[i,audioIndex]
-		if (is.na(fileHandleId) || is.null(fileHandleId)) next
+		if (length(fileHandleId)==0 || is.na(fileHandleId) || is.null(fileHandleId)) next
 		medianF0<-try({
 					file<-dataFiles[[fileHandleId]]
 					computeMedianF0(file)
