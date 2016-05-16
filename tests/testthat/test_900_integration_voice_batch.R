@@ -70,7 +70,7 @@ if (canExecute) {
 		
 		features<-synTableQuery(paste0("SELECT * FROM ", voiceFeatureTableId))
 		
-		expect_equal(2, nrow(features@values))
+		expect_equal(as.integer(2), nrow(features@values), info=paste0("actual: ", nrow(features@values)))
 		# the dummy 'medianF0' function returns a value equals to the recordId
 		expect_equal(features@values$recordId, as.character(features@values$medianF0))
 		expect_equal(features@values$is_computed, rep(TRUE, 2))
@@ -90,7 +90,7 @@ if (canExecute) {
 
 		features<-synTableQuery(paste0("SELECT * FROM ", voiceFeatureTableId))
 		
-		expect_equal(4, nrow(features@values))
+		expect_equal(4, nrow(features@values), info=paste0("actual: ", nrow(features@values)))
 		# the dummy 'medianF0' function returns a value equals to the recordId
 		expect_equal(features@values$recordId, as.character(features@values$medianF0))
 		expect_equal(features@values$is_computed, rep(TRUE, 4))
@@ -119,7 +119,7 @@ if (canExecute) {
 		# checkout rows 3,4,5,6:  5+6 repeat 3+4
 		features<-synTableQuery(paste0("SELECT * FROM ", voiceFeatureTableId, " LIMIT 4 OFFSET 2"))
 		
-		expect_equal(4, nrow(features@values))
+		expect_equal(4, nrow(features@values), info=paste0("actual: ", nrow(features@values)))
 		# the dummy 'medianF0' function returns a value equals to the recordId
 		expect_equal(features@values$recordId, as.character(features@values$medianF0))
 		expect_equal(features@values$is_computed, rep(TRUE, 4))
