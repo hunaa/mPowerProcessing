@@ -34,9 +34,9 @@ batchVoiceProcess<-function(voiceInputTableId, voiceFeatureTableId, batchTableId
 					hostName=hostName, batchStatus="PROCESSING", stringsAsFactors=FALSE)
 		} else {
 			# here we retain the row label of the original row
-			rowToLock$batchStart=Sys.time()
-			rowToLock$hostName=hostName
-			rowToLock$batchStatus="PROCESSING"
+			rowToLock[1,"batchStart"]<-Sys.time()
+			rowToLock[1,"hostName"]<-hostName
+			rowToLock[1,"batchStatus"]<-"PROCESSING"
 		}
 		batchQueryResult@values<-rowToLock
 		synStoreResult<-try(synStore(batchQueryResult))
