@@ -75,6 +75,10 @@ if (canExecute) {
 		expect_equal(features@values$recordId, as.character(features@values$medianF0))
 		expect_equal(features@values$is_computed, rep(TRUE, 2))
 		
+		# there should be one row in the batch status table
+		batchStatus<-synTableQuery(paste0("SELECT * FROM ", voiceBatchTableId))
+		expect_equal(nrow(batchStatus@values), as.integer(1))
+		
 		# now do it again!
 		with_mock(
 				computeMedianF0=function(file){
@@ -93,7 +97,35 @@ if (canExecute) {
 		
 		# second batch should be different from first
 		expect_equal(features@values$recordId, unique(features@values$recordId))
-	
+		
+		# there should be one row in the batch status table
+		batchStatus<-synTableQuery(paste0("SELECT * FROM ", voiceBatchTableId))
+		expect_equal(nrow(batchStatus@values), as.integer(2))
+		
+		# now write a 'stale' record
+		batchStatus@values[2, "batchStart"]<-Sys.time()-as.difftime(3, units="hours")
+		batchStatus@values[2, "batchStatus"]<-"PROCESSING"
+		synStore(batchStatus)
+		
+		# now do it again!  Should reprocess the second batch
+		with_mock(
+				computeMedianF0=function(file){
+					contents<-fromJSON(file)
+					return(contents['medianF0'])
+				},
+				batchVoiceProcess(voiceInputTableId, voiceFeatureTableId, voiceBatchTableId, batchSize)
+		)
+		
+		# checkout rows 3,4,5,6:  5+6 repeat 3+4
+		features<-synTableQuery(paste0("SELECT * FROM ", voiceFeatureTableId, "LIMIT 4 OFFSET 2"))
+		
+		expect_equal(4, nrow(features@values))
+		# the dummy 'medianF0' function returns a value equals to the recordId
+		expect_equal(features@values$recordId, as.character(features@values$medianF0))
+		expect_equal(features@values$is_computed, rep(TRUE, 4))
+		
+		# second batch should be different from first
+		expect_equal(features@values[c(1,2),], features@values[c(3,4),])
 	},
 	finally={
 		synDelete(project)

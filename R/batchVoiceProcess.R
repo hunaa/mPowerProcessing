@@ -28,18 +28,17 @@ batchVoiceProcess<-function(voiceInputTableId, voiceFeatureTableId, batchTableId
 		# the next batch
 		batchToProcess<-min(availableBatches)
 		# lock it
-		rowToLock<-batchQueryResult@values[which(batchQueryResult@values$batchNumber==batch),]
-		if (nrow(rowToLoc)==0) {
+		rowToLock<-batchQueryResult@values[which(batchQueryResult@values$batchNumber==batchToProcess),]
+		if (nrow(rowToLock)==0) {
 			rowToLock<-data.frame(batchNumber=batchToProcess, batchStart=Sys.time(), 
 					hostName=hostName, batchStatus="PROCESSING", stringsAsFactors=FALSE)
 		} else {
 			# here we retain the row label of the original row
-			rowToLock$batchStart=Sys.time()
-			rowToLock$hostName=hostName
-			rowToLock$batchStatus="PROCESSING"
+			rowToLock[1,"batchStart"]<-Sys.time()
+			rowToLock[1,"hostName"]<-hostName
+			rowToLock[1,"batchStatus"]<-"PROCESSING"
 		}
 		batchQueryResult@values<-rowToLock
-
 		synStoreResult<-try(synStore(batchQueryResult))
 		if (!is(synStoreResult, "try-error")) break
 		print(synStoreResult[[1]])
