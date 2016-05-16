@@ -8,12 +8,16 @@
 batchVoiceProcess<-function(voiceInputTableId, voiceFeatureTableId, batchTableId, batchSize, hostName="UNK") {
 	recordCountQuery<-synTableQuery(paste0("SELECT COUNT(*) FROM ", voiceInputTableId))
 	recordCount <- recordCountQuery@values[1,1]
+	
+	# clean up any 'stale' batches
+	batchTimeOutEpochMillis<-as.numeric(Sys.time()-as.difftime(2, units="hours"))*1000
+	staleBatchQueryResult<-synTableQuery(paste0("SELECT batchNumber, batchStart, hostName, batchStatus FROM ", 
+					batchTableId, " where batchStatus='PROCESSING' and batchStart<",  batchTimeOutEpochMillis))
+	if (nrow(staleBatchQueryResult@values)>0) synDeleteRows(staleBatchQueryResult)
+	
 	for (i in 1:10) { # try the following 10 times, retrying if there is a concurrency error
 		# find a batch
-		# time out is two hours ago
-		batchTimeOutEpochMillis<-as.numeric(Sys.time()-as.difftime(2, units="hours"))*1000
-		batchQueryResult<-synTableQuery(paste0("SELECT batchNumber, batchStart, hostName, batchStatus FROM ", 
-			batchTableId, " where batchStatus='COMPLETED' OR ( batchStatus='PROCESSING' and batchStart>",  batchTimeOutEpochMillis, ")"))
+		batchQueryResult<-synTableQuery(paste0("SELECT batchNumber, batchStart, hostName, batchStatus FROM ", batchTableId))
 		processedBatches<-batchQueryResult@values$batchNumber
 		totalBatches<-(1:(ceiling(recordCount/batchSize)))
 		if (length(processedBatches)==0) {
@@ -22,23 +26,14 @@ batchVoiceProcess<-function(voiceInputTableId, voiceFeatureTableId, batchTableId
 			availableBatches<-totalBatches[-processedBatches]
 		}
 		if (length(availableBatches)==0) {
-			print("All batches have been processed!")
+			print("All batches have been (or are being) processed!")
 			return(TRUE)
 		}
 		# the next batch
 		batchToProcess<-min(availableBatches)
 		# lock it
-		rowToLock<-batchQueryResult@values[which(batchQueryResult@values$batchNumber==batchToProcess),]
-		if (nrow(rowToLock)==0) {
-			rowToLock<-data.frame(batchNumber=batchToProcess, batchStart=Sys.time(), 
-					hostName=hostName, batchStatus="PROCESSING", stringsAsFactors=FALSE)
-		} else {
-			# here we retain the row label of the original row
-			rowToLock[1,"batchStart"]<-Sys.time()
-			rowToLock[1,"hostName"]<-hostName
-			rowToLock[1,"batchStatus"]<-"PROCESSING"
-		}
-		batchQueryResult@values<-rowToLock
+		batchQueryResult@values<-data.frame(batchNumber=batchToProcess, batchStart=Sys.time(), 
+				hostName=hostName, batchStatus="PROCESSING", stringsAsFactors=FALSE)
 		synStoreResult<-try(synStore(batchQueryResult))
 		if (!is(synStoreResult, "try-error")) break
 		print(synStoreResult[[1]])

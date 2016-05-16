@@ -117,7 +117,7 @@ if (canExecute) {
 		)
 		
 		# checkout rows 3,4,5,6:  5+6 repeat 3+4
-		features<-synTableQuery(paste0("SELECT * FROM ", voiceFeatureTableId, "LIMIT 4 OFFSET 2"))
+		features<-synTableQuery(paste0("SELECT * FROM ", voiceFeatureTableId, " LIMIT 4 OFFSET 2"))
 		
 		expect_equal(4, nrow(features@values))
 		# the dummy 'medianF0' function returns a value equals to the recordId
@@ -125,7 +125,11 @@ if (canExecute) {
 		expect_equal(features@values$is_computed, rep(TRUE, 4))
 		
 		# second batch should be different from first
-		expect_equal(features@values[c(1,2),], features@values[c(3,4),])
+		first2WOnames<-features@values[c(1,2),]
+		rownames(first2WOnames)<-NULL
+		second2WOnames<-features@values[c(3,4),]
+		rownames(second2WOnames)<-NULL
+		expect_equal(first2WOnames, second2WOnames)
 	},
 	finally={
 		synDelete(project)
