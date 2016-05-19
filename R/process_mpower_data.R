@@ -286,12 +286,24 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, tlrId, vId1, vId2, w
 		lp@values[1, "LAST_VERSION"]<-lastProcessedBalanceVersion
 		synStore(lp)
 	}
-	
-	voiceCleanedDataId<-nameToTableIdMap[["Voice Activity"]]
+
+	## ------------------------------------------------------------
+	##  Compute voice features
+	## ------------------------------------------------------------
+	voiceCleanedDataId <- nameToTableIdMap[["Voice Activity"]]
 	if (is.null(voiceCleanedDataId)) stop("No cleaned Voice Activity data")
-	
-	# TODO compute voice features
-	
+
+	lp <- lastProcessedFeatureVersion(lastProcessedFeatureVersionTableId, voiceCleanedDataId, "medianF0", voiceFeatureTableId)
+	lastProcessedVoiceVersion <- computeVoiceFeatures(
+		voiceCleanedDataId,
+		lp@values[1, "LAST_VERSION"],
+		voiceFeatureTableId)
+	if (!is.na(lastProcessedVoiceVersion)) {
+		lp@values[1, "LAST_VERSION"] <- lastProcessedVoiceVersion
+		synStore(lp)
+	}
+	## ------------------------------------------------------------
+
 	# Now compute the normalized features
 	demographicsCleanedDataId<-nameToTableIdMap[["Demographics Survey"]]
 	if (is.null(demographicsCleanedDataId)) stop("No cleaned Demographics Survey data")
@@ -302,8 +314,9 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, tlrId, vId1, vId2, w
 			balance=balanceFeatureTableId, voice=voiceFeatureTableId)
 	thirtyDayWindow <- list(start=Sys.Date()-as.difftime(30, units="days"), end=Sys.Date())
 	
-	# TODO add voice feature featureNames <- list(balance='zcrAA', gait='F0XY', tap='tap_count', voice='???')
-	featureNames <- list(balance='zcrAA', gait='F0XY', tap='tap_count', tapLeft='tap_count', tapRight='tap_count')
+	featureNames <- list(balance='zcrAA', gait='F0XY',
+						tap='tap_count', tapLeft='tap_count', tapRight='tap_count',
+						voice="medianF0")
 	normalizedFeatures<-runNormalization(tables, features, featureNames, thirtyDayWindow)
 	
 	for (healthCode in names(normalizedFeatures)) {

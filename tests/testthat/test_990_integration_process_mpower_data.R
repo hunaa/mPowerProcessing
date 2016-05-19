@@ -129,7 +129,7 @@ if (canExecute) {
 					filePath<-tempfile()
 					connection<-file(filePath)
 					writeChar(fileContent[origFilePath], connection, eos=NULL)
-					close(connection)  
+					close(connection)
 					fileHandle<-synapseClient:::chunkedUploadFile(filePath)
 					newFileHandleIds<-append(newFileHandleIds, fileHandle$id)
 				}
@@ -157,7 +157,83 @@ if (canExecute) {
 		load(inputFile) # brings into namespace: schemaAndQuery
 		createMultipleTables(project, schemaAndQuery, tableName, mockAttachmentFolders)
 	}
-	
+
+	## A specialized version of createTable/createMultipleTables that uploads binary voice data files
+	createVoiceActivityTables <- function(project, tables, tableName, mockAttachmentFolders) {
+
+		## return new table IDs
+		tableIds <- NULL
+
+		for (i in seq(along=tables)) {
+			newTableName <- paste0(tableName, " ", i)
+			message("Creating ", newTableName, "...")
+
+			message("\nclass of schema = ", class(tables[[i]]$schema))
+			message("\nclass of query = ", class(tables[[i]]$query))
+
+			schema    <- tables[[i]]$schema
+			tableData <- tables[[i]]$query@values
+
+			## upload mock data files and attach to file handle columns
+			fileHandleColumns<-whichFilehandle(schema@columns)
+			for (fhc in fileHandleColumns) {
+				mockFileFolder <- system.file("testdata", mockAttachmentFolders[fhc], package="mPowerProcessing")
+				mockFiles <- list.files(mockFileFolder, full.names=TRUE)
+				newFileHandleIds<-NULL
+				for (filePath in mockFiles) {
+					fileHandle <- synapseClient:::chunkedUploadFile(filePath)
+					newFileHandleIds<-append(newFileHandleIds, fileHandle$id)
+				}
+				tableData[[fhc]] <- rep(newFileHandleIds, length.out=nrow(tableData))
+			}
+
+			## create new table schema
+			newSchema <- TableSchema(newTableName, project, schema@columns@content)
+			newSchema <- synStore(newSchema)
+
+			# create table content
+			table <- synStore(Table(newSchema, tableData))
+
+			## add ID of newly created table to list
+			tableIds <- append(tableIds, propertyValue(newSchema, "id"))
+		}
+
+		tableIds
+	}
+
+	## Given a schemaAndQuery data.frame, convert it into a list.
+	##
+	## schemaAndQuery data.frames look like this:
+	##
+	##        syn4961455 syn4961457 syn4961464
+	## schema tdf1       tdf2       tdf3
+	## query  ts1        ts2        ts3
+	##
+	## tdf = An object of class "TableDataFrame"
+	## ts  = An object of class "TableSchema"
+	##
+	## The results of schemaAndQueryToList(schemaAndQuery) look like:
+	##
+	## $syn4961455$schema = tdf1
+	## $syn4961455$query  = ts1
+	##
+	## $syn4961457$schema = tdf2
+	## $syn4961457$query  = ts2
+	##
+	## $syn4961464$schema = tdf3
+	## $syn4961464$query  = ts3
+	##
+	schemaAndQueryToList <- function(schemaAndQuery) {
+		tables <- list()
+		for (j in seq(length.out=ncol(schemaAndQuery))) {
+			tables[[j]] <- list()
+			tables[[j]]['schema'] <- schemaAndQuery[[1,j]]
+			tables[[j]]['query']  <- schemaAndQuery[[2,j]]
+		}
+		names(tables) <- colnames(schemaAndQuery)
+		return(tables)
+	}
+
 	# maps column name in Table to the folder name where mock files are found
 	tappingAttachments<-c(
 	"accel_tapping.json.items"="default-json-files",
@@ -173,17 +249,26 @@ if (canExecute) {
 	
 	voiceTaskInputFile<-file.path(testDataFolder, "voiceTaskInput.RData")
 	load(voiceTaskInputFile) # brings into namespace: schemaAndQuery, schema2, query2, fileContent, vFiles
+
+
+	# ------------------------------------------------------------
+	#   Create mock voice tables
+	# ------------------------------------------------------------
 	v1MockAttachmentFolders<-c(
-			"audio_audio.m4a"="default-json-files",
-			"audio_countdown.m4a"="default-json-files",  
-			"momentInDayFormat.json"="moment-in-day-json"
-			)
-	vId1<-createMultipleTables(project, schemaAndQuery, "Voice Raw Input 1", v1MockAttachmentFolders)
-	v2MockAttachmentFolders<-c(
-			"audio_audio.m4a"="default-json-files",
-			"audio_countdown.m4a"="default-json-files")
-	vId2<-createTable(project, schema2, query2, "Voice Raw Input 2", v2MockAttachmentFolders)
-	
+			"audio_audio.m4a"="audio_audio.m4a",
+			"audio_countdown.m4a"="default-json-files",
+			"momentInDayFormat.json"="moment-in-day-json")
+	tables <- schemaAndQueryToList(schemaAndQuery)
+	vId1 <- createVoiceActivityTables(project, tables, "Voice Raw Input 1", v1MockAttachmentFolders)
+	message("vId1: ", paste(vId1, collapse=" "))
+
+	v2MockAttachmentFolders <- c(	"audio_audio.m4a"="audio_audio.m4a",
+																"audio_countdown.m4a"="default-json-files")
+	tables <- list(list(schema=schema2, query=query2))
+	vId2 <- createVoiceActivityTables(project, tables, "Voice Raw Input 2", v2MockAttachmentFolders)
+	message("vId2: ", paste(vId2, collapse=" "))
+	# ------------------------------------------------------------
+
 	walkingAttachments<-c("accel_walking_outbound.json.items"="default-json-files",      
 		"deviceMotion_walking_outbound.json.items"="deviceMotion_walking_outbound.json.items",
 		"pedometer_walking_outbound.json.items"="default-json-files",
@@ -258,9 +343,14 @@ if (canExecute) {
 	# verify content
 	expect_true(all(tappingRightFeatures[['is_computed']]==TRUE))
 	expect_true(all(tappingRightFeatures[['tap_count']]==as.integer(155)))
-	
+
 	voiceFeatures<-synTableQuery(sprintf("select * from %s", featureTableIds$vfSchemaId))@values
-	# TODO verify content
+	message("Verifying voice features:")
+	medianF0s <- sort(unique(voiceFeatures$medianF0))
+	message("found medianF0s = ", paste(medianF0s, collapse=", "))
+	expected_medianF0s <- c(100, 107, 178)
+	expect_equal(medianF0s, expected_medianF0s, tolerance=1.0)
+
 	gaitFeatures<-synTableQuery(sprintf("select * from %s", featureTableIds$gfSchemaId))@values
 	# TODO verify content
 	balanceFeatures<-synTableQuery(sprintf("select * from %s", featureTableIds$bfSchemaId))@values
