@@ -357,6 +357,7 @@ read_json_from_file<-function(file) {
 ## VOICE
 #####
 process_voice_activity<-function(vId1, vId2, lastProcessedVersion1, lastProcessedVersion2) {
+  message("toLevel1: processing voice activity... ")
   maxRowProcessed<-c()
   
   ## FIRST SET OF IDS HAVE TO PARSE INTO momentInDayFormat.json FILES TO EXTRACT MED INFO
@@ -369,7 +370,7 @@ process_voice_activity<-function(vId1, vId2, lastProcessedVersion1, lastProcesse
    		maxRowProcessed[x]<<-getMaxRowVersion(vals)
     
 	    vMap <- synDownloadTableColumns(vTab, "momentInDayFormat.json")
-	    vMID <- sapply(as.list(rownames(vals)), function(rn){
+	    vMID <- lapply(as.list(rownames(vals)), function(rn){
 	      if( is.na(vals[rn, "momentInDayFormat.json"]) ){
 	        return(c(choiceAnswers=NA))
 	      } else{
@@ -382,7 +383,7 @@ process_voice_activity<-function(vId1, vId2, lastProcessedVersion1, lastProcesse
 	        }
 	      }
 	    })
-	    vAllNames <- unique(unlist(sapply(vMID, names)))
+	    vAllNames <- unique(unlist(lapply(vMID, names)))
 	    vMID <- lapply(vMID, function(y){
 	      these <- setdiff(vAllNames, names(y))
 	      y[ these ] <- NA
