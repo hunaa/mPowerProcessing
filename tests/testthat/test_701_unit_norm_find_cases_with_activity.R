@@ -119,14 +119,18 @@ cases <- findCasesWithPrepostActivity(demo, featureTables, window)
 
 cat("\nfound:", cases,"\n")
 
-## we expect to get back these two
-expected_cases = c('test-10006', 'test-10007')
+## Due to MPOW-39, we now want to generate dashboard data for
+## participants with pre and post-med activity regardless of
+## whether they have a professional diagnosis of Parkinson's
+expected_cases = c('test-10001', 'test-10006', 'test-10007')
 names(expected_cases) <- expected_cases
 
 expect_equal(cases, expected_cases)
 
+## test-10001 Not a PD patient, but has pre and post activity,
+## so, OK under the new rules.
+
 ## The other health codes shouldn't be returned for these reasons
-## test-10001 Not a PD patient
 ## test-10002 age is NA
 ## test-10003 no pre or post medication
 ## test-10004 no pre or post inside window

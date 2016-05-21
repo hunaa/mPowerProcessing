@@ -43,13 +43,13 @@ countParticipantActivityDays <- function(activity, dat, healthCode, window) {
 ##     voice.3      voice        other     1
 ##
 countActivity <- function(demo, featureTables, window) {
-  # find participants with a PD diagnosis
-  cases <- na.omit(demo$healthCode[demo$`professional-diagnosis` & !is.na(demo$age)])
-  names(cases) <- cases
+  # find participants with age specified
+  healthCodes <- na.omit(demo$healthCode[ !is.na(demo$age) ])
+  names(healthCodes) <- healthCodes
 
   # for each PD patient, return a data.frame with counts of activities
   # performed within the date window
-  lapply(cases, function(healthCode) {
+  lapply(healthCodes, function(healthCode) {
     message(healthCode)
     do.call(rbind,
             mapply(countParticipantActivityDays, names(featureTables), featureTables,
@@ -96,6 +96,8 @@ expect_equal(GetAgeMatchedControlIds(79, ageInterval=5, demo=demo), sprintf('tes
 
 
 ## controls
+## for the control population, we use the parameter i to
+## make the value of the feature tend lower with age
 n <- 10000
 i <- sample(1:61, n, replace=TRUE)
 dat_controls <- data.frame(
@@ -162,11 +164,19 @@ window <- list(start=as.Date('2015-04-01'), end=as.Date('2015-04-30'))
 cppa <- countPrepostActivity(demo, featureTables, window)
 
 
+## test findCasesWithPrepostActivity
+healthCodesWithPrePostActivity <- findCasesWithPrepostActivity(demo, featureTables, window)
+
+## not guaranteed, but very unlikely to be missing any of the cases
+expect_true(all(sapply(cases,
+  function(healthCode) healthCode %in% healthCodesWithPrePostActivity)))
+
+
 ## test normalization
 ##   * test that the pre values are less than post values as they are
 ##     contrived to be in the bogus data created above.
 ##   * test that the counts of days with pre and post data are as expected
-for (healthCode in cases) {
+for (healthCode in healthCodesWithPrePostActivity) {
   message('testing ', healthCode)
   norm <- NormalizeFeature(dat,
                            dat,
@@ -176,7 +186,11 @@ for (healthCode in cases) {
                            ageInterval=5)
   mpre <- mean(norm$fdat$featureX[norm$fdat$medTimepoint==timepoints[1]], na.rm=TRUE)
   mpost <- mean(norm$fdat$featureX[norm$fdat$medTimepoint==timepoints[2]], na.rm=TRUE)
-  expect_true(mpre < mpost)
+
+  ## for cases, featureX is contrived to be lower pre-med than post.
+  if (healthCode %in% cases) {
+    expect_true(mpre < mpost)
+  }
 
   norms <- list(foo=norm)
   tnorms <- transformNormalizedData(norms, window)
@@ -186,7 +200,8 @@ for (healthCode in cases) {
                cppa[[healthCode]]$days[ cppa[[healthCode]]$medTimepoint=='post' ])
   
   ## TEST WITH A DIFFERENT NORMALIZATION DATASET (SAME FEATURE)
-  ## NORM DATA IS CONSISTENTLY LARGER - SO NORMALIZED DATA SHOULD BE SMALLER
+  ## normDat$featureX is consistently larger than dat$featureX, so
+  ## after normalization this should be preserved.
   normLR <- NormalizeFeature(dat,
                              normDat,
                              patientId=healthCode,
@@ -195,7 +210,11 @@ for (healthCode in cases) {
                              ageInterval=5)
   mpreLR <- mean(normLR$fdat$featureX[norm$fdat$medTimepoint==timepoints[1]], na.rm=TRUE)
   mpostLR <- mean(normLR$fdat$featureX[norm$fdat$medTimepoint==timepoints[2]], na.rm=TRUE)
-  expect_true(mpre > mpreLR)
-  expect_true(mpost > mpostLR)
+
+  ## for cases, featureX is contrived to be lower pre-med than post.
+  if (healthCode %in% cases) {
+    expect_true(mpre > mpreLR)
+    expect_true(mpost > mpostLR)
+  }
 }
 
