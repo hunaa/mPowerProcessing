@@ -47,7 +47,7 @@ batchVoiceProcess<-function(voiceInputTableId, voiceFeatureTableId, batchTableId
   audioIndex<-2 # i.e. the audio file handles are in the second column of the query result
 	batchQueryString<-paste0('SELECT "recordId", "', dataColName, '" FROM ', 
 			voiceInputTableId, ' LIMIT ', batchSize, 
-			' OFFSET ', batchSize*(batchToProcess-1))
+			' OFFSET ', as.integer(batchSize*(batchToProcess-1)))
 	voiceBatch<-synTableQuery(batchQueryString)
 	recordIds<-voiceBatch@values[[recordIdIndex]]
 	n<-length(recordIds)
