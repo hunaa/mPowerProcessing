@@ -168,9 +168,6 @@ if (canExecute) {
 			newTableName <- paste0(tableName, " ", i)
 			message("Creating ", newTableName, "...")
 
-			message("\nclass of schema = ", class(tables[[i]]$schema))
-			message("\nclass of query = ", class(tables[[i]]$query))
-
 			schema    <- tables[[i]]$schema
 			tableData <- tables[[i]]$query@values
 
@@ -184,7 +181,8 @@ if (canExecute) {
 					fileHandle <- synapseClient:::chunkedUploadFile(filePath)
 					newFileHandleIds<-append(newFileHandleIds, fileHandle$id)
 				}
-				tableData[[fhc]] <- rep(newFileHandleIds, length.out=nrow(tableData))
+				j <- which(!is.na(tableData[[fhc]]))
+				tableData[[fhc]][j] <- sample(newFileHandleIds, size=length(j), replace=TRUE)
 			}
 
 			## create new table schema
@@ -346,7 +344,7 @@ if (canExecute) {
 
 	voiceFeatures<-synTableQuery(sprintf("select * from %s", featureTableIds$vfSchemaId))@values
 	message("Verifying voice features:")
-	medianF0s <- sort(unique(voiceFeatures$medianF0))
+	medianF0s <- sort(unique(voiceFeatures$medianF0), na.last=TRUE)
 	message("found medianF0s = ", paste(medianF0s, collapse=", "))
 	expected_medianF0s <- c(100, 107, 178)
 	expect_equal(medianF0s, expected_medianF0s, tolerance=1.0)
