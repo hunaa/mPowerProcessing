@@ -39,6 +39,7 @@ GetControlFeatureSummaryStats <- function(dat, controlIds, featName){
 #' Normalize feature data relative to an age matched control.
 #'
 #' @param dat data.frame of feature data for an activity
+#' @param normDat data.frame from which to draw age matched controls
 #' @param patientId patient's healthCode
 #' @param featName name of feature column
 #' @param demo data.frame holding demographic data
@@ -52,6 +53,7 @@ GetControlFeatureSummaryStats <- function(dat, controlIds, featName){
 #'         and featName, with the feature column normalized to fall between
 #'         0 and 1.
 NormalizeFeature <- function(dat,
+                             normDat,
                              patientId,
                              featName,
                              demo,
@@ -61,7 +63,7 @@ NormalizeFeature <- function(dat,
                              reverse = FALSE){
   patientAge <- demo$age[match(patientId, demo$healthCode)]
   controlIds <- GetAgeMatchedControlIds(patientAge, ageInterval, demo)
-  controlStats <- GetControlFeatureSummaryStats(dat, controlIds, featName)
+  controlStats <- GetControlFeatureSummaryStats(normDat, controlIds, featName)
   fdat <- dat[dat$healthCode %in% patientId, c("medTimepoint", "date", featName)]
   z <- (fdat[, featName] - controlStats$mean)/controlStats$sd
   alpha <- (1 - floorCeilingRange)/2
@@ -98,8 +100,13 @@ NormalizeFeature <- function(dat,
 #' @return a list of health codes
 findCasesWithPrepostActivity <- function(demo, featureTables, window) {
   # find participants with a PD diagnosis
-  cases <- na.omit(demo$healthCode[demo$`professional-diagnosis` & !is.na(demo$age)])
-  names(cases) <- cases
+  # cases <- na.omit(demo$healthCode[demo$`professional-diagnosis` & !is.na(demo$age)])
+
+  # Find participants with age filled in. As of MPOW-39, we decided
+  # to generate dashboard data for any participants with pre or post-
+  # med activity regardless of whether they have a diagnosis of
+  # Parkinson's.
+  participantsWithAge <- na.omit(demo$healthCode[ !is.na(demo$age) ])
 
   prepost <- c('Immediately before Parkinson medication',
                'Just after Parkinson medication (at your best)')
@@ -110,7 +117,7 @@ findCasesWithPrepostActivity <- function(demo, featureTables, window) {
       ## patients, within the date window, pre or post medication
       dat$healthCode[ dat$date >= window$start &
                       dat$date <= window$end &
-                      dat$healthCode %in% cases &
+                      dat$healthCode %in% participantsWithAge &
                       dat$medTimepoint %in% prepost ]
     })
   ))
