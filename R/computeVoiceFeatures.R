@@ -37,6 +37,7 @@ computeVoiceFeatures <- function(cleanDataTableId, lastProcessedVersion, feature
   for (i in seq(along=recordIds)) {
     fileHandleId <- queryResults@values[i, dataColumnName]
     recordId <- queryResults@values[i, "recordId"]
+    message("... computing voice features for recordId=", recordId, "  fileHandleId=", fileHandleId)
     if (is.na(fileHandleId) || is.null(fileHandleId)) next
     medianF0 <- try({
       filepath <- fileMap[[fileHandleId]]
