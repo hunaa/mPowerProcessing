@@ -319,32 +319,34 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, tlrId, vId1, vId2, w
 						voice="medianF0")
 	normalizedFeatures<-runNormalization(tables, features, featureNames, thirtyDayWindow)
 	
-	# Now call the Visualization Data API 
-	#https://sagebionetworks.jira.com/wiki/display/BRIDGE/mPower+Visualization#mPowerVisualization-WritemPowerVisualizationData
-	cat("Invoking visualization API...\n")
-	url <- bridger:::uriToUrl("/parkinson/visualization", bridger:::.getBridgeCache("bridgeEndpoint"))
-	
 	nRecords<-length(normalizedFeatures)
-	testHealthCodes<-rep(c('0b91132b-c181-4481-9394-1748837e23b4',
-						'2ace23da-cea8-41b3-bb09-9996e0f2b3b9',
-						'1e5b526b-0b24-4fb7-bd1d-d3025c9d63fe',
-						'e8a17d84-6d96-4b82-9969-af6fe319c2ce'
-				), length.out=nRecords)
-	for (i in 1:nRecords) {
-		healthCode<-names(normalizedFeatures)[i]
-		normdata <- normalizedFeatures[[healthCode]]
-		if (inherits(normdata, "try-error")) {
-			message(sprintf('skipping %s due to error in processing', healthCode))
-		} else {
-			jsonString <- visDataToJSON(testHealthCodes[i], normalizedFeatures[[healthCode]])
-			print(jsonString)
-			# call Bridge Visualization API
-			response<-getURL(url, postfields=jsonString, customrequest="POST", 
-				.opts=bridger:::.getBridgeCache("opts"), httpheader=bridger:::.getBridgeCache("httpheader"))
-			# response is "Visualization created."
-		}
-	}			
-	cat("... done.\n")
+	if (nRecords>0) {
+		# Now call the Visualization Data API 
+		#https://sagebionetworks.jira.com/wiki/display/BRIDGE/mPower+Visualization#mPowerVisualization-WritemPowerVisualizationData
+		cat("Invoking visualization API...\n")
+		url <- bridger:::uriToUrl("/parkinson/visualization", bridger:::.getBridgeCache("bridgeEndpoint"))
+			
+		testHealthCodes<-rep(c('0b91132b-c181-4481-9394-1748837e23b4',
+							'2ace23da-cea8-41b3-bb09-9996e0f2b3b9',
+							'1e5b526b-0b24-4fb7-bd1d-d3025c9d63fe',
+							'e8a17d84-6d96-4b82-9969-af6fe319c2ce'
+					), length.out=nRecords)
+		for (i in 1:nRecords) {
+			healthCode<-names(normalizedFeatures)[i]
+			normdata <- normalizedFeatures[[healthCode]]
+			if (inherits(normdata, "try-error")) {
+				message(sprintf('skipping %s due to error in processing', healthCode))
+			} else {
+				jsonString <- visDataToJSON(testHealthCodes[i], normalizedFeatures[[healthCode]])
+				print(jsonString)
+				# call Bridge Visualization API
+				response<-getURL(url, postfields=jsonString, customrequest="POST", 
+					.opts=bridger:::.getBridgeCache("opts"), httpheader=bridger:::.getBridgeCache("httpheader"))
+				# response is "Visualization created."
+			}
+		}			
+		cat("... done.\n")
+	}
 
 	cat("... ALL DONE!!!\n")
 }
