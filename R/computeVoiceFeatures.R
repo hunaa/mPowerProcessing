@@ -33,7 +33,7 @@ computeVoiceFeatures <- function(cleanDataTableId, lastProcessedVersion, feature
       stringsAsFactors=FALSE)
 
 
-	if (!all(is.na(queryResults@values[[jsonColName]]))) {
+	if (!all(is.na(queryResults@values[[dataColumnName]]))) {
 	  # now compute the features
 	  fileMap <- synDownloadTableColumns(queryResults, dataColumnName)
 	  for (i in seq(along=recordIds)) {
