@@ -33,20 +33,22 @@ computeGaitFeatures<-function(cleanDataTableId, lastProcessedVersion, featureTab
 			stringsAsFactors=FALSE)
 
 	# now compute the features
-	jsonFiles<-synDownloadTableColumns(queryResults, jsonColName)
-	for (i in 1:n) {
-		fileHandleId<-queryResults@values[i,jsonColName]
-		if (is.na(fileHandleId) || is.null(fileHandleId)) next
-		f0XY<-try({
-					file<-jsonFiles[[fileHandleId]]
-					data<-fromJSON(file)
-					gait_F0XY(data)
-				}, silent=T)
-		if (is(f0XY, "try-error")) {
-			cat("computeGaitFeatures:  gait_F0XY failed for i=", i, ", fileHandleId=", fileHandleId, "\n")
-		} else {
-			featureDataFrame[i,"F0XY"] <- f0XY
-			featureDataFrame[i,"is_computed"] <- TRUE
+	if (!all(is.na(queryResults@values[[jsonColName]]))) {
+		jsonFiles<-synDownloadTableColumns(queryResults, jsonColName)
+		for (i in 1:n) {
+			fileHandleId<-queryResults@values[i,jsonColName]
+			if (is.na(fileHandleId) || is.null(fileHandleId)) next
+			f0XY<-try({
+						file<-jsonFiles[[fileHandleId]]
+						data<-fromJSON(file)
+						gait_F0XY(data)
+					}, silent=T)
+			if (is(f0XY, "try-error")) {
+				cat("computeGaitFeatures:  gait_F0XY failed for i=", i, ", fileHandleId=", fileHandleId, "\n")
+			} else {
+				featureDataFrame[i,"F0XY"] <- f0XY
+				featureDataFrame[i,"is_computed"] <- TRUE
+			}
 		}
 	}
 	

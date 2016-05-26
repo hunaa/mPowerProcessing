@@ -32,24 +32,27 @@ computeVoiceFeatures <- function(cleanDataTableId, lastProcessedVersion, feature
       "medianF0"=rep(NA, n),
       stringsAsFactors=FALSE)
 
-  # now compute the features
-  fileMap <- synDownloadTableColumns(queryResults, dataColumnName)
-  for (i in seq(along=recordIds)) {
-    fileHandleId <- queryResults@values[i, dataColumnName]
-    recordId <- queryResults@values[i, "recordId"]
-    message("... computing voice features for recordId=", recordId, "  fileHandleId=", fileHandleId)
-    if (is.na(fileHandleId) || is.null(fileHandleId)) next
-    medianF0 <- try({
-      filepath <- fileMap[[fileHandleId]]
-      medianF0(convert_to_wav(filepath))
-    })
-    if (is(medianF0, "try-error")) {
-      cat("computeVoiceFeatures:  medianF0 failed for recordId=", recordId, ", fileHandleId=", fileHandleId, "\n")
-    } else {
-      featureDataFrame[i, "medianF0"] <- medianF0
-      featureDataFrame[i, "is_computed"] <- TRUE
-    }
-  }
+
+	if (!all(is.na(queryResults@values[[dataColumnName]]))) {
+	  # now compute the features
+	  fileMap <- synDownloadTableColumns(queryResults, dataColumnName)
+	  for (i in seq(along=recordIds)) {
+	    fileHandleId <- queryResults@values[i, dataColumnName]
+	    recordId <- queryResults@values[i, "recordId"]
+	    message("... computing voice features for recordId=", recordId, "  fileHandleId=", fileHandleId)
+	    if (is.na(fileHandleId) || is.null(fileHandleId)) next
+	    medianF0 <- try({
+	      filepath <- fileMap[[fileHandleId]]
+	      medianF0(convert_to_wav(filepath))
+	    })
+	    if (is(medianF0, "try-error")) {
+	      cat("computeVoiceFeatures:  medianF0 failed for recordId=", recordId, ", fileHandleId=", fileHandleId, "\n")
+	    } else {
+	      featureDataFrame[i, "medianF0"] <- medianF0
+	      featureDataFrame[i, "is_computed"] <- TRUE
+	    }
+	  }
+	}
 
   # store the results
   featureTable <- synTableQuery(paste0('SELECT * FROM ',featureTableId))

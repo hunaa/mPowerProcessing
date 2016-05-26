@@ -44,21 +44,23 @@ computeTappingFeatures<-function(cleanDataTableId, lastProcessedVersion, feature
 			"tap_count"=rep(NA, n),
 			stringsAsFactors=FALSE)
 
-	# now compute the features
-	tappingFiles<-synDownloadTableColumns(queryResults, jsonColName)
-	for (i in 1:n) {
-		fileHandleId<-queryResults@values[i,jsonColName]
-		if (is.na(fileHandleId) || is.null(fileHandleId)) next
-		tapCount<-try({
-					tappingFile<-tappingFiles[[fileHandleId]]
-					tappingData<-fromJSON(tappingFile)
-					tappingCountStatistic(tappingData)
-				}, silent=T)
-		if (is(tapCount, "try-error")) {
-			cat("computeTappingFeatures:  tappingCountStatistic failed for i=", i, ", fileHandleId=", fileHandleId, "\n")
-		} else {
-			featureDataFrame[i,"tap_count"] <- tapCount
-			featureDataFrame[i,"is_computed"] <- TRUE
+	if (!all(is.na(queryResults@values[[jsonColName]]))) {
+		# now compute the features
+		tappingFiles<-synDownloadTableColumns(queryResults, jsonColName)
+		for (i in 1:n) {
+			fileHandleId<-queryResults@values[i,jsonColName]
+			if (is.na(fileHandleId) || is.null(fileHandleId)) next
+			tapCount<-try({
+						tappingFile<-tappingFiles[[fileHandleId]]
+						tappingData<-fromJSON(tappingFile)
+						tappingCountStatistic(tappingData)
+					}, silent=T)
+			if (is(tapCount, "try-error")) {
+				cat("computeTappingFeatures:  tappingCountStatistic failed for i=", i, ", fileHandleId=", fileHandleId, "\n")
+			} else {
+				featureDataFrame[i,"tap_count"] <- tapCount
+				featureDataFrame[i,"is_computed"] <- TRUE
+			}
 		}
 	}
 	

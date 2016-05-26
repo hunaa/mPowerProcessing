@@ -32,21 +32,23 @@ computeBalanceFeatures<-function(cleanDataTableId, lastProcessedVersion, feature
 			"zcrAA"=rep(NA, n),
 			stringsAsFactors=FALSE)
 
-	# now compute the features
-	jsonFiles<-synDownloadTableColumns(queryResults, jsonColName)
-	for (i in 1:n) {
-		fileHandleId<-queryResults@values[i,jsonColName]
-		if (is.na(fileHandleId) || is.null(fileHandleId)) next
-		zcrAA<-try({
-					file<-jsonFiles[[fileHandleId]]
-					data<-fromJSON(file)		
-					balance_zcrAA(data)
-				}, silent=T)
-		if (is(zcrAA, "try-error")) {
-			cat("computeBalanceFeatures:  balance_zcrAA failed for i=", i, ", fileHandleId=", fileHandleId, "\n")
-		} else {
-			featureDataFrame[i,"zcrAA"] <- zcrAA
-			featureDataFrame[i,"is_computed"] <- TRUE
+	if (!all(is.na(queryResults@values[[jsonColName]]))) {
+		# now compute the features
+		jsonFiles<-synDownloadTableColumns(queryResults, jsonColName)
+		for (i in 1:n) {
+			fileHandleId<-queryResults@values[i,jsonColName]
+			if (is.na(fileHandleId) || is.null(fileHandleId)) next
+			zcrAA<-try({
+						file<-jsonFiles[[fileHandleId]]
+						data<-fromJSON(file)		
+						balance_zcrAA(data)
+					}, silent=T)
+			if (is(zcrAA, "try-error")) {
+				cat("computeBalanceFeatures:  balance_zcrAA failed for i=", i, ", fileHandleId=", fileHandleId, "\n")
+			} else {
+				featureDataFrame[i,"zcrAA"] <- zcrAA
+				featureDataFrame[i,"is_computed"] <- TRUE
+			}
 		}
 	}
 	
