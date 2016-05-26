@@ -103,3 +103,43 @@ with_mock(
     expect_equal(newLastProcessedVersion, 8)
   }
 )
+
+ ## All NAs
+ 
+ cleanedTappingData<-data.frame(
+		 recordId=c("AA", "BB", "CC"),
+		 "tapping_results.json.TappingSamples"=c(NA, NA, NA),
+		 "tapping_left.json.TappingSamples"=c(NA, NA, NA),
+		 "tapping_right.json.TappingSamples"=c(NA, NA, NA),
+		 stringsAsFactors=F
+ )
+ rownames(cleanedTappingData)<-c("1_1", "2_1", "3_8")
+ queryResults<-Table("syn000", cleanedTappingData)
+ 
+ with_mock(
+		 synTableQuery=function(sql) {
+			 tableId<-getIdFromSql(sql)
+			 if (tableId=="syn000") {
+				 queryResults
+			 } else if (tableId=="syn999") {
+				 Table("syn999", data.frame())
+			 } else {
+				 stop(paste0("Unexpected table id <", tableId, ">"))
+			 }
+		 },
+		 synDownloadTableColumns=function(table, columns){c("111"="file1", "222"="file2", "333"="file3")},
+		 fromJSON=function(file){"[]"},
+		 tappingCountStatistic=function(data){as.integer(7)},
+		 synStore=function(table) {
+			 expect_equal(table@schema, "syn999")
+			 expect_equal(table@values$recordId, c("AA", "BB", "CC"))
+			 expect_equal(table@values[["is_computed"]], c(F,F,F))
+			 expect_equal(table@values[["tap_count"]], c(NA, NA, NA))
+		 },
+		 {
+			 newLastProcessedVersion<-computeTappingFeatures(cleanDataTableId, lastProcessedVersion, featureTableId)
+			 expect_equal(newLastProcessedVersion, 8)
+		 }
+ )
+ 
+ 
