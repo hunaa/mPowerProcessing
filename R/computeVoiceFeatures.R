@@ -32,12 +32,14 @@ computeVoiceFeatures <- function(cleanDataTableId, lastProcessedVersion, feature
       "medianF0"=rep(NA, n),
       stringsAsFactors=FALSE)
 
+
 	if (!all(is.na(queryResults@values[[jsonColName]]))) {
-		# now compute the features
+	  # now compute the features
 	  fileMap <- synDownloadTableColumns(queryResults, dataColumnName)
 	  for (i in seq(along=recordIds)) {
 	    fileHandleId <- queryResults@values[i, dataColumnName]
 	    recordId <- queryResults@values[i, "recordId"]
+	    message("... computing voice features for recordId=", recordId, "  fileHandleId=", fileHandleId)
 	    if (is.na(fileHandleId) || is.null(fileHandleId)) next
 	    medianF0 <- try({
 	      filepath <- fileMap[[fileHandleId]]
