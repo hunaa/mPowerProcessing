@@ -326,10 +326,11 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, tlrId, vId1, vId2, w
 		cat("Invoking visualization API...\n")
 		url <- bridger:::uriToUrl("/parkinson/visualization", bridger:::.getBridgeCache("bridgeEndpoint"))
 			
-		testHealthCodes<-rep(c('0b91132b-c181-4481-9394-1748837e23b4',
-							'2ace23da-cea8-41b3-bb09-9996e0f2b3b9',
-							'1e5b526b-0b24-4fb7-bd1d-d3025c9d63fe',
-							'e8a17d84-6d96-4b82-9969-af6fe319c2ce'
+		testHealthCodes<-rep(c('afba0a91-dddd-4927-85d7-0cf7c5ab3cfe',#brian.bot+test-report
+							'76e03824-93de-4bd2-81b8-6ba0cf8c244d',#mike.kellen+test-report
+							'e550d6ea-8058-4288-af65-27a494141c2b',#thea.norman
+							'd66f8651-40fc-4b77-80ba-07d6da274493',#dwayne.jeng+test01
+							'f8266cc7-eb8e-4fc3-9255-72b7c2649980'#amy.truong
 					), length.out=nRecords)
 		for (i in 1:nRecords) {
 			healthCode<-names(normalizedFeatures)[i]
