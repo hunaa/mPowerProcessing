@@ -128,7 +128,7 @@ getVisData <- function(healthCode, featureNames, featureTables, window, demo, ag
 
 #' Convert getVisData output into JSON.
 #'
-#' @return a JSON string
+#' @return a list of JSON strings
 #'
 #' \code{
 #'  [
@@ -166,8 +166,8 @@ getVisData <- function(healthCode, featureNames, featureTables, window, demo, ag
 #'  ]
 #' }
 visDataToJSON <- function(healthCode, normdata) {
-  towardJSON <- lapply(collectDates(normdata), function(thisDate) {
-    list(
+  lapply(collectDates(normdata), function(thisDate) {
+	rjson::toJSON(list(
       healthCode=healthCode,
       date=as.character(thisDate),
       visualization=list(
@@ -194,9 +194,8 @@ visDataToJSON <- function(healthCode, normdata) {
           post=normdata$balance$fdat[as.character(thisDate), "post"],
           controlMin=normdata$balance$controlLower,
           controlMax=normdata$balance$controlUpper
-        )))
+        ))))
   })
-  return(rjson::toJSON(towardJSON))
 }
 
 
@@ -264,16 +263,6 @@ testNormalization <- function(participantId, featureNames, featureTables, window
 #'
 #'  normalizedFeatures <- runNormalization(tables, features, window)
 #'
-#'  # export to Bridge mPower Visualization API
-#'  for (healthCode in names(normalizedFeatures)) {
-#'    normdata <- normalizedFeatures[[healthCode]]
-#'    if (inherits(normdata, "try-error")) {
-#'      message(sprintf('skipping %s due to error in processing', healthCode))
-#'    } else {
-#'      jsonString <- visDataToJSON(healthCode, normalizedFeatures[[healthCode]])
-#'    }
-#'    # call Bridge Visualization API here
-#'  }
 #'
 runNormalization <- function(tables, features, featureNames, window) {
   # demographics table
