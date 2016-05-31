@@ -338,12 +338,17 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, tlrId, vId1, vId2, w
 			if (inherits(normdata, "try-error")) {
 				message(sprintf('skipping %s due to error in processing', healthCode))
 			} else {
-				jsonString <- visDataToJSON(testHealthCodes[i], normalizedFeatures[[healthCode]])
-				print(jsonString)
-				# call Bridge Visualization API
-				response<-getURL(url, postfields=jsonString, customrequest="POST", 
-					.opts=bridger:::.getBridgeCache("opts"), httpheader=bridger:::.getBridgeCache("httpheader"))
-				# response is "Visualization created."
+				jsonStrings <- visDataToJSON(testHealthCodes[i], normalizedFeatures[[healthCode]])
+				for (jsonString in jsonStrings) {
+					print(jsonString)
+					# call Bridge Visualization API
+					curl<-getCurlHandle()
+					response<-getURL(url, postfields=jsonString, customrequest="POST", 
+							.opts=bridger:::.getBridgeCache("opts"), httpheader=bridger:::.getBridgeCache("httpheader"), curl=curl)
+					# response is "Visualization created."
+					httpStatus<-getCurlInfo(curl)$response.code
+					if (httpStatus>=400) stop(response)
+				}
 			}
 		}			
 		cat("... done.\n")
