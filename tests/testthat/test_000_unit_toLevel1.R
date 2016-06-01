@@ -160,4 +160,9 @@ expect_equal(subsetThis(preDf), preDf[-2, ])
 preDf <- current
 preDf$createdOn[4] <- as.Date("2016-01-02")
 expect_equal(subsetThis(preDf), preDf[c(4, 1:3, 5:7), ])
-  
+
+#####
+## TEST TEXT MANIPULATION FOR LEFT/RIGHT TAPPING MEDICATION DATA
+tapLeftRight <- c("Just after taking Parkinson medication (at your best)", "Immediately before taking Parkinson medication")
+tapSingle <- c("Just after Parkinson medication (at your best)", "Immediately before Parkinson medication")
+expect_equal(sub(" taking", "", tapLeftRight, fixed=TRUE), tapSingle)
