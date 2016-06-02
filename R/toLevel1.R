@@ -337,7 +337,7 @@ process_tapping_leftright_activity <- function(tlrId, lastProcessedVersion){
   
   tlrDat <- subsetThis(tlrDat)
   rownames(tlrDat) <- tlrDat$recordId
-  list(tlrDat=tlrDat, tlrFilehandleCols=tlrFilehandleCols, maxRowVersion=maxRowVersion)
+  list(tlrDat=tlrDat, tlrFilehandleCols=tlrFilehandleCols, maxRowProcessed=maxRowVersion) 
 }
 
 

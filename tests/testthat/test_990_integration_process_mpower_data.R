@@ -327,6 +327,9 @@ if (canExecute) {
 			bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId, lastProcessedFeatureVersionTableId)
 	markProcesingComplete(bridgeExportQueryResult, "complete")
 	
+	lastProcessedVersion<-synTableQuery(sprintf("select * from %s", lastProcessedVersionTableId))@values
+	expect_equal(nrow(lastProcessedVersion), 15)
+	
 	tappingFeatures<-synTableQuery(sprintf("select * from %s", featureTableIds$tfSchemaId))@values
 	# verify content
 	expect_true(all(tappingFeatures[['is_computed']]==TRUE))
