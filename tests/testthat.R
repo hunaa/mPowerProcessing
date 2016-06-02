@@ -6,5 +6,9 @@
 library(testthat)
 library("mPowerProcessing")
 
-# https://github.com/travis-ci/travis-ci/issues/3849
-test_check("mPowerProcessing")
+filter<-Sys.getenv("TEST_THAT_FILTER")
+if (nchar(filter)>0) {
+	test_check("mPowerProcessing", filter=filter)
+} else {
+	test_check("mPowerProcessing")
+}

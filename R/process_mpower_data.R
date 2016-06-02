@@ -326,7 +326,9 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, tlrId, vId1, vId2, w
 		cat("Invoking visualization API...\n")
 		url <- bridger:::uriToUrl("/parkinson/visualization", bridger:::.getBridgeCache("bridgeEndpoint"))
 			
-		testHealthCodes<-rep(c('afba0a91-dddd-4927-85d7-0cf7c5ab3cfe',#brian.bot+test-report
+		testHealthCodes<-rep(c(
+							'fb0c8ffc-52d7-492f-b5c1-9fdb7cce247f',# Alx's admin account
+							'afba0a91-dddd-4927-85d7-0cf7c5ab3cfe',#brian.bot+test-report
 							'76e03824-93de-4bd2-81b8-6ba0cf8c244d',#mike.kellen+test-report
 							'e550d6ea-8058-4288-af65-27a494141c2b',#thea.norman
 							'd66f8651-40fc-4b77-80ba-07d6da274493',#dwayne.jeng+test01
