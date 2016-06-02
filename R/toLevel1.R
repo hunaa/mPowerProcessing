@@ -328,7 +328,7 @@ process_tapping_leftright_activity <- function(tlrId, lastProcessedVersion){
     return(list(tlrDat=tlrDat, tlrFilehandleCols=tlrFilehandleCols, maxRowVersion=lastProcessedVersion))
   }
   
-  maxRowVersion<-getMaxRowVersion(tlrDat)
+  maxRowVersion<-list(tlrId=getMaxRowVersion(tlrDat))
   
   tlrDat$externalId <- NULL
   tlrDat$uploadDate <- NULL
