@@ -6,14 +6,16 @@
 ###############################################################################
 
 computeTappingFeatures<-function(cleanDataTableId, lastProcessedVersion, featureTableId, hand=NA) {
-	cat("Computing tapping features...\n")
   
   ## PICK THE RIGHT COLUMN NAME DEPENDING ON 'HAND'
   if(is.na(hand)){
+    cat("Computing tapping features...\n")
     jsonColName<-"tapping_results.json.TappingSamples"
   } else if(hand=="left"){
+    cat("Computing tapping features - left hand...\n")
     jsonColName<-"tapping_left.json.TappingSamples"
   } else if(hand=="right"){
+    cat("Computing tapping features - right hand...\n")
     jsonColName<-"tapping_right.json.TappingSamples"
   } else{
     stop(paste0("Unexpected hand specified for tapping feature extraction: ", hand))

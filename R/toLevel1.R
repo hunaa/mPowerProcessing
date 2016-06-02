@@ -334,6 +334,8 @@ process_tapping_leftright_activity <- function(tlrId, lastProcessedVersion){
   tlrDat$externalId <- NULL
   tlrDat$uploadDate <- NULL
   tlrDat$medTimepoint <- cleanString(tlrDat$momentInDayFormat.json.choiceAnswers)
+  ## FIX medTimepoint TO MATCH PREVIOUS VERSIONS
+  tlrDat$medTimepoint <- sub(" taking", "", tlrDat$medTimepoint, fixed=TRUE)
   tlrDat$momentInDayFormat.json.choiceAnswers <- NULL
   
   tlrDat <- subsetThis(tlrDat)
