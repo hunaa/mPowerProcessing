@@ -328,8 +328,9 @@ process_tapping_leftright_activity <- function(tlrId, lastProcessedVersion){
     return(list(tlrDat=tlrDat, tlrFilehandleCols=tlrFilehandleCols, maxRowVersion=lastProcessedVersion))
   }
   
-  maxRowVersion<-list(tlrId=getMaxRowVersion(tlrDat))
-  
+	maxRowVersion<-list()
+	maxRowVersion[[tlrId]]<-getMaxRowVersion(tlrDat)
+	
   tlrDat$externalId <- NULL
   tlrDat$uploadDate <- NULL
   tlrDat$medTimepoint <- cleanString(tlrDat$momentInDayFormat.json.choiceAnswers)
