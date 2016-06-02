@@ -2,6 +2,14 @@ sudo: required
 
 language: ruby
 
+env:
+ - TEST_THAT_FILTER=_unit_
+ - TEST_THAT_FILTER=900_integration_
+ - TEST_THAT_FILTER=910_integration_
+ - TEST_THAT_FILTER=920_integration_
+ - TEST_THAT_FILTER=990_integration_
+
+
 services:
  - docker
 

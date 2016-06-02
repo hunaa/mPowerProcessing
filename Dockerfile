@@ -1,5 +1,3 @@
-# Note we specify a specific version of rocker/rstudio which we know to use v 3.2 of R
-# This is temporary, until synapseClient is released for R 3.3.
 FROM rocker/rstudio
 # Note:  The following is needed if starting from r-base, but doesn't work 
 # because r-base is based on the 'testing' versions of Debian libraries, 
