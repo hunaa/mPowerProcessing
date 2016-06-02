@@ -328,8 +328,9 @@ process_tapping_leftright_activity <- function(tlrId, lastProcessedVersion){
     return(list(tlrDat=tlrDat, tlrFilehandleCols=tlrFilehandleCols, maxRowVersion=lastProcessedVersion))
   }
   
-  maxRowVersion<-getMaxRowVersion(tlrDat)
-  
+	maxRowVersion<-list()
+	maxRowVersion[[tlrId]]<-getMaxRowVersion(tlrDat)
+	
   tlrDat$externalId <- NULL
   tlrDat$uploadDate <- NULL
   tlrDat$medTimepoint <- cleanString(tlrDat$momentInDayFormat.json.choiceAnswers)
@@ -339,7 +340,7 @@ process_tapping_leftright_activity <- function(tlrId, lastProcessedVersion){
   
   tlrDat <- subsetThis(tlrDat)
   rownames(tlrDat) <- tlrDat$recordId
-  list(tlrDat=tlrDat, tlrFilehandleCols=tlrFilehandleCols, maxRowVersion=maxRowVersion)
+  list(tlrDat=tlrDat, tlrFilehandleCols=tlrFilehandleCols, maxRowProcessed=maxRowVersion) 
 }
 
 

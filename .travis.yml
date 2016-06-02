@@ -18,8 +18,7 @@ before_install:
 
 script:
  # Now run the tests.
- # Note:  Omitting '--no-manual' below results in "Error in texi2dvi(...):  pdflatex is not available"
- - docker run -w /mPowerProcessing/tests -e SYNAPSE_USERNAME=$SYNAPSE_USERNAME -e SYNAPSE_APIKEY=$SYNAPSE_APIKEY -e BRIDGE_USERNAME=$BRIDGE_USERNAME -e BRIDGE_PASSWORD=$BRIDGE_PASSWORD sagebionetworks/mpower-processing bash -c "R --no-save < /mPowerProcessing/tests/testthat.R"
+ - docker run -w /mPowerProcessing/tests -e SYNAPSE_USERNAME=$SYNAPSE_USERNAME -e SYNAPSE_APIKEY=$SYNAPSE_APIKEY -e BRIDGE_USERNAME=$BRIDGE_USERNAME -e BRIDGE_PASSWORD=$BRIDGE_PASSWORD -e TEST_THAT_FILTER=$TEST_THAT_FILTER sagebionetworks/mpower-processing bash -c "R --no-save < /mPowerProcessing/tests/testthat.R"
  
 after_success:
  - test $TRAVIS_PULL_REQUEST == "false" && docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
