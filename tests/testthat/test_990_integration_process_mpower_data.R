@@ -159,7 +159,7 @@ if (canExecute) {
 	}
 
 	## A specialized version of createTable/createMultipleTables that uploads binary voice data files
-	createVoiceActivityTables <- function(project, tables, tableName, mockAttachmentFolders) {
+	createVoiceActivityTables <- function(project, tables, tableName, mockAttachmentFolders, limit=1000) {
 
 		## return new table IDs
 		tableIds <- NULL
@@ -170,6 +170,10 @@ if (canExecute) {
 
 			schema    <- tables[[i]]$schema
 			tableData <- tables[[i]]$query@values
+
+			if (nrow(tableData) > limit) {
+				tableData <- tableData[1:limit,]
+			}
 
 			## upload mock data files and attach to file handle columns
 			fileHandleColumns<-whichFilehandle(schema@columns)
@@ -257,13 +261,13 @@ if (canExecute) {
 			"audio_countdown.m4a"="default-json-files",
 			"momentInDayFormat.json"="moment-in-day-json")
 	tables <- schemaAndQueryToList(schemaAndQuery)
-	vId1 <- createVoiceActivityTables(project, tables, "Voice Raw Input 1", v1MockAttachmentFolders)
+	vId1 <- createVoiceActivityTables(project, tables, "Voice Raw Input 1", v1MockAttachmentFolders, limit=25)
 	message("vId1: ", paste(vId1, collapse=" "))
 
 	v2MockAttachmentFolders <- c(	"audio_audio.m4a"="audio_audio.m4a",
 																"audio_countdown.m4a"="default-json-files")
 	tables <- list(list(schema=schema2, query=query2))
-	vId2 <- createVoiceActivityTables(project, tables, "Voice Raw Input 2", v2MockAttachmentFolders)
+	vId2 <- createVoiceActivityTables(project, tables, "Voice Raw Input 2", v2MockAttachmentFolders, limit=25)
 	message("vId2: ", paste(vId2, collapse=" "))
 	# ------------------------------------------------------------
 
