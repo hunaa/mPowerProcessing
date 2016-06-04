@@ -371,8 +371,15 @@ process_voice_activity<-function(vId1, vId2, lastProcessedVersion1, lastProcesse
 			maxRowProcessed[x]<<-lastProcessedVersion1[x]
 		} else {
    		maxRowProcessed[x]<<-getMaxRowVersion(vals)
-    
-	    vMap <- synDownloadTableColumns(vTab, "momentInDayFormat.json")
+
+	    vMap <- if (all(is.na(vals[["momentInDayFormat.json"]]))) {
+                ## Work around for SYNR-1043, a bug in synDownloadTableColumns
+                ## which causes an error if all file handles are NA
+                list()
+              }
+              else {
+                synDownloadTableColumns(vTab, "momentInDayFormat.json")
+              }
 	    vMID <- lapply(as.list(rownames(vals)), function(rn){
 	      if( is.na(vals[rn, "momentInDayFormat.json"]) ){
 	        return(c(choiceAnswers=NA))
