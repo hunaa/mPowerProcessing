@@ -44,7 +44,8 @@ if (canExecute) {
 	c2<-TableColumn(name="mPowerBatchStart", columnType="DATE")
 	c3<-TableColumn(name="hostName", columnType="STRING")
 	c4<-TableColumn(name="batchStatus", columnType="STRING")
-	mPowerBatchStatusSchema<-TableSchema("mPower Batch Status Schema", project, list(c1,c2,c3,c4))
+	c5<-TableColumn(name="reportsSentCount", columnType="INTEGER")
+	mPowerBatchStatusSchema<-TableSchema("mPower Batch Status Schema", project, list(c1,c2,c3,c4,c5))
 	mPowerBatchStatusSchema<-synStore(mPowerBatchStatusSchema)
 	mPowerBatchStatusId<-propertyValue(mPowerBatchStatusSchema, "id")
 	
@@ -60,7 +61,7 @@ if (canExecute) {
 	expect_equal(nrow(jobStatus@values), 1)
 	expect_equal(jobStatus@values[1,"batchStatus"], "inProgress")
 	
-	markProcesingComplete(bridgeExportQueryResult, "complete")
+	markProcesingComplete(bridgeExportQueryResult, "complete", 0)
 	
 	# check that the batch has been marked 'complete'
 	jobStatus<-synTableQuery(paste0("select * from ", mPowerBatchStatusId,

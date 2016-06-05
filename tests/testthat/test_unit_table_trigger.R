@@ -233,7 +233,7 @@ with_mock(
 							mPowerBatchStart=now, 
 							hostName="hostname",
 							batchStatus="inProgress", stringsAsFactors=FALSE))
-			result<-markProcesingComplete(queryResult, "complete")
+			result<-markProcesingComplete(queryResult, "complete", 0)
 			
 			expect_true(is(result, "TableDataFrame"))
 			expect_equal(result@schema, mPowerBatchStatusId)
@@ -241,6 +241,7 @@ with_mock(
 							bridgeUploadDate="2016-03-21", 
 							mPowerBatchStart=now, 
 							hostName="hostname",
-							batchStatus="complete", stringsAsFactors=FALSE))
+							batchStatus="complete", 
+							reportSentCount=as.integer(0), stringsAsFactors=FALSE))
 		}
 )
