@@ -309,7 +309,8 @@ if (canExecute) {
 	c2<-TableColumn(name="mPowerBatchStart", columnType="DATE")
 	c3<-TableColumn(name="hostName", columnType="STRING")
 	c4<-TableColumn(name="batchStatus", columnType="STRING")
-	mPowerBatchStatusSchema<-TableSchema("mPower Batch Status Schema", project, list(c1,c2,c3,c4))
+	c5<-TableColumn(name="reportsSentCount", columnType="INTEGER")
+	mPowerBatchStatusSchema<-TableSchema("mPower Batch Status Schema", project, list(c1,c2,c3,c4,c5))
 	mPowerBatchStatusSchema<-synStore(mPowerBatchStatusSchema)
 	mPowerBatchStatusId<-propertyValue(mPowerBatchStatusSchema, "id")
 	
@@ -326,10 +327,11 @@ if (canExecute) {
 	bridgeExportQueryResult<-checkForAndLockBridgeExportBatch(bridgeStatusId, mPowerBatchStatusId, "", Sys.time())
 	expect_true(!(is.null(bridgeExportQueryResult) || nrow(bridgeExportQueryResult@values)==0))
 		
-	process_mpower_data_bare(eId, uId, pId, mId, tIds, tlrId, vId1, vId2, wIds, outputProjectId, 
+	reportsSentCount<-
+		process_mpower_data_bare(eId, uId, pId, mId, tIds, tlrId, vId1, vId2, wIds, outputProjectId, 
 			featureTableIds$tfSchemaId, featureTableIds$tlfSchemaId, featureTableIds$trfSchemaId, featureTableIds$vfSchemaId, featureTableIds$bfSchemaId, featureTableIds$gfSchemaId, 
 			bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId, lastProcessedFeatureVersionTableId)
-	markProcesingComplete(bridgeExportQueryResult, "complete")
+	markProcesingComplete(bridgeExportQueryResult, "complete", reportsSentCount)
 	
 	lastProcessedVersion<-synTableQuery(sprintf("select * from %s", lastProcessedVersionTableId))@values
 	expect_equal(nrow(lastProcessedVersion), 15)

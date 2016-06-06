@@ -3,6 +3,7 @@ bridgeUploadDateColumnName<-"bridgeUploadDate"
 mPowerBatchStartColumnName<-"mPowerBatchStart"
 hostNameColumnName<-"hostName"
 batchStatusColumnName<-"batchStatus"
+reportsSentCountColumnName<-"reportsSentCount"
 inProgressStatusValue<-"inProgress"
 
 # check for new data to process:  
@@ -79,9 +80,10 @@ getHostname<-function() {
 	result
 }
 
-markProcesingComplete<-function(batchStatusQueryResult, status) {
+markProcesingComplete<-function(batchStatusQueryResult, status, reportsSentCount) {
 	if (nrow(batchStatusQueryResult@values)!=1) stop(paste0("Expected one row but found ", nrow(batchStatusQueryResult@values)))
 	batchStatusQueryResult@values[1, batchStatusColumnName]<-status
+	batchStatusQueryResult@values[1, reportsSentCountColumnName]<-as.integer(reportsSentCount)
 	synStore(batchStatusQueryResult, retrieveData=TRUE)
 }
 
@@ -131,15 +133,17 @@ process_mpower_data<-function(eId, uId, pId, mId, tId, tlrId, vId1, vId2, wId, o
 	bridgeExportQueryResult<-checkForAndLockBridgeExportBatch(bridgeStatusId, mPowerBatchStatusId, hostname, Sys.time()) # no lease timeout given
 	if (is.null(bridgeExportQueryResult) || nrow(bridgeExportQueryResult@values)==0) return(NULL)
 	
+	reportsSentCount<-0
 	tryCatch({
-				process_mpower_data_bare(eId, uId, pId, mId, tId, tlrId, vId1, vId2, wId, outputProjectId, 
+				reportsSentCount<-
+					process_mpower_data_bare(eId, uId, pId, mId, tId, tlrId, vId1, vId2, wId, outputProjectId, 
 						tappingFeatureTableId, tappingLeftFeatureTableId, tappingRightFeatureTableId, voiceFeatureTableId, balanceFeatureTableId, gaitFeatureTableId,
 						bridgeStatusId, mPowerBatchStatusId, lastProcessedVersionTableId, lastProcessedFeatureVersionTableId)
-				markProcesingComplete(bridgeExportQueryResult, "complete")
+				markProcesingComplete(bridgeExportQueryResult, "complete", reportsSentCount)
 			}, 
 			error=function(e) {
 				message(e)
-				markProcesingComplete(bridgeExportQueryResult, "failed")
+				markProcesingComplete(bridgeExportQueryResult, "failed", 0)
 			})
 }			
 
@@ -334,6 +338,7 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, tlrId, vId1, vId2, w
 							'd66f8651-40fc-4b77-80ba-07d6da274493',#dwayne.jeng+test01
 							'f8266cc7-eb8e-4fc3-9255-72b7c2649980'#amy.truong
 					)
+		reportsSentCount<-0
 		for (i in 1:min(nRecords,length(testHealthCodes))) { # for now, just send the first few reports, to the test health codes
 			healthCode<-names(normalizedFeatures)[i]
 			normdata <- normalizedFeatures[[healthCode]]
@@ -351,10 +356,12 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, tlrId, vId1, vId2, w
 					httpStatus<-getCurlInfo(curl)$response.code
 					if (httpStatus>=400) stop(response)
 				}
+				if (length(jsonStrings)>0) reportsSentCount<-reportsSentCount+1
 			}
 		}			
 		cat("... done.\n")
 	}
 
 	cat("... ALL DONE!!!\n")
+	reportsSentCount
 }
