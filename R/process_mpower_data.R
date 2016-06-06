@@ -133,7 +133,6 @@ process_mpower_data<-function(eId, uId, pId, mId, tId, tlrId, vId1, vId2, wId, o
 	bridgeExportQueryResult<-checkForAndLockBridgeExportBatch(bridgeStatusId, mPowerBatchStatusId, hostname, Sys.time()) # no lease timeout given
 	if (is.null(bridgeExportQueryResult) || nrow(bridgeExportQueryResult@values)==0) return(NULL)
 	
-	reportsSentCount<-0
 	tryCatch({
 				reportsSentCount<-
 					process_mpower_data_bare(eId, uId, pId, mId, tId, tlrId, vId1, vId2, wId, outputProjectId, 
@@ -324,6 +323,7 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, tlrId, vId1, vId2, w
 	normalizedFeatures<-runNormalization(tables, features, featureNames, thirtyDayWindow)
 	
 	nRecords<-length(normalizedFeatures)
+	reportsSentCount<-0
 	if (nRecords>0) {
 		# Now call the Visualization Data API 
 		#https://sagebionetworks.jira.com/wiki/display/BRIDGE/mPower+Visualization#mPowerVisualization-WritemPowerVisualizationData
@@ -338,7 +338,6 @@ process_mpower_data_bare<-function(eId, uId, pId, mId, tId, tlrId, vId1, vId2, w
 							'd66f8651-40fc-4b77-80ba-07d6da274493',#dwayne.jeng+test01
 							'f8266cc7-eb8e-4fc3-9255-72b7c2649980'#amy.truong
 					)
-		reportsSentCount<-0
 		for (i in 1:min(nRecords,length(testHealthCodes))) { # for now, just send the first few reports, to the test health codes
 			healthCode<-names(normalizedFeatures)[i]
 			normdata <- normalizedFeatures[[healthCode]]
