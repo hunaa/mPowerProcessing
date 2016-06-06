@@ -3,6 +3,7 @@ bridgeUploadDateColumnName<-"bridgeUploadDate"
 mPowerBatchStartColumnName<-"mPowerBatchStart"
 hostNameColumnName<-"hostName"
 batchStatusColumnName<-"batchStatus"
+reportsSentCountColumnName<-"reportsSentCount"
 inProgressStatusValue<-"inProgress"
 
 # check for new data to process:  
@@ -82,6 +83,7 @@ getHostname<-function() {
 markProcesingComplete<-function(batchStatusQueryResult, status, reportsSentCount) {
 	if (nrow(batchStatusQueryResult@values)!=1) stop(paste0("Expected one row but found ", nrow(batchStatusQueryResult@values)))
 	batchStatusQueryResult@values[1, batchStatusColumnName]<-status
+	batchStatusQueryResult@values[1, reportsSentCountColumnName]<-as.integer(reportsSentCount)
 	synStore(batchStatusQueryResult, retrieveData=TRUE)
 }
 
